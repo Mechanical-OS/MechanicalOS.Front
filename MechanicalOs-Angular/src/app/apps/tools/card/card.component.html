@@ -5,8 +5,9 @@
             <p>{{tool.description}}</p>
             <div class="tool-card-footer">
                 <div class="tool-access">
-                    <span><i class="fas fa-edit"></i> Acessar</span>
-                  </div>
+                    <span><i class="fas fa-edit"></i> <a *ngIf="tool.link" [href]="tool.link"
+                           class="tool-access" target="_self">Acessar</a></span>
+                </div>
                 <span class="tool-version"><strong>Versão:</strong> {{tool.version}}</span>
             </div>
         </div>

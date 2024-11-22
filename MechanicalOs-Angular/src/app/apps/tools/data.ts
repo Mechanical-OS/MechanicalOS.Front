@@ -22,7 +22,7 @@ export const TOOLS: ToolsModel[] = [
     description:
       "Tipos de serviços oferecidos pela sua oficina,cadastro, consulta, importação...",
     version: 1,
-    link: "",
+    link: "apps/services",
   },
   {
     id: 4,

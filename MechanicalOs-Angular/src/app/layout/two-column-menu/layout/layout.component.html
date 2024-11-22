@@ -1,0 +1,19 @@
+<div id="wrapper">
+    <!-- topbar -->
+    <!-- left side bar-->
+    <app-two-column-left-sidebar [sidebarType]="leftSidebarType">
+    </app-two-column-left-sidebar>
+    
+    <div class="content-page" *ngIf="reRender">
+        <app-topbar (settingsButtonClicked)="onSettingsButtonClicked()" (mobileMenuButtonClicked)="onToggleMobileMenu()"
+            layoutType="two-column" [leftSidebarTheme]="leftSidebarTheme"></app-topbar>
+        <div class="content">
+            <!-- content -->
+            <div class="container-fluid">
+                <router-outlet></router-outlet>
+            </div> <!-- container -->
+        </div> <!-- content -->
+        <!-- footer -->
+        <app-footer></app-footer>
+    </div>
+</div>

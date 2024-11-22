@@ -1,0 +1,150 @@
+<!-- page title -->
+<app-page-title [breadcrumbItems]="pageTitle" title="Invoice"></app-page-title>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <!-- Logo & title -->
+                <div class="clearfix">
+                    <div class="float-start">
+                        <div class="auth-brand">
+                            <div class="logo logo-dark">
+                                <span class="logo-lg">
+                                    <img src="../assets/images/logo-dark.png" alt="" height="22">
+                                </span>
+                            </div>
+
+                            <div class="logo logo-light">
+                                <span class="logo-lg">
+                                    <img src="../assets/images/logo-light.png" alt="" height="22">
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="float-end">
+                        <h4 class="m-0 d-print-none">Invoice</h4>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mt-3">
+                            <p><b>Hello, {{invoiceData.customer}}</b></p>
+                            <p class="text-muted">Thanks a lot because you keep purchasing our products. Our company
+                                promises to provide high quality products for you as well as outstanding
+                                customer service for every transaction. </p>
+                        </div>
+
+                    </div><!-- end col -->
+                    <div class="col-md-4 offset-md-2">
+                        <div class="mt-3 float-end">
+                            <p><strong>Order Date : </strong> <span class="float-end"> &nbsp;&nbsp;&nbsp;&nbsp;
+                                    {{invoiceData.invoice_date}}</span></p>
+                            <p><strong>Order Status : </strong>
+                                <span class="float-end">
+                                    @if(invoiceData.invoice_status==='Unpaid'){
+                                    <span class="badge bg-danger">{{invoiceData.invoice_status}}</span>
+                                    }@else if(invoiceData.invoice_status==='Paid'){
+                                    <span class="badge bg-success">{{invoiceData.invoice_status}}</span>
+                                    }
+                                </span>
+                            </p>
+                            <p><strong>Order No. : </strong> <span class="float-end">{{invoiceData.invoice_id}} </span>
+                            </p>
+                        </div>
+                    </div><!-- end col -->
+                </div>
+                <!-- end row -->
+
+                <div class="row mt-3">
+                    <div class="col-sm-6">
+                        <h6>Billing Address</h6>
+                        <address>
+                            {{invoiceData.billing_address?.owner}}<br>
+                            {{invoiceData.billing_address?.line_1}}<br>
+                            {{invoiceData.billing_address?.city}}, {{invoiceData.billing_address?.state}}
+                            {{invoiceData.billing_address?.zip}}<br>
+                            <abbr title="Phone">P:</abbr> {{invoiceData.billing_address?.phone}}
+                        </address>
+                    </div> <!-- end col -->
+
+                    <div class="col-sm-6">
+                        <h6>Shipping Address</h6>
+                        <address>
+                            {{invoiceData.address?.owner}}<br>
+                            {{invoiceData.address?.line_1}}<br>
+                            {{invoiceData.address?.city}}, {{invoiceData.address?.state}}
+                            {{invoiceData.address?.zip}}<br>
+                            <abbr title="Phone">P:</abbr> {{invoiceData.address?.phone}}
+                        </address>
+                    </div> <!-- end col -->
+                </div>
+                <!-- end row -->
+
+                <div class="row">
+                    <div class="col-12">
+                        <div class="table-responsive">
+                            <table class="table mt-4 table-centered">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Item</th>
+                                        <th style="width: 10%">Hours</th>
+                                        <th style="width: 10%">Hours Rate</th>
+                                        <th style="width: 10%" class="text-end">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @for (item of invoiceData.items; track $index) {
+                                    <tr>
+                                        <td>{{item.id}}</td>
+                                        <td>
+                                            <b>{{item.name}}</b> <br />
+                                            {{item.description}}
+                                        </td>
+                                        <td>{{item.hours}}</td>
+                                        <td>{{item.hour_rate | currency}}</td>
+                                        <td class="text-end">{{item.total | currency}}</td>
+                                    </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div> <!-- end table-responsive -->
+                    </div> <!-- end col -->
+                </div>
+                <!-- end row -->
+
+                <div class="row">
+                    <div class="col-sm-6">
+                        <div class="clearfix pt-5">
+                            <h6 class="text-muted">Notes:</h6>
+
+                            <small class="text-muted">
+                                {{invoiceData.notes}}
+                            </small>
+                        </div>
+                    </div> <!-- end col -->
+                    <div class="col-sm-6">
+                        <div class="float-end">
+                            <p><b>Sub-total:</b> <span class="float-end">{{invoiceData.sub_total | currency}}</span></p>
+                            <p><b>Discount (10%):</b> <span class="float-end"> &nbsp;&nbsp;&nbsp; {{invoiceData.discount
+                                    | currency}}</span></p>
+                            <h3>{{invoiceData.total | currency}} USD</h3>
+                        </div>
+                        <div class="clearfix"></div>
+                    </div> <!-- end col -->
+                </div>
+                <!-- end row -->
+
+                <div class="mt-4 mb-1">
+                    <div class="text-end d-print-none">
+                        <a href="javascript:window.print()" class="btn btn-primary waves-effect waves-light me-1"><i class="mdi mdi-printer me-1"></i> Print</a>
+                        <a href="javascript:void(0)" class="btn btn-info waves-effect waves-light">Submit</a>
+                    </div>
+                </div>
+            </div>
+        </div> <!-- end card -->
+    </div> <!-- end col -->
+</div>
+<!-- end row -->

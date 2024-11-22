@@ -1,0 +1,20 @@
+<div id="wrapper">
+    <!-- topbar -->
+    
+    <!-- left side bar-->
+    <app-left-sidebar [includeUserProfile]="showSidebarUserInfo">
+    </app-left-sidebar>
+    
+    <div class="content-page">
+        <app-topbar (settingsButtonClicked)="onSettingsButtonClicked()" (mobileMenuButtonClicked)="onToggleMobileMenu()" layoutType="vertical"></app-topbar>
+        <div class="content">
+            <!-- content -->
+            @if(reRender){
+            <div class="container-fluid">
+                <router-outlet></router-outlet>
+            </div>
+            }
+        <!-- footer -->
+        <app-footer></app-footer>
+    </div>
+</div>

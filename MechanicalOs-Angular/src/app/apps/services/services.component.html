@@ -1,0 +1,46 @@
+<!-- page title -->
+<app-page-title [breadcrumbItems]="pageTitle" title=""></app-page-title>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="mb-4">
+                    <h4>Serviços oferecidos pela sua oficina</h4>
+                </div>
+                <div class="row mb-2">
+                    <div class="col-lg-4">
+                        <div class="text-lg">
+                            <button type="button" class="btn btn-danger waves-effect waves-light mb-2 me-2"><i
+                                    class="mdi mdi-plus me-1"></i>CADASTRAR SERVIÇO</button>
+                            <button type="button" class="btn btn-light waves-effect mb-2">Importar</button>
+                        </div>
+                    </div><!-- end col-->
+                    <!-- <div class="col-lg-8">
+                        <form class="d-flex flex-wrap align-items-center">
+                            <label for="status-select" class="me-2">Status</label>
+                            <div class="me-sm-3">
+                                <select class="form-select form-select my-1 my-lg-0" id="status-select" name="status"
+                                    [(ngModel)]="ServiceStatusGroup" (change)="changeServiceStatusGroup(ServiceStatusGroup)">
+                                    <option value="Available">Disponível</option>
+                                    <option value="Unavailable">Indisponível</option>
+                                    <option value="Pending">Pendente</option>
+                                </select>
+                            </div>
+                        </form>
+                    </div> -->
+                    
+                </div>
+                <app-ui-preloader [display]="loading"></app-ui-preloader>
+                <!-- order table -->
+                <!-- product table -->
+                <app-advanced-table #advancedTable (handleTableLoad)="handleTableLoad($event)" [tableData]="serviceList"
+                    [columns]="columns" [pagination]="true" [hasRowSelection]="false" [isSearchable]="true"
+                    (search)="searchData($event)" [isSortable]="false" tableClasses="table-centered"
+                    theadClasses="table-light">
+                </app-advanced-table>
+            </div> <!-- end card-body-->
+        </div> <!-- end card-->
+    </div> <!-- end col -->
+</div>
+<!-- end row -->

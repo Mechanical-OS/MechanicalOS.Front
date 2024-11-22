@@ -1,0 +1,21 @@
+<div id="wrapper">
+    <!-- topbar -->
+    <!-- left side bar-->
+    <app-left-sidebar [includeUserProfile]="showSidebarUserInfo">
+    </app-left-sidebar>
+    @if(reRender){
+    <!-- <div class=""> -->
+    <div class="content-page">
+        <!-- content -->
+        <app-topbar (settingsButtonClicked)="onSettingsButtonClicked()" (mobileMenuButtonClicked)="onToggleMobileMenu()" layoutType="detached"></app-topbar>
+        <div class="content">
+            <div class="container-fluid">
+                <router-outlet></router-outlet>
+            </div> <!-- container -->
+        </div>
+    </div> <!-- content -->
+    <!-- footer -->
+    <app-footer></app-footer>
+    <!-- </div> -->
+    }
+</div>

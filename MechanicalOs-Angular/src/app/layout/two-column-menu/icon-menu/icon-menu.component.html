@@ -1,0 +1,35 @@
+<ngx-simplebar class="sidebar-icon-menu">
+    <!-- LOGO -->
+    <div class="logo-box">
+        <!-- Brand Logo Light -->
+        <a href="index.html">
+            <img src="assets/images/logo-sm.png" alt="small logo" height="28">
+        </a>
+    </div>
+    <div class="h-100" id="two-col-sidenav-main">
+        <ul class="menu" id="two-col-sidenav-main">
+            @for(menu of menuItems;track $index){
+            <ng-container>
+                @if(menu.children){
+                <li class="menu-item">
+                    <a class="menu-link" href="javascript: void(0)" [attr.data-menu-key]="menu.key" [ngClass]="{'active': openMenuItems.includes(menu.key!)}" (click)="toggleMenuItem($event,menu)">
+                        @if(menu.icon){
+                            <span class="menu-icon"><i-feather [name]="menu.icon"></i-feather></span>
+                        }
+                    </a>
+                </li>
+                }@else{
+                <li class="menu-item">
+                    <a class="menu-link" [attr.href]="menu.link" [attr.data-menu-key]="menu.key" [ngClass]="{'active': openMenuItems.includes(menu.key!)}" (click)="toggleMenuItem($event,menu)">
+                        @if(menu.icon){
+                        <span class="menu-icon"><i-feather [name]="menu.icon"></i-feather></span>
+                        }
+                    </a>
+                </li>
+                }
+
+            </ng-container>
+            }
+        </ul>
+    </div>
+</ngx-simplebar>

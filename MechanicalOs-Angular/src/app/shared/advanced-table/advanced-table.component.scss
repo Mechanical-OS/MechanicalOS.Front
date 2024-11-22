@@ -1,0 +1,22 @@
+/* Estilo para linhas ímpares */
+table tbody tr:nth-child(odd) {
+    background-color: rgba(217, 217, 217, 0.4);
+    /* Cinza claro com 40% de opacidade */
+}
+
+/* Estilo para linhas pares */
+table tbody tr:nth-child(even) {
+    background-color: #FFFFFF;
+    /* Branco */
+}
+
+/* Estilo adicional para garantir legibilidade */
+table tbody tr:hover {
+    background-color: #F1F1F1;
+    /* Cor para hover nas linhas */
+}
+
+/* Remover borda inferior das linhas */
+table tbody tr {
+    border-bottom: 0px solid #F1F1F1;
+}

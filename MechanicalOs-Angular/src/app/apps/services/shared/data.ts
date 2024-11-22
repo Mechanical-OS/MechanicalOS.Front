@@ -15,7 +15,7 @@ const SERVICELIST: Service[] = [
         shortDescription: 'Troca de filtro de ar condicionado',
         description: 'Troca de filtro de ar condicionado',
         price: 70.00,
-        status:'Available',
+        status:'Unavailable',
     },
     {
         id: 3,
@@ -23,7 +23,7 @@ const SERVICELIST: Service[] = [
         shortDescription: 'Vitrificação do parabrisa dianteiro',
         description: 'Vitrificação do parabrisa dianteiro',
         price: 700.00,
-        status:'Available',
+        status:'Pending',
     },
 ]
 export {SERVICELIST}

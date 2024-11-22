@@ -54,29 +54,32 @@ export class ServicesComponent {
     this.columns = [
       {
         name: "code",
-        label: "CÓDIGO",
+        label: "Código",
         formatter: this.serviceIDFormatter.bind(this),
+        
       },
       {
         name: "description",
-        label: "DESCRIÇÃO",
+        label: "Descrição",
         formatter: (service: Service) => service.description,
       },
       {
         name: "price",
-        label: "PREÇO",
-        formatter: (service: Service) => service.price
+        label: "Preço",
+        formatter: this.priceFormatter.bind(this),
       },
       {
         name: "status",
-        label: "STATUS",
+        label: "Status",
         formatter: this.serviceStatusFormatter.bind(this),
+        width:200
       },
       {
         name: "Action",
-        label: "Action",
+        label: "Ações",
         sort: false,
         formatter: this.serviceActionFormatter.bind(this),
+        width: 10
       },
     ];
   }
@@ -95,7 +98,11 @@ export class ServicesComponent {
       });
     });
   }
-
+  // format price currency
+  priceFormatter(service: Service): string {
+    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(service.price);
+  }
+  
   // formats order ID cell
   serviceIDFormatter(service: Service): any {
     return this.sanitizer.bypassSecurityTrustHtml(
@@ -103,32 +110,23 @@ export class ServicesComponent {
     );
   }
 
-  //formats image cell
-  // imageFormatter(service: Service): any {
-  //   let products: string = ``;
-  //   for (let i = 0; i < service.images.length; i++) {
-  //     products += `<a href="javascript:void(0)"><img src="${service.images[i]}" alt="product-img" height="32" /></a>`;
-  //   }
-  //   return this.sanitizer.bypassSecurityTrustHtml(products);
-  // }
-
   // formats payment status cell
   serviceStatusFormatter(service: Service): any {
-    if (service.status == "available") {
+    if (service.status == "Available") {
       return this.sanitizer.bypassSecurityTrustHtml(
-        `<h5><span class="badge bg-soft-success text-success"><i class="mdi mdi-bitcoin"></i> Disponível</span></h5>`
+        `<h5><span class="badge bg-soft-success text-success">Disponível</span></h5>`
       );
-    } else if (service.status == "unavailable") {
+    } else if (service.status == "Unavailable") {
       return this.sanitizer.bypassSecurityTrustHtml(
-        `<h5><span class="badge bg-soft-warning text-warning"><i class="mdi mdi-timer-sand"></i> Indisponível</span></h5>`
+        `<h5><span class="badge bg-soft-warning text-warning"> Indisponível</span></h5>`
       );
-    } else if (service.status == "pending") {
+    } else if (service.status == "Pending") {
       return this.sanitizer.bypassSecurityTrustHtml(
-        ` <h5><span class="badge bg-soft-danger text-danger"><i class="mdi mdi-cancel"></i> Pendente</span></h5>`
+        ` <h5><span class="badge bg-soft-danger text-danger"> Pendente</span></h5>`
       );
     } else {
       return this.sanitizer.bypassSecurityTrustHtml(
-        `<h5><span class="badge bg-soft-info text-info"><i class="mdi mdi-cash"></i> ---</span></h5>`
+        `<h5><span class="badge bg-soft-info text-info"></i> ---</span></h5>`
       );
     }
   }
@@ -136,11 +134,15 @@ export class ServicesComponent {
   // action cell formatter
   serviceActionFormatter(order: Service): any {
     return this.sanitizer.bypassSecurityTrustHtml(
-      `<a href="javascript:void(0);" class="action-icon"> <i class="mdi mdi-eye"></i></a>
-           <a href="javascript:void(0);" class="action-icon"> <i class="mdi mdi-square-edit-outline"></i></a>
-           <a href="javascript:void(0);" class="action-icon"> <i class="mdi mdi-delete"></i></a>`
+      `<a href="javascript:void(0);" class="action-icon edit-icon" style="color: #58B99D;"> 
+          <i class="mdi mdi-square-edit-outline"></i>
+       </a>
+       <a href="javascript:void(0);" class="action-icon delete-icon" style="color: #FF5353;"> 
+          <i class="mdi mdi-delete"></i>
+       </a>`
     );
   }
+  
 
   /**
    * Match table data with search input

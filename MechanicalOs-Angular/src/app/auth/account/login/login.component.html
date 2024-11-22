@@ -1,0 +1,64 @@
+<app-default-layout2>
+    <!-- title-->
+    <h4 class="mt-0">Entrar</h4>
+    <p class="text-muted mb-4">Entre com seu usuário e senha para acessar o sistema</p>
+
+    <app-ui-preloader [display]="loading"></app-ui-preloader>
+    @if(error){
+    <ngb-alert type="danger" [dismissible]="false">{{ error }}</ngb-alert>
+    }
+    <!-- form -->
+    <form name="login-form2" [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+        <div class="mb-3">
+            <label for="emailaddress" class="form-label">Email</label>
+            <input class="form-control" type="email" id="emailaddress" required placeholder="Digite seu email" formControlName="email" [ngClass]="{'is-invalid': formSubmitted && formValues.email.invalid}">
+            @if(formSubmitted && formValues.email.invalid){
+            <div class="invalid-feedback">
+                @if(formValues.email.errors?.required){
+                <div>
+                    Email é obrigatório.
+                </div>
+                }@if(formValues.email.errors?.email){
+                <div>
+                    Email inválido.
+                </div>
+                }
+            </div>}
+        </div>
+        <div class="mb-3">
+            <a [routerLink]="['../reset-password']" class="text-muted float-end"><small>Esqueceu a senha?</small></a>
+            <label for="password" class="form-label">Senha</label>
+            <div class="input-group input-group-merge">
+                <input [type]="showPassword? 'text' : 'password'" id="password" class="form-control" placeholder="Digite sua senha" formControlName="password" required minlength="4" [ngClass]="{'is-invalid': formSubmitted && formValues.password.invalid}">
+                <div class="input-group-text" (click)="showPassword=!showPassword">
+                    <span class="password-eye"></span>
+                </div>
+                @if(formSubmitted && formValues.password.invalid){
+                <div class="invalid-feedback">
+                    @if(formValues.password.errors?.required){
+                    <div>
+                        Senha é obrigatório.
+                    </div>
+                    }@if(formValues.password.errors?.minlength){
+                    <div>
+                        Senha precisa ter mais de 3 caracteres.
+                    </div>
+                    }
+                </div>
+                }
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <div class="form-check">
+                <input type="checkbox" class="form-check-input" id="checkbox-signin">
+                <label class="form-check-label" for="checkbox-signin">Manter conectado</label>
+            </div>
+        </div>
+        <div class="text-center d-grid">
+            <button class="btn btn-primary" type="submit">Entrar </button>
+        </div>
+    </form>
+    <!-- end form-->
+
+</app-default-layout2>

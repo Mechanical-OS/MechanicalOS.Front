@@ -1,0 +1,29 @@
+<div class="card">
+    <div class="card-body">
+        <div class="float-end" ngbDropdown>
+            <a href="javascript:void(0)" class="arrow-none card-drop" ngbDropdownToggle>
+                <i class="mdi mdi-dots-vertical"></i>
+            </a>
+            <div class="dropdown-menu-end" ngbDropdownMenu>
+                <!-- item-->
+                <a href="javascript:void(0);" ngbDropdownItem>Settings</a>
+                <!-- item-->
+                <a href="javascript:void(0);" ngbDropdownItem>Action</a>
+            </div>
+        </div>
+        <h4 class="header-title mb-3">Inbox</h4>
+
+        <ngx-simplebar class="inbox-widget" [style.maxHeight.px]="height">
+            @for (message of messages; track $index) {
+            <div class="inbox-item">
+                <div class="inbox-item-img"><img [src]="message.avatar" class="rounded-circle" alt="">
+                </div>
+                <p class="inbox-item-author">{{message.sender}}</p>
+                <p class="inbox-item-text">{{message.text}}</p>
+                <p class="inbox-item-date">
+                    <a href="javascript:(0);" class="btn btn-sm btn-link text-info font-13"> Reply </a>
+                </p>
+            </div>}
+        </ngx-simplebar> <!-- end inbox-widget -->
+    </div>
+</div> <!-- end card -->

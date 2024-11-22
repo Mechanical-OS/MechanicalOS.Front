@@ -1,0 +1,60 @@
+<!-- page title -->
+<app-page-title [breadcrumbItems]="pageTitle" title="Calendar"></app-page-title>
+
+<div class="row">
+    <div class="col-12">
+
+        <div class="card">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-lg-3">
+                        <button class="btn btn-lg font-16 btn-primary w-100" id="btn-new-event" (click)="createNewEvent()"><i class="mdi mdi-plus-circle-outline"></i> Create New
+                            Event</button>
+
+                        <div id="external-events">
+                            <br>
+                            <p class="text-muted">Drag and drop your event or click in the calendar</p>
+                            @for (event of externalEvents; track $index) {
+                            <div class="external-event bg-{{event.type}}" [attr.data-type]="event.type">
+                                <i class="mdi mdi-checkbox-blank-circle me-2 vertical-middle"></i>{{event.title}}
+                            </div>
+                            }
+                        </div>
+
+
+                        <div class="mt-5 d-none d-xl-block">
+                            <h5 class="text-center">How It Works ?</h5>
+
+                            <ul class="ps-3">
+                                <li class="text-muted mb-3">
+                                    It has survived not only five centuries, but also the leap into electronic
+                                    typesetting, remaining essentially unchanged.
+                                </li>
+                                <li class="text-muted mb-3">
+                                    Richard McClintock, a Latin professor at Hampden-Sydney College in Virginia, looked
+                                    up one of the more obscure Latin words, consectetur, from a Lorem Ipsum passage.
+                                </li>
+                                <li class="text-muted mb-3">
+                                    It has survived not only five centuries, but also the leap into electronic
+                                    typesetting, remaining essentially unchanged.
+                                </li>
+                            </ul>
+                        </div>
+
+                    </div> <!-- end col-->
+
+                    <div class="col-lg-9">
+                        <div id="calendar">
+                            <full-calendar #calendar [options]="calendarOptions"></full-calendar>
+                        </div>
+                    </div> <!-- end col -->
+
+                </div> <!-- end row -->
+            </div> <!-- end card body-->
+        </div> <!-- end card -->
+
+        <app-calendar-event #eventModal (eventSaved)="handleEventSave($event)" (eventDeleted)="handleEventDelete($event)">
+        </app-calendar-event>
+    </div>
+    <!-- end col-12 -->
+</div> <!-- end row -->

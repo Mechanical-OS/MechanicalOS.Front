@@ -1,0 +1,52 @@
+.tool-card {
+    width: 308px;
+    height: 161px;
+    border: 1px solid black;
+    padding: 16px;
+    margin-bottom: 16px;
+    border-radius: 2px;
+    position: relative; 
+  }
+  
+  .tool-card h4 {
+    font-size: 1.5rem;
+    margin-bottom: 8px;
+  }
+  
+  .tool-card p {
+    font-size: 0.7rem;
+    margin: 4px 0;
+  }
+  
+  .tool-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: absolute;
+    bottom: 16px; 
+    width: calc(100% - 32px); 
+  }
+
+  .tool-access {
+    display: flex;
+    align-items: center; 
+    gap: 8px; 
+    font-size: 0.9rem;
+    cursor: pointer; 
+    color: #28a745; 
+    text-decoration: none;
+  }
+
+  .tool-access:hover {
+    color: #218838;
+  }
+  
+    .tool-card a {
+    display: inline-block;
+  }
+  
+  .tool-version {
+    font-size: 0.8rem;
+    text-align: right;
+  }
+  

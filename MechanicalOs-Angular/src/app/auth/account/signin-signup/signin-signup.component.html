@@ -1,0 +1,183 @@
+<app-default-layout2>
+    <ul ngbNav #nav="ngbNav" [(activeId)]="active" class="nav-tabs nav-bordered">
+        <li ngbNavItem="login">
+            <a ngbNavLink>Log In</a>
+            <ng-template ngbNavContent>
+                <p class="text-muted mb-3">Enter your email address and password to access account.</p>
+
+                <!-- form -->
+                <form name="login-form" [formGroup]="loginForm2" (ngSubmit)="onLogin()">
+                    @if(loginError){
+                    <ngb-alert type="danger" [dismissible]="false">{{ loginError }}
+                    </ngb-alert>
+                    }
+                    <div class="mb-3">
+                        <label for="emailaddress" class="form-label">Email address</label>
+                        <input class="form-control" type="email" id="emailaddress" placeholder="Enter your email" formControlName="email" [ngClass]="{'is-invalid': loginFormSubmitted && loginFormFields.email.invalid}" required>
+                        @if(loginFormSubmitted && loginFormFields.email.invalid){
+                        <div class="invalid-feedback">
+                            @if(loginFormFields.email.errors?.required){
+                            <div>
+                                Email is required.
+                            </div>
+                            }
+                            @if(loginFormFields.email.errors?.email){
+                            <div>
+                                Email must be a valid Email Address
+                            </div>
+                            }
+                        </div>}
+
+                    </div>
+                    <div class="mb-3">
+                        <a [routerLink]="['../reset-password2']" class="text-muted float-end"><small>Forgot your
+                                password?</small></a>
+                        <label for="password" class="form-label">Password</label>
+                        <input class="form-control" type="password" required="" id="password" placeholder="Enter your password" formControlName="password" required minlength="4" [ngClass]="{'is-invalid': loginFormSubmitted && loginFormFields.password.invalid}">
+                        @if(loginFormSubmitted && loginFormFields.password.invalid){
+                        <div class="invalid-feedback">
+                            @if(loginFormFields.password.errors?.required){
+                            <div>
+                                Password is required.
+                            </div>
+                            }@if(loginFormFields.password.errors?.minlength){
+                            <div>
+                                Password length must be greater than 3.
+                            </div>
+                            }
+                        </div>
+                        }
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="checkbox-signin">
+                            <label class="form-check-label" for="checkbox-signin">Remember me</label>
+                        </div>
+                    </div>
+                    <div class="text-center d-grid">
+                        <button class="btn btn-primary" type="submit">Log In </button>
+                    </div>
+                    <!-- social-->
+                    <div class="text-center mt-4">
+                        <p class="text-muted font-16">Sign in with</p>
+                        <ul class="social-list list-inline mt-3">
+                            <li class="list-inline-item">
+                                <a href="javascript: void(0);" class="social-list-item border-primary text-white"><i class="mdi mdi-facebook"></i></a>
+                            </li>
+                            <li class="list-inline-item">
+                                <a href="javascript: void(0);" class="social-list-item border-danger text-danger"><i class="mdi mdi-google"></i></a>
+                            </li>
+                            <li class="list-inline-item">
+                                <a href="javascript: void(0);" class="social-list-item border-info text-info"><i class="mdi mdi-twitter"></i></a>
+                            </li>
+                            <li class="list-inline-item">
+                                <a href="javascript: void(0);" class="social-list-item border-secondary text-secondary"><i class="mdi mdi-github"></i></a>
+                            </li>
+                        </ul>
+                    </div>
+                </form>
+                <!-- end form-->
+            </ng-template>
+        </li>
+        <li ngbNavItem="signup">
+            <a ngbNavLink>Sign Up</a>
+            <ng-template ngbNavContent>
+                <p class="text-muted mb-3">Don't have an account? Create your account, it takes less than a minute</p>
+
+                <!-- form -->
+                <form name="signup-form" [formGroup]="signUpForm2" (ngSubmit)="onSignup()">
+                    @if(signupError){
+                    <ngb-alert type="danger" [dismissible]="false">{{ signupError }}
+                    </ngb-alert>
+                    }
+                    <div class="mb-3">
+                        <label for="fullname" class="form-label">Full Name</label>
+                        <input class="form-control" type="text" id="fullname" placeholder="Enter your name" required formControlName="name" [ngClass]="{'is-invalid': signupFormSubmitted && signupFormFields.name.invalid}">
+                        @if(signupFormSubmitted && signupFormFields.name.invalid){
+                        <div class="invalid-feedback">
+                            @if(signupFormFields.name.errors?.required){
+                            <div>
+                                Name is required.
+                            </div>
+                            }
+                        </div>
+                        }
+                    </div>
+                    <div class="mb-3">
+                        <label for="emailaddress" class="form-label">Email address</label>
+                        <input class="form-control" type="email" id="emailaddress" required placeholder="Enter your email" formControlName="email" [ngClass]="{'is-invalid': signupFormSubmitted && signupFormFields.email.invalid}">
+                        @if(signupFormSubmitted && signupFormFields.email.invalid){
+                        <div class="invalid-feedback">
+                            @if(signupFormFields.email.errors?.required){
+                            <div>
+                                Email is required.
+                            </div>
+                            }
+                            @if(signupFormFields.email.errors?.email){
+                            <div>
+                                Email must be a valid Email Address
+                            </div>
+                            }
+                        </div>}
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <input class="form-control" type="password" formControlName="password" required minlength="4" [ngClass]="{'is-invalid': signupFormSubmitted && signupFormFields.password.invalid}" placeholder="Enter your password">
+                        @if(signupFormSubmitted && signupFormFields.password.invalid){
+                        <div class="invalid-feedback">
+                            @if(signupFormFields.password.errors?.required){
+                            <div>
+                                Password is required.
+                            </div>
+                            }@if(signupFormFields.password.errors?.minlength){
+                            <div>
+                                Password length must be greater than 3.
+                            </div>
+                            }
+                        </div>
+                        }
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="checkbox-signup">
+                            <label class="form-check-label" for="checkbox-signup">I accept <a href="javascript: void(0);" class="text-dark">Terms and Conditions</a></label>
+                        </div>
+                    </div>
+                    <div class="text-center d-grid">
+                        <button class="btn btn-primary waves-effect waves-light" type="submit"> Sign Up </button>
+                    </div>
+                    <!-- social-->
+                    <div class="text-center mt-4">
+                        <p class="text-muted font-16">Sign up with</p>
+                        <ul class="social-list list-inline mt-3 mb-0">
+                            <li class="list-inline-item">
+                                <a href="javascript: void(0);" class="social-list-item border-primary text-white"><i class="mdi mdi-facebook"></i></a>
+                            </li>
+                            <li class="list-inline-item">
+                                <a href="javascript: void(0);" class="social-list-item border-danger text-danger"><i class="mdi mdi-google"></i></a>
+                            </li>
+                            <li class="list-inline-item">
+                                <a href="javascript: void(0);" class="social-list-item border-info text-info"><i class="mdi mdi-twitter"></i></a>
+                            </li>
+                            <li class="list-inline-item">
+                                <a href="javascript: void(0);" class="social-list-item border-secondary text-secondary"><i class="mdi mdi-github"></i></a>
+                            </li>
+                        </ul>
+                    </div>
+                </form>
+                <!-- end form-->
+            </ng-template>
+        </li>
+    </ul>
+
+    <div [ngbNavOutlet]="nav">
+        <app-ui-preloader [display]="loading"></app-ui-preloader>
+    </div>
+
+    <footer class="footer footer-alt">
+        <p class="text-muted">2015 -
+            {{currentYear | date : 'yyyy'}} &copy; UBold theme by <a href="javascript: void(0);" class="text-muted">Coderthemes</a>
+        </p>
+    </footer>
+
+</app-default-layout2>

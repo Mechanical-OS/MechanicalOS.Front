@@ -1,0 +1,98 @@
+<app-default-layout2>
+    <!-- title-->
+    <h4 class="mt-0">Sign Up</h4>
+    <p class="text-muted mb-4">Don't have an account? Create your account, it takes less than a minute</p>
+
+    <!-- form -->
+    <form name="signup-form2" [formGroup]="signUpForm2" (ngSubmit)="onSubmit()">
+        <app-ui-preloader [display]="loading"></app-ui-preloader>
+        @if(error){
+        <ngb-alert type="danger" [dismissible]="false">{{ error }}</ngb-alert>
+        }
+        <div class="mb-3">
+            <label for="fullname" class="form-label">Full Name</label>
+            <input class="form-control" type="text" id="fullname" placeholder="Enter your name" required formControlName="name" [ngClass]="{'is-invalid': formSubmitted && formValues.name.invalid}">
+            @if(formSubmitted && formValues.name.invalid){
+            <div class="invalid-feedback">
+                @if(formValues.name.errors?.required){
+                <div>
+                    Name is required.
+                </div>
+                }
+            </div>
+            }
+        </div>
+        <div class="mb-3">
+            <label for="emailaddress" class="form-label">Email address</label>
+            <input class="form-control" type="email" id="emailaddress" required placeholder="Enter your email" formControlName="email" [ngClass]="{'is-invalid': formSubmitted && formValues.email.invalid}">
+            @if(formSubmitted && formValues.email.invalid){
+            <div class="invalid-feedback">
+                @if(formValues.email.errors?.required){
+                <div>
+                    Email is required.
+                </div>
+                }@if(formValues.email.errors?.email){
+                <div>
+                    Email must be a valid Email Address
+                </div>
+                }
+            </div>
+            }
+        </div>
+        <div class="mb-3">
+            <label for="password" class="form-label">Password</label>
+            <div class="input-group input-group-merge">
+                <input class="form-control" type="password" id="password" placeholder="Enter your password" required minlength="4" formControlName="password" [ngClass]="{'is-invalid': formSubmitted && formValues.password.invalid}">
+                @if(formSubmitted && formValues.password.invalid){
+                <div class="invalid-feedback">
+                    @if(formValues.password.errors?.required){
+                    <div>
+                        Password is required.
+                    </div>
+                    }@if(formValues.password.errors?.minlength){
+                    <div>
+                        Password length must be greater than 3.
+                    </div>
+                    }
+                </div>
+                }
+            </div>
+        </div>
+        <div class="mb-3">
+            <div class="form-check">
+                <input type="checkbox" class="form-check-input" id="checkbox-signup">
+                <label class="form-check-label" for="checkbox-signup">I accept <a href="javascript: void(0);" class="text-dark">Terms and Conditions</a></label>
+            </div>
+        </div>
+        <div class="text-center d-grid">
+            <button class="btn btn-primary waves-effect waves-light" type="submit"> Sign Up </button>
+        </div>
+        <!-- social-->
+        <div class="text-center mt-4">
+            <p class="text-muted font-16">Sign in with</p>
+            <ul class="social-list list-inline mt-3 mb-0">
+                <li class="list-inline-item">
+                    <a href="javascript: void(0);" class="social-list-item border-primary text-white"><i class="mdi mdi-facebook"></i></a>
+                </li>
+                <li class="list-inline-item">
+                    <a href="javascript: void(0);" class="social-list-item border-danger text-danger"><i class="mdi mdi-google"></i></a>
+                </li>
+                <li class="list-inline-item">
+                    <a href="javascript: void(0);" class="social-list-item border-info text-info"><i class="mdi mdi-twitter"></i></a>
+                </li>
+                <li class="list-inline-item">
+                    <a href="javascript: void(0);" class="social-list-item border-secondary text-secondary"><i class="mdi mdi-github"></i></a>
+                </li>
+            </ul>
+        </div>
+    </form>
+    <!-- end form-->
+
+    <!-- Footer-->
+    <footer class="footer footer-alt">
+        <p class="text-muted">Already have account? <a [routerLink]="['../login2']" class="text-muted ms-1"><b>Log
+                    In</b></a>
+        </p>
+    </footer>
+
+</app-default-layout2>

@@ -1,0 +1,96 @@
+@if(isSearchable){
+<form #displayForm="ngForm" class="my-2">
+    <div class="row mb-2">
+        @if(pageSizeOptions.length){
+        <div class="col-12 col-sm-6">
+            <div class="text-center text-sm-start">
+                <label class="form-label me-1">Show
+                    <select class="form-select form-select-sm  w-auto ms-1 me-1 d-inline" name="pageSize" id="event-category" required [(ngModel)]="service.pageSize" (ngModelChange)="paginate()">
+                        @for (option of pageSizeOptions; track $index) {
+                        <option [value]="option">{{option}}</option>
+                        }
+                    </select>
+                    entries</label>
+            </div>
+        </div>}<!-- end col-->
+        <div class="col-12" [class.col-sm-6]="pageSizeOptions.length">
+            <div class="d-flex align-items-center justify-content-center justify-content-sm-end">
+                <label class="d-inline">Search:
+                    <input type="text" name="searchTerm" class="form-control form-control-sm d-inline w-auto ms-1" aria-controls="advanced-table" [(ngModel)]="service.searchTerm" (ngModelChange)="searchData()">
+                </label>
+            </div>
+        </div><!-- end col-->
+    </div>
+    <!-- end row -->
+</form>
+}
+<div class="table-responsive">
+    <table id="advancd-table" class="table advanced-table table-nowrap mb-0" [class]="tableClasses" #advancedTable>
+        <thead [class]="theadClasses">
+            @if(isSortable){
+            <tr>
+                @if(hasRowSelection){
+                <th class="row_select" style="width: 20px;">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="" id="flexCheckIndeterminate" [checked]="selectAll" [indeterminate]="checkIntermediate()" (change)="selectAllRow($event)">
+                    </div>
+                </th>
+                }
+                @for (column of columns; track $index) {
+                <ng-container>
+                    @if(column.sort===false){
+                    <th class="text-capitalize" [style.width.px]="column.width">
+                        {{column.label}}</th>
+                    }@else{
+                    <th class="text-capitalize sortable pe-3 pe-lg-auto" [style.width.px]="column.width" [sortable]="column.name" (sort)="onSort($event)">
+                        {{column.label}}</th>
+                    }
+                </ng-container>
+                }
+            </tr>
+            }@else{
+            <tr>
+                @if(hasRowSelection){
+                <th class="row_select" style="width: 20px;">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="" id="flexCheckIndeterminate" [checked]="selectAll" [indeterminate]="checkIntermediate()" (change)="selectAllRow($event)">
+                    </div>
+                </th>
+                }
+                @for (column of columns; track $index) {
+                <th [style.width.px]="column.width" class="text-capitalize">
+                    {{column.label}}</th>
+                }
+            </tr>
+            }
+        </thead>
+        <tbody>
+            @for (record of tableData | slice: (service.page-1) * service.pageSize : service.page * service.pageSize;; track $index) {
+            <tr [class.selected]="isSelected[+((service.page-1) * service.pageSize)]">
+                @if(hasRowSelection){
+                <td>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" [checked]="isSelected[$index+((service.page-1) * service.pageSize)]" value="" id="flexCheckIndeterminate" (change)="selectRow($index+((service.page-1) * service.pageSize))">
+                    </div>
+                </td>
+                }
+                @for (column of columns; track $index) {
+                <td>
+                    <div [innerHtml]="callFormatter(column,record)"></div>
+                </td>
+                }
+            </tr>}
+        </tbody>
+    </table>
+
+    @if(pagination){
+    <div class="d-flex flex-wrap justify-content-center align-items-center justify-content-md-between mt-2">
+        <div>
+            Showing {{service.startIndex }} to
+            {{service.endIndex}} of {{service.totalRecords}} entries
+        </div>
+        <ngb-pagination class="pagination-rounded custom-pagination" [collectionSize]="service.totalRecords" [(page)]="service.page" [maxSize]="3" [rotate]="true" [pageSize]="service.pageSize" (pageChange)="paginate()">
+        </ngb-pagination>
+    </div>
+    }
+</div>

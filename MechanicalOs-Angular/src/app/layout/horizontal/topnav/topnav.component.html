@@ -1,0 +1,142 @@
+<div class="app-menu">
+    <div class="logo-box">
+        <!-- Brand Logo Light -->
+        <a href="index.html" class="logo-light">
+            <img src="assets/images/logo-light.png" alt="logo" class="logo-lg">
+            <img src="assets/images/logo-sm.png" alt="small logo" class="logo-sm">
+        </a>
+
+        <!-- Brand Logo Dark -->
+        <a href="index.html" class="logo-dark">
+            <img src="assets/images/logo-dark.png" alt="dark logo" class="logo-lg">
+            <img src="assets/images/logo-sm.png" alt="small logo" class="logo-sm">
+        </a>
+    </div>
+    <div class="scrollbar" id="topnav-menu-content">
+        <ul class="menu">
+            <ng-container *ngFor="let menu of menuItems;let i = index" #collapse="ngbCollapse" [(ngbCollapse)]="showMobileMenu">
+                <!-- menu item with child -->
+                @if(hasSubmenu(menu)){
+                <ng-container>
+                    <ng-container *ngTemplateOutlet="MenuItemWithChildren;context:{menu: menu,className:'menu-item',linkClassName: 'menu-link p-0'}">
+                    </ng-container>
+                </ng-container>}
+                @else{
+                <!-- menu item without any child -->
+                <ng-container>
+                    <ng-container *ngTemplateOutlet="MenuItem;context:{menu: menu, className: 'menu-item', linkClassName: 'menu-link'}">
+                    </ng-container>
+                </ng-container>
+                }
+            </ng-container>
+        </ul> <!-- end navbar-->
+    </div>
+</div> <!-- end topnav-->
+
+<!-- Reusable Templates -->
+<ng-template #MenuItemWithChildren let-menu="menu" let-className="className" let-linkClassName="linkClassName">
+    <li [class]="className" [ngClass]="{'active': activeMenuItems.includes(menu.key)}">
+        <a [class]="linkClassName" [ngClass]="{'active': activeMenuItems.includes(menu.key)}" href="javascript: void(0);" role="button" id="topnav-{{menu.key}}" aria-haspopup="true" [attr.aria-expanded]="!menu.collapsed" [attr.data-menu-key]="menu.key" (click)="toggleMenuItem(menu)">
+            @if(menu.icon){
+            <span class="menu-icon">
+                <i-feather [name]="menu.icon"></i-feather>
+            </span>
+            }
+            <span class="menu-text">
+                {{ menu.label }}
+            </span>
+            <span class="menu-arrow"></span>
+            <div class="arrow-down"></div>
+        </a>
+        @if(!hasGrandChildren(menu) && menu.children.length >=10){
+        <ng-container>
+            <div class="collapse collapse-lg" [ngClass]="{'show':!menu.collapsed}" attr.aria-labelledby="topnav-{{menu.key}}">
+                <ng-container *ngTemplateOutlet="MegaMenu;context:{menu:menu.children}">
+                </ng-container>
+            </div>
+        </ng-container>
+        }
+        @if(!hasGrandChildren(menu) && menu.children.length < 10){ <ng-container>
+            <div class="collapse" [ngClass]="{'show':!menu.collapsed}" attr.aria-labelledby="topnav-{{menu.key}}">
+                <ng-container *ngFor=" let subitem of menu.children">
+                    <ng-container *ngTemplateOutlet="SubMenu;context:{menu: subitem,linkClassName: 'menu-link'}">
+                    </ng-container>
+
+                </ng-container>
+            </div>
+            </ng-container>
+            }
+
+            @if(hasGrandChildren(menu)){
+            <div class="collapse" [ngClass]="{'show':!menu.collapsed}" attr.aria-labelledby="topnav-{{menu.key}}">
+                <ng-container *ngFor=" let subitem of menu.children">
+                    <ng-container *ngTemplateOutlet="SubMenu;context:{menu: subitem,linkClassName: 'menu-link'}">
+                    </ng-container>
+                </ng-container>
+            </div>
+            }
+    </li>
+</ng-template>
+
+<ng-template #MegaMenu let-menu="menu">
+    <div class="row">
+        @for(menuItem of menu;track $index){
+        <div class="col-lg-4">
+            <a [routerLink]="menuItem.link" class="menu-link" [ngClass]="{'active': activeMenuItems.includes(menuItem.key)}" [attr.data-menu-key]="menuItem.key">
+                <span class="menu-text">
+                    {{ menuItem.label }}
+                </span>
+            </a>
+        </div>}
+    </div>
+</ng-template>
+
+<ng-template #SubMenu let-menu="menu" let-linkClassName="linkClassName">
+    @if(hasSubmenu(menu)){
+    <ul class="sub-menu">
+        <li class="menu-item">
+            <a [class]="linkClassName" [ngClass]="{'active': activeMenuItems.includes(menu.key)}" href="javascript: void(0);" id="topnav-{{menu.key}}" [attr.data-menu-key]="menu.key" (click)="toggleMenuItem(menu)">
+                @if(menu.icon){
+                <span class="menu-icon">
+                    <i-feather [name]="menu.icon"></i-feather>
+                </span>
+                }
+                <span class="menu-text">{{ menu.label }}</span>
+                <span class="menu-arrow"></span>
+            </a>
+
+            <div class="collapse" [ngClass]="{'show':!menu.collapsed}" attr.aria-labelledby="topnav-{{menu.key}}">
+                <ng-container *ngFor="let subitem of menu.children">
+                    <ng-container *ngTemplateOutlet="SubMenu;context:{menu: subitem,linkClassName: 'menu-link'}">
+                    </ng-container>
+                </ng-container>
+            </div>
+        </li>
+    </ul>
+    }@else{
+    <li class="menu-item py-0">
+        <a [routerLink]="menu.link" class="menu-link" [ngClass]="{'active': activeMenuItems.includes(menu.key)}" [attr.data-menu-key]="menu.key">
+            @if(menu.icon){
+            <span class="menu-icon">
+                <i-feather [name]="menu.icon"></i-feather>
+            </span>
+            }
+            <span class="menu-text">{{ menu.label }}</span>
+        </a>
+    </li>
+    }
+</ng-template>
+
+<ng-template #MenuItem let-menu="menu" let-className="className" let-linkClassName="linkClassName">
+    <li [class]="className" [ngClass]="{'active': activeMenuItems.includes(menu.key)}">
+        <a [routerLink]="menu.link" [class]="linkClassName" [ngClass]="{'active': activeMenuItems.includes(menu.key)}" [attr.data-menu-key]="menu.key">
+            @if(menu.icon){
+            <span class="menu-icon">
+                <i-feather [name]="menu.icon"></i-feather>
+            </span>
+            }
+            <span class="menu-text">{{ menu.label }}</span>
+            <span class="menu-arrow"></span>
+        </a>
+    </li>
+</ng-template>

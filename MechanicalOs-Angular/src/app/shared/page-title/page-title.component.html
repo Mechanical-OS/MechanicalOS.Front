@@ -1,0 +1,25 @@
+<!-- start page title -->
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box">
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="javascript: void(0);">Mechanical OS</a>
+                    </li>
+                    @for (item of breadcrumbItems; track $index) {
+                    <ng-container>
+
+                        @if(item.active){
+                        <li class="breadcrumb-item active"><a routerLink="[item.path]">{{item.label}}</a></li>
+                        }@else{
+                        <li class="breadcrumb-item"><a href="javascript: void(0);" routerLink="[item.path]">{{item.label}}</a>
+                        </li>
+                        }
+                    </ng-container>}
+                </ol>
+            </div>
+            <h4 class="page-title">{{title}}</h4>
+        </div>
+    </div>
+</div>
+<!-- end page title -->

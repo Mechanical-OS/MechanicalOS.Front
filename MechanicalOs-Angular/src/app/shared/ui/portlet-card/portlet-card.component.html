@@ -1,0 +1,22 @@
+@if(!isClosed){
+<div class="card" [class]="cardClasses">
+    <div class="card-body">
+        <div class="card-widgets">
+            <a href="javascript:void(0);" (click)="refreshContent()" class="me-1"><i class="mdi mdi-refresh"></i></a>
+            <a href="javascript:void(0)" (click)="collapse.toggle()" class="me-1" [attr.aria-expanded]="!isCollapsed" role="button" aria-expanded="false"><i [class]="isCollapsed ? 'mdi mdi-plus' : 'mdi mdi-minus'"></i></a>
+            <a href="javascript:void(0)" (click)="closeCard()"><i class="mdi mdi-close"></i></a>
+        </div>
+        <h4 class="header-title mb-0" [class]="cardTitleClass">{{cardTitle}}</h4>
+
+        <div id="cardCollpase" class="collapse" #collapse="ngbCollapse" [(ngbCollapse)]="isCollapsed">
+            <div class="pt-3">
+                <ng-content></ng-content>
+            </div>
+        </div> <!-- collapsed end -->
+    </div> <!-- end card-body -->
+    @if(refreshRequsted){
+    <div class="card-disabled">
+        <div class="card-portlets-loader"></div>
+    </div>
+    }
+</div> }<!-- end card-->

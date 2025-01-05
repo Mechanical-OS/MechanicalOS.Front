@@ -30,16 +30,23 @@ export class BaseService<T> {
     }
 
     // GET: Buscar com filtro
-    findByFilter(filter: Record<string, any>): Observable<Result<T[]>> {
-        let params = new HttpParams();
-        Object.keys(filter).forEach((key) => {
-            if (filter[key] !== null && filter[key] !== undefined) {
-                params = params.set(key, filter[key]);
-            }
-        });
+    // findByFilter(filter: Record<string, any>): Observable<Result<T[]>> {
+    //     let params = new HttpParams();
+    //     Object.keys(filter).forEach((key) => {
+    //         if (filter[key] !== null && filter[key] !== undefined) {
+    //             params = params.set(key, filter[key]);
+    //         }
+    //     });
 
-        return this.http.get<Result<T[]>>(`${this.baseUrl}`, { params });
-    }
+    //     return this.http.get<Result<T[]>>(`${this.baseUrl}`, { params });
+    // }
+
+    findByFilter(filter: Record<string, any>): Observable<Result<T[]>> {
+        const term = filter.term || '';
+        const url = `${this.baseUrl}/Search/${term}`;
+        return this.http.get<Result<T[]>>(url);
+      }
+      
 
     // POST: Salvar ou atualizar um registro
     save(entity: T): Observable<Result<T>> {

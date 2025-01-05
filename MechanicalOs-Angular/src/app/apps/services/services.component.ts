@@ -4,8 +4,13 @@ import { BreadcrumbItem } from 'src/app/shared/page-title/page-title.model';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DomSanitizer } from '@angular/platform-browser';
 import { Column } from 'src/app/shared/advanced-table/advanced-table.component';
-import { Service } from './shared/service.model';
-import { SERVICELIST } from './shared/data';
+import { ServiceModel } from './models/service.model';
+import { SERVICELIST } from './models/data';
+import { ServiceService } from './service.services';
+import { GetAllRequest } from 'src/app/Http/models/Input/get-all-request.model';
+import { firstValueFrom } from 'rxjs';
+import Swal from 'sweetalert2';
+import { StatusEnum } from '../Shared/Enum/EnumStatusCard';
 
 @Component({
   selector: 'app-services',
@@ -14,7 +19,7 @@ import { SERVICELIST } from './shared/data';
 })
 export class ServicesComponent {
   pageTitle: BreadcrumbItem[] = [];
-  serviceList: Service[] = [];
+  serviceList: ServiceModel[] = [];
   selectAll: boolean = false;
   ServiceStatusGroup: string = "All";
   loading: boolean = false;
@@ -25,15 +30,16 @@ export class ServicesComponent {
   constructor(
     private router: Router,
     private route: ActivatedRoute,
-    private sanitizer: DomSanitizer
-  ) {}
+    private sanitizer: DomSanitizer,
+    private service: ServiceService
+  ) { }
   ngOnInit(): void {
     this.pageTitle = [
       { label: "Service", path: "/" },
       { label: "Service", path: "/", active: true },
     ];
 
-    // get order list
+    // get service list
     this._fetchData();
 
     // initialize advance table
@@ -41,13 +47,45 @@ export class ServicesComponent {
   }
 
   /**
-   *  fetches order list
+   *  fetches services list
    */
-  _fetchData(): void {
-    this.serviceList = SERVICELIST;
+
+  async _fetchData(): Promise<void> {
+    const request: GetAllRequest = {
+      pageSize: 25,
+      pageIndex: 1,
+      sort: '',
+      direction: ''
+    };
+
+    try {
+      // Converte o Observable em uma Promise usando firstValueFrom
+      const result = await firstValueFrom(this.service.getAll(request));
+      if (result.statusCode === 200) {
+        this.serviceList = result.content.resultList;
+      } else {
+        // Exibe o erro com SweetAlert
+        Swal.fire({
+          icon: 'error',
+          title: 'Erro na Requisição',
+          text: result.message || 'Algo deu errado ao buscar os dados.',
+          confirmButtonText: 'Entendi',
+        });
+      }
+    } catch (error) {
+      console.error('Erro na API:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Erro na API',
+        text: 'Não foi possível carregar os dados. Tente novamente mais tarde.',
+        confirmButtonText: 'Entendi',
+      });
+    }
   }
 
-  ngAfterViewInit(): void {}
+
+
+  ngAfterViewInit(): void { }
 
   // initialize advance table columns
   initAdvancedTableData(): void {
@@ -60,12 +98,16 @@ export class ServicesComponent {
       {
         name: "description",
         label: "DESCRIÇÃO",
-        formatter: (service: Service) => service.description,
+        formatter: (service: ServiceModel) => service.description,
       },
       {
         name: "price",
         label: "PREÇO",
-        formatter: (service: Service) => service.price
+        formatter: (service: ServiceModel) =>
+          new Intl.NumberFormat('pt-BR', {
+            style: 'currency',
+            currency: 'BRL',
+          }).format(service.price),
       },
       {
         name: "status",
@@ -97,44 +139,35 @@ export class ServicesComponent {
   }
 
   // formats order ID cell
-  serviceIDFormatter(service: Service): any {
+  serviceIDFormatter(service: ServiceModel): any {
     return this.sanitizer.bypassSecurityTrustHtml(
       `<a href="javascript:void(0)" class="order text-body fw-bold" id="${service.code}">#${service.code}</a> `
     );
   }
 
-  //formats image cell
-  // imageFormatter(service: Service): any {
-  //   let products: string = ``;
-  //   for (let i = 0; i < service.images.length; i++) {
-  //     products += `<a href="javascript:void(0)"><img src="${service.images[i]}" alt="product-img" height="32" /></a>`;
-  //   }
-  //   return this.sanitizer.bypassSecurityTrustHtml(products);
-  // }
-
-  // formats payment status cell
-  serviceStatusFormatter(service: Service): any {
-    if (service.status == "available") {
+  // formats status cell
+  serviceStatusFormatter(service: ServiceModel): any {
+    if (service.status == StatusEnum.Active) {
       return this.sanitizer.bypassSecurityTrustHtml(
         `<h5><span class="badge bg-soft-success text-success"><i class="mdi mdi-bitcoin"></i> Disponível</span></h5>`
       );
-    } else if (service.status == "unavailable") {
+    } else if (service.status == StatusEnum.Inactive) {
       return this.sanitizer.bypassSecurityTrustHtml(
         `<h5><span class="badge bg-soft-warning text-warning"><i class="mdi mdi-timer-sand"></i> Indisponível</span></h5>`
       );
-    } else if (service.status == "pending") {
+    } else if (service.status == StatusEnum.Pending) {
       return this.sanitizer.bypassSecurityTrustHtml(
         ` <h5><span class="badge bg-soft-danger text-danger"><i class="mdi mdi-cancel"></i> Pendente</span></h5>`
       );
     } else {
       return this.sanitizer.bypassSecurityTrustHtml(
-        `<h5><span class="badge bg-soft-info text-info"><i class="mdi mdi-cash"></i> ---</span></h5>`
+        `<h5><span class="badge bg-soft-info text-info"><i class=""></i> ---</span></h5>`
       );
     }
   }
 
   // action cell formatter
-  serviceActionFormatter(order: Service): any {
+  serviceActionFormatter(order: ServiceModel): any {
     return this.sanitizer.bypassSecurityTrustHtml(
       `<a href="javascript:void(0);" class="action-icon"> <i class="mdi mdi-eye"></i></a>
            <a href="javascript:void(0);" class="action-icon"> <i class="mdi mdi-square-edit-outline"></i></a>
@@ -147,12 +180,12 @@ export class ServicesComponent {
    * @param row Table row
    * @param term Search the value
    */
-  matches(row: Service, term: string) {
+  matches(row: ServiceModel, term: string) {
     return (
       row.id?.toString().includes(term) ||
       row.code?.toLowerCase().includes(term) ||
-      row.description?.toLowerCase().includes(term) ||
-      row.status?.toLowerCase().includes(term)
+      row.description?.toLowerCase().includes(term)
+
     );
   }
 
@@ -160,17 +193,39 @@ export class ServicesComponent {
    * Search Method
    */
   searchData(searchTerm: string): void {
-    if (searchTerm === "") {
+
+    // Se o termo estiver vazio, carrega os dados iniciais
+    if (searchTerm === '') {
       this._fetchData();
-    } else {
-      let updatedData = SERVICELIST;
-      //  filter
-      updatedData = updatedData.filter((service) =>
-        this.matches(service, searchTerm)
-      );
-      this.serviceList = updatedData;
+      return;
     }
+
+    // Requisição à API usando o método findByFilter do BaseService
+    this.service.findByFilter({ term: searchTerm }).subscribe({
+      next: (result) => {
+        if (result.statusCode === 200) {
+          this.serviceList = result.content;
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Erro na Pesquisa',
+            text: result.message || 'Não foi possível realizar a pesquisa.',
+            confirmButtonText: 'Entendi',
+          });
+        }
+      },
+      error: (error) => {
+        console.error('Erro na API:', error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Erro na API',
+          text: 'Houve um problema ao buscar os dados. Tente novamente mais tarde.',
+          confirmButtonText: 'Entendi',
+        });
+      },
+    });
   }
+
 
   /**
    * change service status group
@@ -184,8 +239,8 @@ export class ServicesComponent {
       ServiceStatusGroup === "All"
         ? SERVICELIST
         : [...SERVICELIST].filter((o) =>
-            o.status?.includes(ServiceStatusGroup)
-          );
+          o.status.toString()?.includes(ServiceStatusGroup)
+        );
     this.serviceList = updatedData;
     setTimeout(() => {
       this.loading = false;

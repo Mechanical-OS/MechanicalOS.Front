@@ -1,13 +1,13 @@
-import { Service } from "./service.model";
+import { ServiceModel } from "./service.model";
 
-const SERVICELIST: Service[] = [
+const SERVICELIST: ServiceModel[] = [
     {
         id: 1,
         code: 'ML000001',
         shortDescription: 'Troca de óleo do motor',
         description: 'Troca de óleo do motor',
         price: 180.00,
-        status:'Available',
+        status: 1,
     },
     {
         id: 2,
@@ -15,7 +15,7 @@ const SERVICELIST: Service[] = [
         shortDescription: 'Troca de filtro de ar condicionado',
         description: 'Troca de filtro de ar condicionado',
         price: 70.00,
-        status:'Available',
+        status: 1,
     },
     {
         id: 3,
@@ -23,7 +23,7 @@ const SERVICELIST: Service[] = [
         shortDescription: 'Vitrificação do parabrisa dianteiro',
         description: 'Vitrificação do parabrisa dianteiro',
         price: 700.00,
-        status:'Available',
+        status: 1,
     },
 ]
-export {SERVICELIST}
+export { SERVICELIST }

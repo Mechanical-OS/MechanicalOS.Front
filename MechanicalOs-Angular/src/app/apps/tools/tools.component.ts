@@ -14,7 +14,7 @@ export class ToolsComponent implements OnInit {
   pageTitle: BreadcrumbItem[] = [];
   tools: ToolsModel[] = [];
 
-  constructor(private service: ToolsService) {}
+  constructor(private service: ToolsService) { }
 
   ngOnInit(): void {
     this.pageTitle = [{ label: "Home", path: "/", active: true }];
@@ -22,19 +22,12 @@ export class ToolsComponent implements OnInit {
     //this.loadToolsCard();
   }
 
-  loadToolsCard(): void{
-    const request: GetAllRequest = {
-      pageSize: 10,
-      pageIndex: 1,
-      sort: '',
-      direction: ''
-    };
-    
-    this.service.getModules().subscribe((result) =>{
-      if(result.statusCode == 200){
+  loadToolsCard(): void {
+    this.service.getModules().subscribe((result) => {
+      if (result.statusCode == 200) {
         console.log(result);
         this.tools = result.content.resultList;
-      }else{
+      } else {
         console.error(result.message);
       }
     })

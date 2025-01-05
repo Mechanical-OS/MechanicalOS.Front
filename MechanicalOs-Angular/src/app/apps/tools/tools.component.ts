@@ -18,7 +18,7 @@ export class ToolsComponent implements OnInit {
 
   ngOnInit(): void {
     this.pageTitle = [{ label: "Home", path: "/", active: true }];
-    this.tools = TOOLS;
+    //this.tools = TOOLS;
     //this.loadToolsCard();
   }
 
@@ -26,7 +26,8 @@ export class ToolsComponent implements OnInit {
     this.service.getModules().subscribe((result) => {
       if (result.statusCode == 200) {
         console.log(result);
-        this.tools = result.content.resultList;
+        this.tools = result.content;
+        console.log(this.tools);
       } else {
         console.error(result.message);
       }

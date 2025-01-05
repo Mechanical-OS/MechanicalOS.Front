@@ -16,7 +16,7 @@ export class BaseService<T> {
 
     //Buscar todos os modulos - Futuramente vamos tratar as permissoes
     getModules(): Observable<GetAllResponse<T>> {
-        return this.http.get<GetAllResponse<T>>(`${this.baseUrl}/GetAll`);
+        return this.http.get<GetAllResponse<T>>(`${this.baseUrl}/GetModules`);
     }
 
     // POST: Buscar todos os registros com paginação
@@ -28,18 +28,6 @@ export class BaseService<T> {
     findById(id: number | string): Observable<Result<T>> {
         return this.http.get<Result<T>>(`${this.baseUrl}/${id}`);
     }
-
-    // GET: Buscar com filtro
-    // findByFilter(filter: Record<string, any>): Observable<Result<T[]>> {
-    //     let params = new HttpParams();
-    //     Object.keys(filter).forEach((key) => {
-    //         if (filter[key] !== null && filter[key] !== undefined) {
-    //             params = params.set(key, filter[key]);
-    //         }
-    //     });
-
-    //     return this.http.get<Result<T[]>>(`${this.baseUrl}`, { params });
-    // }
 
     findByFilter(filter: Record<string, any>): Observable<Result<T[]>> {
         const term = filter.term || '';

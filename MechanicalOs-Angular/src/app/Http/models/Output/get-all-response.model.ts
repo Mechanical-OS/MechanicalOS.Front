@@ -6,7 +6,7 @@ export interface PaginatedResult<T> {
   }
   
   export interface GetAllResponse<T> {
-    content: PaginatedResult<T>;
+    content: PaginatedResult<T> | any;
     message: string;
     statusCode: number;
   }

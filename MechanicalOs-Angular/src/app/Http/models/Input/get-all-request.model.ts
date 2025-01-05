@@ -1,7 +1,7 @@
 export interface GetAllRequest {
     pageSize: number;
     pageIndex: number;
-    sort?: string;
-    direction?: string;
+    sort?: string; //ordenar por coluna
+    direction?: string; // asc or desc
   }
   

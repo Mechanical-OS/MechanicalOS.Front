@@ -21,6 +21,7 @@ import { LayoutModule } from './layout/layout.module';
         Title,
         { provide: HTTP_INTERCEPTORS, useClass: JwtInterceptor, multi: true },
         { provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor, multi: true },
+        { provide: 'BASE_API_URL', useValue: 'https://api.mechanical-os.com.br/api/Service' },
         // provider used to create fake backend
         FakeBackendProvider,
         provideHttpClient(withInterceptorsFromDi()),

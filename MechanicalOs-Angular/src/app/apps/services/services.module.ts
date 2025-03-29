@@ -6,11 +6,13 @@ import { PageTitleModule } from 'src/app/shared/page-title/page-title.module';
 import { WidgetModule } from 'src/app/shared/widget/widget.module';
 import { ServicesRoutingModule } from './services-routing.module';
 import { ServicesComponent } from './services.component';
+import { CurrencyBrDirective } from 'src/app/shared/directives/currency-br.directive';
 
 
 @NgModule({
   declarations: [
-    ServicesComponent
+    ServicesComponent,
+    CurrencyBrDirective
   ],
   imports: [
     CommonModule,

@@ -13,6 +13,8 @@ import Swal from 'sweetalert2';
 import { StatusEnum } from '../Shared/Enum/EnumStatusCard';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { FormValidationService } from 'src/app/shared/services/form-validation.service';
+import { NotificationService } from 'src/app/shared/services/notification.service';
 
 @Component({
   selector: 'app-services',
@@ -38,7 +40,9 @@ export class ServicesComponent {
     private route: ActivatedRoute,
     private sanitizer: DomSanitizer,
     private service: ServiceService,
-    private modalService: NgbModal
+    private modalService: NgbModal,
+    public formValidationMessage: FormValidationService,
+    private notificationService: NotificationService
   ) { }
   ngOnInit(): void {
     this.pageTitle = [
@@ -47,10 +51,11 @@ export class ServicesComponent {
     ];
 
     this.serviceForm = this.fb.group({
-      code: ['', Validators.required],
+      name:['', Validators.required],
+      code: ['', [Validators.required, Validators.minLength(3)]],
       shortDescription: ['', [Validators.required, Validators.maxLength(100)]],
       description: [''],
-      price: ['', [Validators.required, Validators.pattern(/^\d+(\.\d{1,2})?$/)]],
+      price: ['', [Validators.required]],
     });
 
     // get service list
@@ -259,20 +264,31 @@ export class ServicesComponent {
     }, 400);
   }
 
+  //#region SERVICES HTTP
+
+  //#endregion
+
   /**
    * MODAL CADASTRO DE SERVIÇO
    */
   openModal(): void {
     this.serviceForm.reset();
-    this.modalService.open(this.serviceModal, { centered: true, size:"xl" });
+    this.modalService.open(this.serviceModal, { centered: true, size: "xl", backdrop: 'static' });
   }
 
   save(modalRef: any): void {
     if (this.serviceForm.valid) {
       const data = this.serviceForm.value;
-      console.log('Serviço salvo:', data);
-      // Aqui pode chamar seu service para salvar na API
-      modalRef.close();
+      console.log(data);
+      this.service.saveNewService(data).subscribe((ret: any)=>{
+        console.log(ret);
+        if(ret.statusCode === 200){
+          this.notificationService.showSuccess(ret);
+          this.serviceList.push(ret.content);
+          modalRef.close();
+        }
+      });
+     
     }
   }
 }

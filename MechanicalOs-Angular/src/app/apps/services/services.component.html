@@ -35,41 +35,62 @@
 <!--MODAL CADASTRO-->
 <ng-template #serviceModal let-modal>
     <div class="modal-header">
-      <h5 class="modal-title">Cadastrar / Editar Serviço</h5>
-      <button type="button" class="btn-close" (click)="modal.dismiss()"></button>
+        <h5 class="modal-title">Cadastrar / Editar Serviço</h5>
+        <button type="button" class="btn-close" (click)="modal.dismiss()"></button>
     </div>
-  
+
     <form [formGroup]="serviceForm" (ngSubmit)="save(modal)">
-      <div class="modal-body">
-        <div class="row mb-3">
-          <div class="col-md-4">
-            <label class="form-label">Código</label>
-            <input type="text" class="form-control" formControlName="code" />
-          </div>
-          <div class="col-md-8">
-            <label class="form-label">Descrição Curta</label>
-            <input type="text" class="form-control" formControlName="shortDescription" />
-          </div>
+        <div class="modal-body">
+            <div class="row mb-3">
+                <div class="col-md-3">
+                    <label class="form-label">Título</label>
+                    <input type="text" class="form-control" formControlName="name"
+                        [ngClass]="{'is-invalid': (serviceForm.get('name')?.invalid && serviceForm.get('name')?.touched)}" />
+
+                    <div class="invalid-feedback">
+                        {{formValidationMessage.getErrorMessage(serviceForm.get('name'), 'Título')}}
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Código</label>
+                    <input type="text" class="form-control" formControlName="code"
+                        [ngClass]="{'is-invalid': (serviceForm.get('code')?.invalid && serviceForm.get('code')?.touched)}" />
+
+                    <div class="invalid-feedback">
+                        {{formValidationMessage.getErrorMessage(serviceForm.get('code'), 'Código')}}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Descrição Curta</label>
+                    <input type="text" class="form-control" formControlName="shortDescription"
+                    [ngClass]="{'is-invalid': (serviceForm.get('shortDescription')?.invalid && serviceForm.get('shortDescription')?.touched)}" />
+                    <div class="invalid-feedback">
+                        {{formValidationMessage.getErrorMessage(serviceForm.get('shortDescription'), 'Descrição Curta')}}
+                    </div>
+                </div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-12">
+                    <label class="form-label">Descrição</label>
+                    <textarea rows="4" class="form-control" formControlName="description"></textarea>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label class="form-label">Preço</label>
+                    <input placeholder="R$" type="text" class="form-control" formControlName="price" 
+                    appCurrencyBr
+                    [ngClass]="{'is-invalid': (serviceForm.get('price')?.invalid && serviceForm.get('price')?.touched)}" />
+                    <div class="invalid-feedback">
+                        {{formValidationMessage.getErrorMessage(serviceForm.get('price'), 'Preço')}}
+                    </div>
+                </div>
+            </div>
         </div>
-  
-        <div class="row mb-3">
-          <div class="col-md-12">
-            <label class="form-label">Descrição</label>
-            <textarea rows="4" class="form-control" formControlName="description"></textarea>
-          </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" type="button" (click)="modal.dismiss()">Cancelar</button>
+            <button class="btn btn-primary" type="submit" [disabled]="serviceForm.invalid">Salvar</button>
         </div>
-  
-        <div class="row mb-3">
-          <div class="col-md-4">
-            <label class="form-label">Preço</label>
-            <input type="text" class="form-control" formControlName="price" />
-          </div>
-        </div>
-      </div>
-  
-      <div class="modal-footer">
-        <button class="btn btn-secondary" type="button" (click)="modal.dismiss()">Cancelar</button>
-        <button class="btn btn-primary" type="submit" [disabled]="serviceForm.invalid">Salvar</button>
-      </div>
     </form>
-  </ng-template>
+</ng-template>

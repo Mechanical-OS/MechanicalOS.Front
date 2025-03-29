@@ -1,4 +1,4 @@
-import { Component, ViewChild } from '@angular/core';
+import { Component, TemplateRef, ViewChild } from '@angular/core';
 import { PageTitleModule } from "../../shared/page-title/page-title.module";
 import { BreadcrumbItem } from 'src/app/shared/page-title/page-title.model';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -11,6 +11,8 @@ import { GetAllRequest } from 'src/app/Http/models/Input/get-all-request.model';
 import { firstValueFrom } from 'rxjs';
 import Swal from 'sweetalert2';
 import { StatusEnum } from '../Shared/Enum/EnumStatusCard';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
   selector: 'app-services',
@@ -25,19 +27,31 @@ export class ServicesComponent {
   loading: boolean = false;
   columns: Column[] = [];
 
+  @ViewChild('serviceModal') serviceModal!: TemplateRef<any>;
+  serviceForm!: FormGroup;
+
   @ViewChild("advancedTable") advancedTable: any;
 
   constructor(
+    private fb: FormBuilder,
     private router: Router,
     private route: ActivatedRoute,
     private sanitizer: DomSanitizer,
-    private service: ServiceService
+    private service: ServiceService,
+    private modalService: NgbModal
   ) { }
   ngOnInit(): void {
     this.pageTitle = [
       { label: "Service", path: "/" },
       { label: "Service", path: "/", active: true },
     ];
+
+    this.serviceForm = this.fb.group({
+      code: ['', Validators.required],
+      shortDescription: ['', [Validators.required, Validators.maxLength(100)]],
+      description: [''],
+      price: ['', [Validators.required, Validators.pattern(/^\d+(\.\d{1,2})?$/)]],
+    });
 
     // get service list
     this._fetchData();
@@ -82,8 +96,6 @@ export class ServicesComponent {
       });
     }
   }
-
-
 
   ngAfterViewInit(): void { }
 
@@ -245,5 +257,22 @@ export class ServicesComponent {
     setTimeout(() => {
       this.loading = false;
     }, 400);
+  }
+
+  /**
+   * MODAL CADASTRO DE SERVIÇO
+   */
+  openModal(): void {
+    this.serviceForm.reset();
+    this.modalService.open(this.serviceModal, { centered: true, size:"xl" });
+  }
+
+  save(modalRef: any): void {
+    if (this.serviceForm.valid) {
+      const data = this.serviceForm.value;
+      console.log('Serviço salvo:', data);
+      // Aqui pode chamar seu service para salvar na API
+      modalRef.close();
+    }
   }
 }

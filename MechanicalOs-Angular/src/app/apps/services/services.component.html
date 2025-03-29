@@ -11,25 +11,12 @@
                 <div class="row mb-2">
                     <div class="col-lg-4">
                         <div class="text-lg">
-                            <button type="button" class="btn btn-danger waves-effect waves-light mb-2 me-2"><i
-                                    class="mdi mdi-plus me-1"></i>CADASTRAR SERVIÇO</button>
+                            <button type="button" class="btn btn-danger waves-effect waves-light mb-2 me-2"
+                                (click)="openModal()"><i class="mdi mdi-plus me-1"></i>CADASTRAR
+                                SERVIÇO</button>
                             <button type="button" class="btn btn-light waves-effect mb-2">Importar</button>
                         </div>
                     </div><!-- end col-->
-                    <!-- <div class="col-lg-8">
-                        <form class="d-flex flex-wrap align-items-center">
-                            <label for="status-select" class="me-2">Status</label>
-                            <div class="me-sm-3">
-                                <select class="form-select form-select my-1 my-lg-0" id="status-select" name="status"
-                                    [(ngModel)]="ServiceStatusGroup" (change)="changeServiceStatusGroup(ServiceStatusGroup)">
-                                    <option value="Available">Disponível</option>
-                                    <option value="Unavailable">Indisponível</option>
-                                    <option value="Pending">Pendente</option>
-                                </select>
-                            </div>
-                        </form>
-                    </div> -->
-                    
                 </div>
                 <app-ui-preloader [display]="loading"></app-ui-preloader>
                 <!-- order table -->
@@ -44,3 +31,45 @@
     </div> <!-- end col -->
 </div>
 <!-- end row -->
+
+<!--MODAL CADASTRO-->
+<ng-template #serviceModal let-modal>
+    <div class="modal-header">
+      <h5 class="modal-title">Cadastrar / Editar Serviço</h5>
+      <button type="button" class="btn-close" (click)="modal.dismiss()"></button>
+    </div>
+  
+    <form [formGroup]="serviceForm" (ngSubmit)="save(modal)">
+      <div class="modal-body">
+        <div class="row mb-3">
+          <div class="col-md-4">
+            <label class="form-label">Código</label>
+            <input type="text" class="form-control" formControlName="code" />
+          </div>
+          <div class="col-md-8">
+            <label class="form-label">Descrição Curta</label>
+            <input type="text" class="form-control" formControlName="shortDescription" />
+          </div>
+        </div>
+  
+        <div class="row mb-3">
+          <div class="col-md-12">
+            <label class="form-label">Descrição</label>
+            <textarea rows="4" class="form-control" formControlName="description"></textarea>
+          </div>
+        </div>
+  
+        <div class="row mb-3">
+          <div class="col-md-4">
+            <label class="form-label">Preço</label>
+            <input type="text" class="form-control" formControlName="price" />
+          </div>
+        </div>
+      </div>
+  
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" (click)="modal.dismiss()">Cancelar</button>
+        <button class="btn btn-primary" type="submit" [disabled]="serviceForm.invalid">Salvar</button>
+      </div>
+    </form>
+  </ng-template>

@@ -13,8 +13,8 @@ import { NotificationService } from "src/app/shared/services/notification.servic
 })
 
 export class ServiceService extends BaseService<ServiceModel> {
-    constructor(http: HttpClient, private notificationService: NotificationService) {
-        super(http, SERVICES_URL);
+    constructor(http: HttpClient, notificationService: NotificationService) {
+        super(http, notificationService, SERVICES_URL);
     }
 
     saveNewService(data: ServiceModel): Observable<OperationResult<any>> {

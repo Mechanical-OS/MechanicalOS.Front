@@ -308,10 +308,14 @@ export class ServicesComponent implements OnInit {
       cancelButtonText: 'NÃO',
     }).then((result) => {
       if (result.isConfirmed) {
-        this.service.delete(id).subscribe((ret: Result<string>)=>{
-          if(ret.statusCode === 200){
+        this.service.delete(id).subscribe((ret: Result<string>) => {
+          if (ret.statusCode === 200) {
             this.notificationService.showMessage(ret.message, 'Sucesso');
-          }else{
+        
+            this.serviceList = this.serviceList.filter(item => item.id != id);
+            console.log(this.serviceList);
+            
+          } else {
             this.notificationService.showAlert(ret);
           }
         });

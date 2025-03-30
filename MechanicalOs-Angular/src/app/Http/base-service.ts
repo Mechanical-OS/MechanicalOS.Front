@@ -1,9 +1,10 @@
-import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Inject, Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { catchError, finalize, map, Observable, throwError } from 'rxjs';
 import { OperationResult, Result } from './models/operation-result.model';
 import { GetAllRequest } from './models/Input/get-all-request.model';
 import { GetAllResponse } from './models/Output/get-all-response.model';
+import { NotificationService } from '../shared/services/notification.service';
 
 @Injectable({
     providedIn: 'root'
@@ -11,6 +12,7 @@ import { GetAllResponse } from './models/Output/get-all-response.model';
 export class BaseService<T> {
     constructor(
         protected http: HttpClient,
+        protected notificationService: NotificationService,
         @Inject(String) private baseUrl: string
     ) { }
 
@@ -33,8 +35,8 @@ export class BaseService<T> {
         const term = filter.term || '';
         const url = `${this.baseUrl}/Search/${term}`;
         return this.http.get<Result<T[]>>(url);
-      }
-      
+    }
+
 
     // POST: Salvar ou atualizar um registro
     save(entity: T): Observable<Result<T>> {
@@ -47,6 +49,20 @@ export class BaseService<T> {
 
     // DELETE: Excluir um registro por ID
     delete(id: number | string): Observable<Result<string>> {
-        return this.http.delete<Result<string>>(`${this.baseUrl}/${id}`);
+        this.notificationService.showLoading();
+        return this.http.delete<Result<string>>(`${this.baseUrl}/${id}`).pipe(
+            map(response => {
+                if (response.statusCode != 200) {
+                    this.notificationService.showError(response);
+                    throw new Error(response.message || 'Erro desconhecido');
+                }
+                return response;
+            }),
+            catchError((error: HttpErrorResponse) => {
+                this.notificationService.showError(error);
+                return throwError(() => error);
+            }),
+            finalize(() => this.notificationService.hideLoading())
+        );
     }
 }

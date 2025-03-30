@@ -46,6 +46,11 @@ const routes: Routes = [
     component: PublicLayoutComponent,
     loadChildren: () => import('./pages/extra-pages/error500/error500.module').then(m => m.Error500Module)
   },
+  {
+    path: '**',
+    component: PublicLayoutComponent,
+    loadChildren: () => import('./pages/extra-pages/error404/error404.module').then(m => m.Error404Module)
+  },
   
 
 ];

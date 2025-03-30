@@ -41,8 +41,12 @@ export class BaseService<T> {
         return this.http.post<Result<T>>(`${this.baseUrl}`, entity);
     }
 
+    update(entity: T): Observable<Result<T>> {
+        return this.http.put<Result<T>>(`${this.baseUrl}`, entity);
+    }
+
     // DELETE: Excluir um registro por ID
-    delete(id: number | string): Observable<OperationResult<string>> {
-        return this.http.delete<OperationResult<string>>(`${this.baseUrl}/${id}`);
+    delete(id: number | string): Observable<Result<string>> {
+        return this.http.delete<Result<string>>(`${this.baseUrl}/${id}`);
     }
 }

@@ -1,4 +1,4 @@
-import { Component, TemplateRef, ViewChild } from '@angular/core';
+import { Component, OnInit, TemplateRef, ViewChild } from '@angular/core';
 import { PageTitleModule } from "../../shared/page-title/page-title.module";
 import { BreadcrumbItem } from 'src/app/shared/page-title/page-title.model';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -15,19 +15,26 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { FormValidationService } from 'src/app/shared/services/form-validation.service';
 import { NotificationService } from 'src/app/shared/services/notification.service';
+import { Result } from 'src/app/Http/models/operation-result.model';
 
 @Component({
   selector: 'app-services',
   templateUrl: './services.component.html',
   styleUrl: './services.component.scss'
 })
-export class ServicesComponent {
+export class ServicesComponent implements OnInit {
   pageTitle: BreadcrumbItem[] = [];
   serviceList: ServiceModel[] = [];
   selectAll: boolean = false;
   ServiceStatusGroup: string = "All";
   loading: boolean = false;
   columns: Column[] = [];
+
+  isDisabled: boolean = false;
+  statusList = [
+    { id: StatusEnum.Active, descricao: 'Ativo' },
+    { id: StatusEnum.Inactive, descricao: 'Inativo' }
+  ];
 
   @ViewChild('serviceModal') serviceModal!: TemplateRef<any>;
   serviceForm!: FormGroup;
@@ -51,11 +58,13 @@ export class ServicesComponent {
     ];
 
     this.serviceForm = this.fb.group({
-      name:['', Validators.required],
+      id: [''],
+      name: ['', Validators.required],
       code: ['', [Validators.required, Validators.minLength(3)]],
       shortDescription: ['', [Validators.required, Validators.maxLength(100)]],
       description: [''],
       price: ['', [Validators.required]],
+      status: [StatusEnum.Active]
     });
 
     // get service list
@@ -102,7 +111,9 @@ export class ServicesComponent {
     }
   }
 
-  ngAfterViewInit(): void { }
+  ngAfterViewInit(): void {
+    document.addEventListener('click', (event: any) => this.handleActionClick(event));
+  }
 
   // initialize advance table columns
   initAdvancedTableData(): void {
@@ -183,13 +194,35 @@ export class ServicesComponent {
     }
   }
 
-  // action cell formatter
-  serviceActionFormatter(order: ServiceModel): any {
-    return this.sanitizer.bypassSecurityTrustHtml(
-      `<a href="javascript:void(0);" class="action-icon"> <i class="mdi mdi-eye"></i></a>
-           <a href="javascript:void(0);" class="action-icon"> <i class="mdi mdi-square-edit-outline"></i></a>
-           <a href="javascript:void(0);" class="action-icon"> <i class="mdi mdi-delete"></i></a>`
-    );
+  handleActionClick(event: any): void {
+    const target = event.target.closest('.action-icon');
+    if (!target) return;
+
+    const id = target.getAttribute('data-id');
+    if (!id) return;
+
+    if (target.classList.contains('edit-btn')) {
+      let service = this.serviceList.find(x => x.id == id);
+      if (service)
+        this.openModal(service || null);
+    } else if (target.classList.contains('delete-btn')) {
+      this.deleteService(id);
+    } else if (target.classList.contains('view-btn')) {
+      //this.visualizarItem(id);
+    }
+  }
+
+  serviceActionFormatter(item: ServiceModel): any {
+    return this.sanitizer.bypassSecurityTrustHtml(`
+      <a href="javascript:void(0);" class="action-icon edit-btn" data-id="${item.id}">
+        <i class="mdi mdi-square-edit-outline"></i>
+      </a>
+      <a href="javascript:void(0);" class="action-icon delete-btn ${this.isDisabled ? 'disabled' : ''}" 
+       data-id="${item.id}"
+       style="${this.isDisabled ? 'pointer-events: none; opacity: 0.5;' : ''}">
+      <i class="mdi mdi-delete"></i>
+    </a>
+    `);
   }
 
   /**
@@ -265,30 +298,82 @@ export class ServicesComponent {
   }
 
   //#region SERVICES HTTP
+  deleteService(id: number) {
+    Swal.fire({
+      title: 'Excluir Registro!!!',
+      text: "Tem certeza que deseja excluir o serviço? Ação não poderá ser desfeita!!!",
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'SIM',
+      cancelButtonText: 'NÃO',
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.service.delete(id).subscribe((ret: Result<string>)=>{
+          if(ret.statusCode === 200){
+            this.notificationService.showMessage(ret.message, 'Sucesso');
+          }else{
+            this.notificationService.showAlert(ret);
+          }
+        });
+      }
+    })
+
+  }
 
   //#endregion
 
   /**
    * MODAL CADASTRO DE SERVIÇO
    */
-  openModal(): void {
+  openModal(item: ServiceModel | null): void {
     this.serviceForm.reset();
-    this.modalService.open(this.serviceModal, { centered: true, size: "xl", backdrop: 'static' });
+
+    if (item) {
+      this.serviceForm.patchValue({
+        id: item.id,
+        name: item.name,
+        code: item.code,
+        shortDescription: item.shortDescription,
+        description: item.description,
+        price: item.price,
+        status: item.status
+      });
+      this.serviceForm.controls['code'].disable();
+    } else {
+      this.serviceForm.controls['code'].enable();
+    }
+
+    this.modalService.open(this.serviceModal, { centered: true, size: 'xl', backdrop: 'static' });
   }
 
   save(modalRef: any): void {
     if (this.serviceForm.valid) {
-      const data = this.serviceForm.value;
-      console.log(data);
-      this.service.saveNewService(data).subscribe((ret: any)=>{
-        console.log(ret);
-        if(ret.statusCode === 200){
-          this.notificationService.showSuccess(ret);
-          this.serviceList.push(ret.content);
-          modalRef.close();
-        }
-      });
-     
+      const data = this.serviceForm.getRawValue();
+      if (data.id != null && data.id > 0) {
+        this.service.updateService(data).subscribe((ret: any) => {
+          console.log(ret);
+          if (ret.statusCode === 200) {
+            this.notificationService.showSuccess(ret);
+
+            const index = this.serviceList.findIndex(s => s.id === ret.content.id);
+            if (index !== -1) {
+              this.serviceList[index] = ret.content;
+            }
+
+            modalRef.close();
+          }
+        });
+      } else {
+        this.service.saveNewService(data).subscribe((ret: any) => {
+          if (ret.statusCode === 200) {
+            this.notificationService.showSuccess(ret);
+            this.serviceList.push(ret.content);
+            modalRef.close();
+          }
+        });
+      }
+
+
     }
   }
 }

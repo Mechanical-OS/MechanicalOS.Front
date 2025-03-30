@@ -15,7 +15,7 @@
         </div>}<!-- end col-->
         <div class="col-12" [class.col-sm-6]="pageSizeOptions.length">
             <div class="d-flex align-items-center justify-content-center justify-content-sm-end">
-                <label class="d-inline">Search:
+                <label class="d-inline">Buscar:
                     <input type="text" name="searchTerm" class="form-control form-control-sm d-inline w-auto ms-1" aria-controls="advanced-table" [(ngModel)]="service.searchTerm" (ngModelChange)="searchData()">
                 </label>
             </div>
@@ -86,8 +86,8 @@
     @if(pagination){
     <div class="d-flex flex-wrap justify-content-center align-items-center justify-content-md-between mt-2">
         <div>
-            Showing {{service.startIndex }} to
-            {{service.endIndex}} of {{service.totalRecords}} entries
+            Mostrando {{service.startIndex }} de
+            {{service.endIndex}} de um total de {{service.totalRecords}} registros
         </div>
         <ngb-pagination class="pagination-rounded custom-pagination" [collectionSize]="service.totalRecords" [(page)]="service.page" [maxSize]="3" [rotate]="true" [pageSize]="service.pageSize" (pageChange)="paginate()">
         </ngb-pagination>

@@ -50,7 +50,7 @@ export class CustomersComponent {
 
   async _fetchData(): Promise<void> {
     const request: GetAllRequest = {
-      pageSize: 25,
+      pageSize: 10,
       pageIndex: 1,
       sort: '',
       direction: ''
@@ -60,30 +60,6 @@ export class CustomersComponent {
       console.log(ret.content.resultList);
       this.customerList = ret.content.resultList;
     });
-
-    // try {
-    //   // Converte o Observable em uma Promise usando firstValueFrom
-    //   const result = await firstValueFrom(this.service.getAll(request));
-    //   if (result.statusCode === 200) {
-    //     this.service = result.content.resultList;
-    //   } else {
-    //     // Exibe o erro com SweetAlert
-    //     Swal.fire({
-    //       icon: 'error',
-    //       title: 'Erro na Requisição',
-    //       text: result.message || 'Algo deu errado ao buscar os dados.',
-    //       confirmButtonText: 'Entendi',
-    //     });
-    //   }
-    // } catch (error) {
-    //   console.error('Erro na API:', error);
-    //   Swal.fire({
-    //     icon: 'error',
-    //     title: 'Erro na API',
-    //     text: 'Não foi possível carregar os dados. Tente novamente mais tarde.',
-    //     confirmButtonText: 'Entendi',
-    //   });
-    // }
   }
 
   initAdvancedTableData(): void {
@@ -127,14 +103,6 @@ export class CustomersComponent {
       iconClass: 'fas fa-save',
       colorClass: 'save',
       visible: true,
-      enabled: true
-    },
-    {
-      id: 'photos',
-      label: 'Fotos',
-      iconClass: 'fas fa-camera',
-      colorClass: 'photo',
-      visible: true,
       enabled: false
     },
     {
@@ -162,7 +130,7 @@ export class CustomersComponent {
         break;
       case 'new':
         // lógica para novo
-        console.log('Novo acionado');
+        this.router.navigate(['apps/customers/new']);
         break;
     }
   }

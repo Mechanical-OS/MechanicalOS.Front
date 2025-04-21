@@ -8,9 +8,11 @@ import { WidgetModule } from "src/app/shared/widget/widget.module";
 import { CustomersRoutingModule } from "./customers-routing.module";
 import { SharedModule } from "../calendar/shared/shared.module";
 import { MetroMenuModule } from "src/app/shared/metro-menu/metro-menu.module";
+import { CustomerCreateComponent } from "./customer-create/customer-create.component";
+import { NgbModule } from "@ng-bootstrap/ng-bootstrap";
 
 @NgModule({
-    declarations: [CustomersComponent],
+    declarations: [CustomersComponent, CustomerCreateComponent],
     imports: [
         CommonModule,
         FormsModule,
@@ -19,7 +21,8 @@ import { MetroMenuModule } from "src/app/shared/metro-menu/metro-menu.module";
         AdvancedTableModule,
         WidgetModule,
         PageTitleModule,
-        CustomersRoutingModule
+        CustomersRoutingModule,
+        NgbModule
     ]
 })
 export class CustomerModule { }

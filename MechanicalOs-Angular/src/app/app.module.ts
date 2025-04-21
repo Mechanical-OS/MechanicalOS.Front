@@ -9,10 +9,14 @@ import { ErrorInterceptor } from './core/helpers/error.interceptor';
 import { FakeBackendProvider } from './core/helpers/fake-backend';
 import { JwtInterceptor } from './core/helpers/jwt.interceptor';
 import { LayoutModule } from './layout/layout.module';
+import { NgbDateParserFormatter, NgbDatepickerI18n } from '@ng-bootstrap/ng-bootstrap';
+import { CustomDatepickerI18n, I18n } from './shared/directives/ngb-datepicker-i18n';
+import { CustomDatepickerFormatter } from './shared/directives/custom-datepicker-formatter';
+import { NgbDatepickerPtDirective } from './shared/directives/ngb-datepicker-pt.directive';
 
 @NgModule({
     declarations: [
-        AppComponent
+        AppComponent, NgbDatepickerPtDirective
     ],
     bootstrap: [AppComponent], imports: [BrowserModule,
         JoyrideModule.forRoot(),
@@ -23,6 +27,8 @@ import { LayoutModule } from './layout/layout.module';
             { provide: HTTP_INTERCEPTORS, useClass: JwtInterceptor, multi: true },
             { provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor, multi: true },
             { provide: 'BASE_API_URL', useValue: 'https://api.mechanical-os.com.br/api/Service' },
+            { provide: NgbDatepickerI18n, useClass: CustomDatepickerI18n }, I18n,
+            { provide: NgbDateParserFormatter, useClass: CustomDatepickerFormatter },
             // provider used to create fake backend
             FakeBackendProvider,
             provideHttpClient(withInterceptorsFromDi()),

@@ -8,7 +8,7 @@
                 <div class="mb-4">
                     <h4>Serviços oferecidos pela sua oficina</h4>
                 </div>
-                <div class="row mb-2">
+                <!-- <div class="row mb-2">
                     <div class="col-lg-4">
                         <div class="text-lg">
                             <button type="button" class="btn btn-danger waves-effect waves-light mb-2 me-2"
@@ -16,8 +16,8 @@
                                 SERVIÇO</button>
                             <button type="button" class="btn btn-light waves-effect mb-2">Importar</button>
                         </div>
-                    </div><!-- end col-->
-                </div>
+                    </div>
+                </div> -->
                 <app-ui-preloader [display]="loading"></app-ui-preloader>
                 <!-- order table -->
                 <!-- product table -->
@@ -30,6 +30,10 @@
         </div> <!-- end card-->
     </div> <!-- end col -->
 </div>
+<app-metro-menu
+  [orientation]="'horizontal'"
+  [buttons]="menuButtons"
+  (buttonClick)="handleMenuAction($event)"></app-metro-menu>
 <!-- end row -->
 
 <!--MODAL CADASTRO-->

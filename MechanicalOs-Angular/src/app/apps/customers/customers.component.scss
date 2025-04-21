@@ -1,0 +1,47 @@
+button {
+    border: 1px solid #cccccc;
+    height: 40px;
+    padding: 5px 15px;
+    background: #f8f9fa;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.3s ease-in-out;
+  }
+  
+  button:hover {
+    background: #e2e6ea;
+  }
+
+  .footer-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    padding: 5px;
+    background-color: #f3f3f3;
+    border-top: none; //2px solid #ccc;
+  }
+  
+  .win10-tile {
+    width: 80px;
+    height: 80px;
+    font-size: 12px;
+    font-weight: bold;
+    text-align: center;
+    color: white;
+    border: none;
+    border-radius: 0px;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+    outline: none;
+  }
+  
+  .win10-tile i {
+    font-size: 20px;
+    margin-bottom: 5px;
+  }

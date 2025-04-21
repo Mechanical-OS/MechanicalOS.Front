@@ -1,0 +1,10 @@
+<div class="footer-container" [ngClass]="orientation">
+    <button *ngFor="let btn of buttons" 
+            class="win10-tile"
+            [ngClass]="[btn.colorClass, !btn.enabled ? 'disabled-btn' : '']" 
+            [disabled]="!btn.enabled"
+            (click)="onButtonClick(btn.id)"> <!---->
+            <i [class]="btn.iconClass"></i>
+            {{ btn.label }}
+    </button>
+</div>

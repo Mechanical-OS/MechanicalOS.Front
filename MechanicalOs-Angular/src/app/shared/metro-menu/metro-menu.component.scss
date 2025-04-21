@@ -1,0 +1,150 @@
+// Paleta de Cores Oficina Mecânica
+$azul-escuro: #1e3a8a;
+$cinza-chumbo: #374151;
+$amarelo-mecanico: #f59e0b;
+$vermelho-ferrugem: #b91c1c;
+$verde-ferramenta: #059669;
+$laranja-motor: #ea580c;
+$cinza-claro: #e5e7eb;
+$branco: #ffffff;
+
+.footer-container {
+    position: fixed;
+    z-index: 9999;
+    padding: 10px;
+    gap: 10px;
+    background-color: rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    //box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+    //border: 1px solid rgba(255, 255, 255, 0.18);
+    overflow: hidden;
+
+    &.horizontal {
+        bottom: 0;
+        left: 0;
+        width: 100vw;
+        height: auto;
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+    }
+
+    &.vertical {
+        top: 0;
+        left: 0;
+        height: 100vh;
+        width: auto;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: center;
+    }
+}
+
+
+
+.win10-tile {
+    width: 70px;
+    height: 70px;
+    font-size: 12px;
+    font-weight: bold;
+    text-align: center;
+    color: $branco;
+    border: none;
+    border-radius: 0px;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+    outline: none;
+
+    i {
+        font-size: 20px;
+        margin-bottom: 5px;
+    }
+
+    &:active {
+        transform: scale(0.95);
+    }
+}
+
+.start {
+    background-color: $azul-escuro;
+
+    &:hover {
+        background-color: darken($azul-escuro, 10%);
+    }
+}
+
+.save {
+    background-color: $verde-ferramenta;
+
+    &:hover {
+        background-color: darken($verde-ferramenta, 10%);
+    }
+}
+
+.alert {
+    background-color: $amarelo-mecanico;
+
+    &:hover {
+        background-color: darken($amarelo-mecanico, 10%);
+    }
+}
+
+.upload {
+    background-color: $laranja-motor;
+
+    &:hover {
+        background-color: darken($laranja-motor, 10%);
+    }
+}
+
+.clear {
+    background-color: $laranja-motor;
+
+    &:hover {
+        background-color: darken($laranja-motor, 10%);
+    }
+}
+
+.exit {
+    background-color: $vermelho-ferrugem;
+
+    &:hover {
+        background-color: darken($vermelho-ferrugem, 10%);
+    }
+}
+
+.delete {
+    background-color: $vermelho-ferrugem;
+
+    &:hover {
+        background-color: darken($vermelho-ferrugem, 10%);
+    }
+}
+
+.photo {
+    background-color: $azul-escuro;
+
+    &:hover {
+        background-color: darken($azul-escuro, 10%);
+    }
+}
+
+// ❌ Desabilitado
+.disabled-btn {
+    background-color: $cinza-claro !important;
+    color: #808080 !important;
+    border: none;
+    cursor: not-allowed;
+
+    i {
+        color: #808080 !important;
+    }
+}

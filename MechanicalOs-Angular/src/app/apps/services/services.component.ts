@@ -16,6 +16,7 @@ import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { FormValidationService } from 'src/app/shared/services/form-validation.service';
 import { NotificationService } from 'src/app/shared/services/notification.service';
 import { Result } from 'src/app/Http/models/operation-result.model';
+import { MetroButton } from 'src/app/shared/metro-menu/metro-menu.component';
 
 @Component({
   selector: 'app-services',
@@ -51,6 +52,7 @@ export class ServicesComponent implements OnInit {
     public formValidationMessage: FormValidationService,
     private notificationService: NotificationService
   ) { }
+
   ngOnInit(): void {
     this.pageTitle = [
       { label: "Service", path: "/" },
@@ -311,10 +313,10 @@ export class ServicesComponent implements OnInit {
         this.service.delete(id).subscribe((ret: Result<string>) => {
           if (ret.statusCode === 200) {
             this.notificationService.showMessage(ret.message, 'Sucesso');
-        
+
             this.serviceList = this.serviceList.filter(item => item.id != id);
             console.log(this.serviceList);
-            
+
           } else {
             this.notificationService.showAlert(ret);
           }
@@ -380,4 +382,69 @@ export class ServicesComponent implements OnInit {
 
     }
   }
+
+  //#region MENU
+  menuButtons: MetroButton[] = [
+    {
+      id: 'new',
+      label: 'Novo',
+      iconClass: 'fas fa-plus',
+      colorClass: 'start',
+      visible: true,
+      enabled: true
+    },
+    {
+      id: 'edit',
+      label: 'Editar',
+      iconClass: 'fas fa-edit',
+      colorClass: 'edit',
+      visible: true,
+      enabled: false
+    },
+    {
+      id: 'delete',
+      label: 'Exlcuir',
+      iconClass: 'fas fa-trash',
+      colorClass: 'delete',
+      visible: true,
+      enabled: false
+    },
+    {
+      id: 'import',
+      label: 'Importar',
+      iconClass: 'fas fa-upload',
+      colorClass: 'upload',
+      visible: true,
+      enabled: true
+    },
+    {
+      id: 'exit',
+      label: 'Sair',
+      iconClass: 'fas fa-sign-out-alt',
+      colorClass: 'exit',
+      visible: true,
+      enabled: true
+    }
+  ];
+
+  handleMenuAction(action: string) {
+    switch (action) {
+      case 'save':
+        console.log('Save acionado');
+        break;
+      case 'exit':
+        // lógica para sair
+        console.log('Sair acionado');
+        break;
+      case 'photos':
+        // lógica para fotos
+        console.log('Fotos acionado');
+        break;
+      case 'new':
+        // lógica para novo
+        this.openModal(null);
+        break;
+    }
+  }
+  //#endregion
 }

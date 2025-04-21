@@ -1,0 +1,25 @@
+import { NgModule } from "@angular/core";
+import { CustomersComponent } from "./customers.component";
+import { CommonModule } from "@angular/common";
+import { AdvancedTableModule } from "src/app/shared/advanced-table/advanced-table.module";
+import { PageTitleModule } from "src/app/shared/page-title/page-title.module";
+import { FormsModule, ReactiveFormsModule } from "@angular/forms";
+import { WidgetModule } from "src/app/shared/widget/widget.module";
+import { CustomersRoutingModule } from "./customers-routing.module";
+import { SharedModule } from "../calendar/shared/shared.module";
+import { MetroMenuModule } from "src/app/shared/metro-menu/metro-menu.module";
+
+@NgModule({
+    declarations: [CustomersComponent],
+    imports: [
+        CommonModule,
+        FormsModule,
+        MetroMenuModule,
+        ReactiveFormsModule,
+        AdvancedTableModule,
+        WidgetModule,
+        PageTitleModule,
+        CustomersRoutingModule
+    ]
+})
+export class CustomerModule { }

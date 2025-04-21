@@ -7,6 +7,7 @@ import { WidgetModule } from 'src/app/shared/widget/widget.module';
 import { ServicesRoutingModule } from './services-routing.module';
 import { ServicesComponent } from './services.component';
 import { CurrencyBrDirective } from 'src/app/shared/directives/currency-br.directive';
+import { MetroMenuModule } from 'src/app/shared/metro-menu/metro-menu.module';
 
 
 @NgModule({
@@ -17,6 +18,7 @@ import { CurrencyBrDirective } from 'src/app/shared/directives/currency-br.direc
   imports: [
     CommonModule,
     FormsModule,
+    MetroMenuModule,
     ReactiveFormsModule,
     AdvancedTableModule,
     WidgetModule,

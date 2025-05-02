@@ -18,24 +18,23 @@
                     </div><!-- end col-->
                     <!-- <app-ui-preloader [display]="loading"></app-ui-preloader> -->
                     <app-advanced-table #advancedTable 
-                        (handleTableLoad)="handleTableLoad($event)"
-                        [tableData]="customerList" 
-                        [columns]="columns" 
-                        [pagination]="true" 
-                        [hasRowSelection]="false"
-                        [isSearchable]="false" 
-                        (search)="searchData($event)" 
-                        [isSortable]="false"
-                        tableClasses="table-centered" 
-                        theadClasses="table-light">
+                                        (handleTableLoad)="handleTableLoad($event)"
+                                        [tableData]="customerList" 
+                                        [columns]="columns" 
+                                        [pagination]="true" 
+                                        [hasRowSelection]="false"
+                                        [isSearchable]="false" 
+                                        (search)="searchData($event)" 
+                                        [isSortable]="false"
+                                        tableClasses="table-centered" 
+                                        theadClasses="table-light"
+                                        (rowSelected)="onRowSelected($event)"
+                                        [singleRowSelection]="true">
                     </app-advanced-table>
                 </div>
             </div>
         </div>
     </div>
 </div>
-<app-metro-menu
-  [orientation]="'horizontal'"
-  [buttons]="menuButtons"
-  (buttonClick)="handleMenuAction($event)"></app-metro-menu>
-
+<app-metro-menu [orientation]="'horizontal'" [buttons]="menuButtons"
+    (buttonClick)="handleMenuAction($event)"></app-metro-menu>

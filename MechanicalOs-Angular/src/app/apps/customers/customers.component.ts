@@ -12,6 +12,7 @@ import { CustomerService } from './customer.service';
 import { firstValueFrom } from 'rxjs';
 import Swal from 'sweetalert2';
 import { MetroButton } from 'src/app/shared/metro-menu/metro-menu.component';
+import { MetroMenuService } from 'src/app/shared/metro-menu/metro-menu.service';
 
 @Component({
   selector: 'app-customers',
@@ -31,7 +32,8 @@ export class CustomersComponent {
   constructor(private router: Router,
     private route: ActivatedRoute,
     private sanitizer: DomSanitizer,
-    private service: CustomerService) {
+    private service: CustomerService,
+    private metroMenuService: MetroMenuService) {
 
   }
 
@@ -40,6 +42,9 @@ export class CustomersComponent {
       { label: "Customer", path: "/" },
       { label: "Customer", path: "/", active: true },
     ];
+
+    const initialButtons = this.menuButtons;
+    this.metroMenuService.setButtons(initialButtons);
 
     // get service list
     this._fetchData();
@@ -88,6 +93,16 @@ export class CustomersComponent {
     ];
   }
 
+  onRowSelected(item: any): void {
+    if (item) {
+      this.metroMenuService.enableButton('edit');
+      this.metroMenuService.enableButton('delete');
+    } else {
+      this.metroMenuService.disableButton('edit');
+      this.metroMenuService.enableButton('delete');
+    }
+  }
+
   menuButtons: MetroButton[] = [
     {
       id: 'new',
@@ -96,6 +111,14 @@ export class CustomersComponent {
       colorClass: 'start',
       visible: true,
       enabled: true
+    },
+    {
+      id: 'edit',
+      label: 'Editar',
+      iconClass: 'fas fa-edit',
+      colorClass: 'edit',
+      visible: true,
+      enabled: false
     },
     {
       id: 'save',
@@ -112,13 +135,29 @@ export class CustomersComponent {
       colorClass: 'exit',
       visible: true,
       enabled: true
+    },
+    {
+      id: 'delete',
+      label: 'Excluir',
+      iconClass: 'fas fa-trash',
+      colorClass: 'delete',
+      visible: true,
+      enabled: false
     }
   ];
-  
+
   handleMenuAction(action: string) {
     switch (action) {
       case 'save':
         console.log('Save acionado');
+        break;
+      case 'edit':
+        
+        break;
+      case 'delete':
+        this.service.delete(5).subscribe((ret: any) => {
+          console.log(ret);
+        });
         break;
       case 'exit':
         // lógica para sair
@@ -134,7 +173,7 @@ export class CustomersComponent {
         break;
     }
   }
-  
+
 
   handleTableLoad(event: any): void {
     // product cell
@@ -210,5 +249,9 @@ export class CustomersComponent {
         <i class="mdi mdi-delete"></i>
       </a>
       `);
+  }
+
+  updateCustomer(){
+    
   }
 }

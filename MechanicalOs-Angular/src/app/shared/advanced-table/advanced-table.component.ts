@@ -31,10 +31,13 @@ export class AdvancedTableComponent implements OnInit, AfterViewChecked {
   @Input() tableClasses: string = '';
   @Input() theadClasses: string = '';
   @Input() hasRowSelection: boolean = false;
+  @Input() singleRowSelection: boolean = false;
   @Input() columns: Column[] = [];
   collectionSize: number = this.tableData.length;
   selectAll: boolean = false;
   isSelected: boolean[] = [];
+
+  @Output() rowSelected = new EventEmitter<any>(); // Emissor de evento
 
 
   @Output() search = new EventEmitter<string>();
@@ -45,7 +48,7 @@ export class AdvancedTableComponent implements OnInit, AfterViewChecked {
   @ViewChildren(NgbSortableHeaderDirective) headers!: QueryList<NgbSortableHeaderDirective>;
   @ViewChildren('advancedTable') advancedTable!: any;
 
-  constructor (public service: AdvancedTableServices, private sanitizer: DomSanitizer, private componentFactoryResolver: ComponentFactoryResolver) {
+  constructor(public service: AdvancedTableServices, private sanitizer: DomSanitizer, private componentFactoryResolver: ComponentFactoryResolver) {
   }
 
   ngAfterViewChecked(): void {
@@ -150,16 +153,26 @@ export class AdvancedTableComponent implements OnInit, AfterViewChecked {
   }
 
   /**
-   * selects row
-   * @param index row index
-   */
-  selectRow(index: number): void {
-    this.isSelected[index] = !this.isSelected[index];
-    this.selectAll = (this.isSelected.filter(x => x === true).length === this.tableData.length);
+  * Captura a linha selecionada e emite o evento para o componente pai
+  * @param record Objeto da linha selecionada
+  */
+  selectRow(record: any, index: number): void {
+    const isAlreadySelected = this.isSelected[index];
+  
+    if (this.singleRowSelection) {
+      // Se já estiver selecionado, desmarca
+      if (isAlreadySelected) {
+        this.isSelected = this.tableData.map(() => false);
+      } else {
+        this.isSelected = this.tableData.map((_, i) => i === index);
+      }
+    } else {
+      this.isSelected[index] = !this.isSelected[index];
+      this.selectAll = this.isSelected.every(x => x === true);
+    }
+  
+    this.rowSelected.emit(isAlreadySelected ? null : record);
   }
-
-
-
-
+  
 }
 

@@ -10,6 +10,7 @@ import { Customer } from '../../Shared/models/customer.model';
 import { NotificationService } from 'src/app/shared/services/notification.service';
 import { Router } from '@angular/router';
 import { MetroMenuService } from 'src/app/shared/metro-menu/metro-menu.service';
+import { NgbDateStruct } from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
   selector: 'app-customer-create',
@@ -71,7 +72,8 @@ export class CustomerCreateComponent implements OnInit {
           this.notificationService.showMessage('Cliente cadastrado com sucesso.','success');
           this.form.reset();
         } else {
-          this.notificationService.showError(ret);
+          console.log(ret.message);
+          this.notificationService.showMessage('erro', 'error');
         }
       });
 
@@ -135,6 +137,19 @@ export class CustomerCreateComponent implements OnInit {
   //#region HELPERS
   clearDate(control: string) {
     this.form.controls[control].setValue(null);
+  }
+
+  // 🔄 Converte a string da API para NgbDateStruct
+  private convertDateToNgbDateStruct(dateString: string | null): NgbDateStruct | null {
+    if (!dateString) return null;
+    const date = new Date(dateString);
+    return { year: date.getFullYear(), month: date.getMonth() + 1, day: date.getDate() };
+  }
+
+  // 🔄 Converte o NgbDateStruct de volta para string ISO antes de enviar para API
+  private convertNgbDateStructToString(date: NgbDateStruct | null): string | null {
+    if (!date) return null;
+    return `${date.year}-${date.month.toString().padStart(2, '0')}-${date.day.toString().padStart(2, '0')}T00:00:00`;
   }
 
   //#endregion

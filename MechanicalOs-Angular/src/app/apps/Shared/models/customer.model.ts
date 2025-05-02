@@ -14,7 +14,7 @@ export interface Customer {
     phone: string;
     socialNumber: string; // CPF
     nationalId: string;   // RG
-    dateOfBirth: string;  // Formato ISO: yyyy-mm-dd
+    dateOfBith: string;  // Formato ISO: yyyy-mm-dd
     address: Address;
   }
   

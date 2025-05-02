@@ -1,3 +1,4 @@
+import { NgbDateStruct } from "@ng-bootstrap/ng-bootstrap";
 import { AddressType, Customer } from "../../Shared/models/customer.model";
 
 export class CustomerFactory {
@@ -10,7 +11,7 @@ export class CustomerFactory {
             phone: formValue.phone,
             socialNumber: formValue.cpf,
             nationalId: formValue.rg,
-            dateOfBirth: formValue.birthDate,
+            dateOfBith: this.convertNgbDateStructToString(formValue.birthDate) ?? "",
             address: {
                 country: 'Brasil',
                 state: formValue.uf,
@@ -25,6 +26,11 @@ export class CustomerFactory {
         };
     }
 
+    static convertNgbDateStructToString(date: NgbDateStruct | null): string | null {
+        if (!date) return null;
+        return `${date.year}-${date.month.toString().padStart(2, '0')}-${date.day.toString().padStart(2, '0')}`;
+    }
+
     static fromApi(apiResponse: any): Customer {
         return {
             id: apiResponse.id,
@@ -34,7 +40,7 @@ export class CustomerFactory {
             phone: apiResponse.phone,
             socialNumber: apiResponse.socialNumber,
             nationalId: apiResponse.nationalId,
-            dateOfBirth: apiResponse.dateOfBirth,
+            dateOfBith: apiResponse.dateOfBirth,
             address: {
                 country: apiResponse.address?.country,
                 state: apiResponse.address?.state,
@@ -48,4 +54,6 @@ export class CustomerFactory {
             }
         };
     }
+
+   
 }

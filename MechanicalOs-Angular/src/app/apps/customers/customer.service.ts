@@ -12,6 +12,4 @@ export class CustomerService extends BaseService<Customer> {
     constructor(http: HttpClient, notificationService: NotificationService) {
         super(http, notificationService, CUSTOMER_URL)
     }
-
-    
 }

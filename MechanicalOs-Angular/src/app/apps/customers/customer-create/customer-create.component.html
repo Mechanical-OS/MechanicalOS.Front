@@ -115,7 +115,7 @@
               <div class="row mb-3">
                 <div class="col-md-4">
                   <label for="zipcode" class="form-label">CEP</label>
-                  <input id="zipcode" formControlName="zipcode" class="form-control" />
+                  <input id="zipcode" formControlName="zipcode" class="form-control" (blur)="getZipCode()"/>
                 </div>
                 <div class="col-md-4">
                   <label for="street" class="form-label">Rua</label>

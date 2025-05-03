@@ -11,6 +11,8 @@ import { NotificationService } from 'src/app/shared/services/notification.servic
 import { Router } from '@angular/router';
 import { MetroMenuService } from 'src/app/shared/metro-menu/metro-menu.service';
 import { NgbDateStruct } from '@ng-bootstrap/ng-bootstrap';
+import { ViaCepService } from 'src/app/Http/via-cep/via-cep.service';
+import { ZipCodeResponse } from 'src/app/Http/via-cep/zipcode-response';
 
 @Component({
   selector: 'app-customer-create',
@@ -26,6 +28,7 @@ export class CustomerCreateComponent implements OnInit {
     private fb: FormBuilder,
     public messageValidationService: FormValidationService,
     private service: CustomerService,
+    private viaCepService: ViaCepService,
     private notificationService: NotificationService,
     private metroMenuService: MetroMenuService) { }
 
@@ -54,12 +57,28 @@ export class CustomerCreateComponent implements OnInit {
     });
 
     this.form.valueChanges.subscribe(() => {
-      if(this.form.valid){
+      if (this.form.valid) {
         this.metroMenuService.enableButton('save');
-      }else{
+      } else {
         this.metroMenuService.disableButton('save');
       }
     });
+  }
+
+  getZipCode(): void {
+    const value = this.form.controls['zipcode'].value;
+
+    if (value.length == 8) {
+      this.viaCepService.getCep(value).subscribe((ret: ZipCodeResponse) => {
+        console.log(ret);
+        this.form.controls['street'].setValue(ret.logradouro);
+        this.form.controls['uf'].setValue(ret.uf);
+        this.form.controls['city'].setValue(ret.localidade);
+        this.form.controls['neighborhood'].setValue(ret.bairro);
+        this.form.controls['complement'].setValue(ret.complemento);
+      });
+    }
+    console.log(value);
   }
 
   onSubmit(): void {
@@ -69,7 +88,7 @@ export class CustomerCreateComponent implements OnInit {
 
       this.service.save(newCustomer).subscribe((ret: Result<Customer>) => {
         if (ret.statusCode == 200) {
-          this.notificationService.showMessage('Cliente cadastrado com sucesso.','success');
+          this.notificationService.showMessage('Cliente cadastrado com sucesso.', 'success');
           this.form.reset();
         } else {
           console.log(ret.message);

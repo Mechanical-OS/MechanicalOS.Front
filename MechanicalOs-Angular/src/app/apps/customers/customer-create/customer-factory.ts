@@ -21,6 +21,7 @@ export class CustomerFactory {
                 complement: formValue.complement,
                 reference: '', // 
                 zipcode: formValue.zipcode,
+                neighborhood: formValue.neighborhood,
                 addressType: AddressType.Residential // default
             }
         };
@@ -50,6 +51,7 @@ export class CustomerFactory {
                 complement: apiResponse.address?.complement,
                 reference: apiResponse.address?.reference,
                 zipcode: apiResponse.address?.zipcode,
+                neighborhood: apiResponse.address.neighborhood,
                 addressType: apiResponse.address?.addressType
             }
         };

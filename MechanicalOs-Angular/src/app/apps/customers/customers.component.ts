@@ -29,6 +29,8 @@ export class CustomersComponent {
 
   isDisabled: boolean = false;
 
+  selectedCustomerId: number = 0;
+
   constructor(private router: Router,
     private route: ActivatedRoute,
     private sanitizer: DomSanitizer,
@@ -93,8 +95,10 @@ export class CustomersComponent {
     ];
   }
 
-  onRowSelected(item: any): void {
+  onRowSelected(item: Customer): void {
     if (item) {
+      console.log(item);
+      this.selectedCustomerId = item.id;
       this.metroMenuService.enableButton('edit');
       this.metroMenuService.enableButton('delete');
     } else {
@@ -146,18 +150,17 @@ export class CustomersComponent {
     }
   ];
 
-  handleMenuAction(action: string) {
+  handleMenuAction(action: any) {
     switch (action) {
       case 'save':
         console.log('Save acionado');
         break;
       case 'edit':
-        
+        console.log();
+        this.router.navigate([`apps/customers/${this.selectedCustomerId}/edit`]);
         break;
       case 'delete':
-        this.service.delete(5).subscribe((ret: any) => {
-          console.log(ret);
-        });
+
         break;
       case 'exit':
         // lógica para sair
@@ -252,6 +255,6 @@ export class CustomersComponent {
   }
 
   updateCustomer(){
-    
+
   }
 }

@@ -5,7 +5,11 @@
     <div class="card">
       <div class="card-body">
         <div class="mb-4">
-          <h4 class="fw-bold">CADASTRO DE CLIENTE</h4>
+          <!-- <h4 class="fw-bold">CADASTRO DE CLIENTE</h4> -->
+          <h4 class="fw-bold">
+            {{ isEditMode ? 'Editar Cliente' : 'Cadastro de Clientes' }}
+          </h4>
+
         </div>
 
         <div class="row">
@@ -115,7 +119,7 @@
               <div class="row mb-3">
                 <div class="col-md-4">
                   <label for="zipcode" class="form-label">CEP</label>
-                  <input id="zipcode" formControlName="zipcode" class="form-control" (blur)="getZipCode()"/>
+                  <input id="zipcode" formControlName="zipcode" class="form-control" (blur)="getZipCode()" />
                 </div>
                 <div class="col-md-4">
                   <label for="street" class="form-label">Rua</label>

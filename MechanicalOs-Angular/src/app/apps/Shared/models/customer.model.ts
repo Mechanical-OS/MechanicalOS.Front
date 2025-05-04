@@ -27,6 +27,7 @@ export interface Customer {
     complement: string;
     reference: string;
     zipcode: string;
+    neighborhood: string;
     addressType: AddressType;
   }
   

@@ -17,6 +17,7 @@ import { FormValidationService } from 'src/app/shared/services/form-validation.s
 import { NotificationService } from 'src/app/shared/services/notification.service';
 import { Result } from 'src/app/Http/models/operation-result.model';
 import { MetroButton } from 'src/app/shared/metro-menu/metro-menu.component';
+import { MetroMenuService } from 'src/app/shared/metro-menu/metro-menu.service';
 
 @Component({
   selector: 'app-services',
@@ -30,6 +31,8 @@ export class ServicesComponent implements OnInit {
   ServiceStatusGroup: string = "All";
   loading: boolean = false;
   columns: Column[] = [];
+
+  selectedItemRowId: number = 0;
 
   isDisabled: boolean = false;
   statusList = [
@@ -50,7 +53,8 @@ export class ServicesComponent implements OnInit {
     private service: ServiceService,
     private modalService: NgbModal,
     public formValidationMessage: FormValidationService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private metroMenuService: MetroMenuService
   ) { }
 
   ngOnInit(): void {
@@ -58,6 +62,9 @@ export class ServicesComponent implements OnInit {
       { label: "Service", path: "/" },
       { label: "Service", path: "/", active: true },
     ];
+
+    const initialButtons = this.menuButtons;
+    this.metroMenuService.setButtons(initialButtons);
 
     this.serviceForm = this.fb.group({
       id: [''],
@@ -278,6 +285,16 @@ export class ServicesComponent implements OnInit {
     });
   }
 
+  onRowSelected(item: ServiceModel): void {
+    if (item) {
+      this.selectedItemRowId = item.id;
+      this.metroMenuService.enableButton('edit');
+      this.metroMenuService.enableButton('delete');
+    } else {
+      this.metroMenuService.disableButton('edit');
+      this.metroMenuService.disableButton('delete');
+    }
+  }
 
   /**
    * change service status group
@@ -415,7 +432,7 @@ export class ServicesComponent implements OnInit {
       iconClass: 'fas fa-upload',
       colorClass: 'upload',
       visible: true,
-      enabled: true
+      enabled: false
     },
     {
       id: 'exit',
@@ -432,13 +449,19 @@ export class ServicesComponent implements OnInit {
       case 'save':
         console.log('Save acionado');
         break;
+      case 'edit':
+        let service = this.serviceList.find(x => x.id == this.selectedItemRowId) ?? null;
+        this.openModal(service);
+        break;
       case 'exit':
-        // lógica para sair
-        console.log('Sair acionado');
+        this.router.navigate([`apps/tools`]);
         break;
       case 'photos':
         // lógica para fotos
         console.log('Fotos acionado');
+        break;
+      case 'delete':
+        this.deleteService(this.selectedItemRowId);
         break;
       case 'new':
         // lógica para novo

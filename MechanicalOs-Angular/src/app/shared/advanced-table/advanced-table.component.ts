@@ -38,6 +38,7 @@ export class AdvancedTableComponent implements OnInit, AfterViewChecked {
   isSelected: boolean[] = [];
 
   @Output() rowSelected = new EventEmitter<any>(); // Emissor de evento
+  // @Output() pageChange = new EventEmitter<void>();
 
 
   @Output() search = new EventEmitter<string>();
@@ -83,6 +84,7 @@ export class AdvancedTableComponent implements OnInit, AfterViewChecked {
       this.service.endIndex = this.service.totalRecords;
     }
   }
+  
 
 
   /**

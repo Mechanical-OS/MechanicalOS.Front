@@ -23,7 +23,7 @@
                                         [columns]="columns" 
                                         [pagination]="true" 
                                         [hasRowSelection]="false"
-                                        [isSearchable]="false" 
+                                        [isSearchable]="true" 
                                         (search)="searchData($event)" 
                                         [isSortable]="false"
                                         tableClasses="table-centered" 
@@ -36,5 +36,6 @@
         </div>
     </div>
 </div>
-<app-metro-menu [orientation]="'horizontal'" [buttons]="menuButtons"
-    (buttonClick)="handleMenuAction($event)"></app-metro-menu>
+<app-metro-menu [orientation]="'horizontal'" 
+                [buttons]="menuButtons"
+                (buttonClick)="handleMenuAction($event)"></app-metro-menu>

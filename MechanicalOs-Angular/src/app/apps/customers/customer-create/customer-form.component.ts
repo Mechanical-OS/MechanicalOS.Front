@@ -37,7 +37,7 @@ export class CustomerFormComponent implements OnInit {
     private viaCepService: ViaCepService,
     private notificationService: NotificationService,
     private metroMenuService: MetroMenuService
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     const initialButtons = this.menuButtons;
@@ -47,6 +47,7 @@ export class CustomerFormComponent implements OnInit {
 
     this.customerId = this.route.snapshot.paramMap.get('id');
     if (this.customerId) {
+      console.log(this.customerId);
       this.isEditMode = true;
       this.loadCustomer(this.customerId);
     }
@@ -81,9 +82,9 @@ export class CustomerFormComponent implements OnInit {
   }
 
   loadCustomer(id: string): void {
-    this.service.findById(id).subscribe((customer: any) => {
-      console.log('Cliente para atualziar',customer);
-      const formValue = this.mapCustomerToForm(customer);
+    this.service.findById(id).subscribe((customer: Result<Customer>) => {
+      console.log('Cliente para atualziar', customer);
+      const formValue = this.mapCustomerToForm(customer.content);
       this.form.patchValue(formValue);
     });
   }
@@ -114,22 +115,25 @@ export class CustomerFormComponent implements OnInit {
       const customer = CustomerFactory.fromForm(this.form.value);
 
       if (this.isEditMode && this.customerId) {
+        console.log('Update: ', customer);
         this.service.update(customer).subscribe((ret: Result<Customer>) => {
           if (ret.statusCode === 200) {
+            console.log(ret);
             this.notificationService.showMessage('Cliente atualizado com sucesso.', 'success');
           } else {
             this.notificationService.showMessage('Erro ao atualizar cliente.', 'error');
           }
         });
       } else {
-        this.service.save(customer).subscribe((ret: Result<Customer>) => {
-          if (ret.statusCode === 200) {
-            this.notificationService.showMessage('Cliente cadastrado com sucesso.', 'success');
-            this.form.reset();
-          } else {
-            this.notificationService.showMessage('Erro ao cadastrar cliente.', 'error');
-          }
-        });
+        console.log('Insert: ', customer);
+        // this.service.save(customer).subscribe((ret: Result<Customer>) => {
+        //   if (ret.statusCode === 200) {
+        //     this.notificationService.showMessage('Cliente cadastrado com sucesso.', 'success');
+        //     this.form.reset();
+        //   } else {
+        //     this.notificationService.showMessage('Erro ao cadastrar cliente.', 'error');
+        //   }
+        // });
       }
     } else {
       this.form.markAllAsTouched();

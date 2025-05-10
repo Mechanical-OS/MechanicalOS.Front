@@ -13,6 +13,7 @@ import { firstValueFrom } from 'rxjs';
 import Swal from 'sweetalert2';
 import { MetroButton } from 'src/app/shared/metro-menu/metro-menu.component';
 import { MetroMenuService } from 'src/app/shared/metro-menu/metro-menu.service';
+import { AdvancedTableServices } from 'src/app/shared/advanced-table/advanced-table-service.service';
 
 @Component({
   selector: 'app-customers',
@@ -35,6 +36,7 @@ export class CustomersComponent {
     private route: ActivatedRoute,
     private sanitizer: DomSanitizer,
     private service: CustomerService,
+    private tableService: AdvancedTableServices,
     private metroMenuService: MetroMenuService) {
 
   }
@@ -57,16 +59,24 @@ export class CustomersComponent {
 
   async _fetchData(): Promise<void> {
     const request: GetAllRequest = {
-      pageSize: 10,
-      pageIndex: 1,
+      pageSize: this.tableService.pageSize,
+      pageIndex: this.tableService.page,
       sort: '',
       direction: ''
     };
 
     this.service.getAll(request).subscribe((ret: any) => {
-      console.log(ret.content.resultList);
       this.customerList = ret.content.resultList;
+      this.tableService.totalRecords = ret.content.totalRecords;
+      this.tableService.startIndex = (ret.content.pageIndex * ret.content.pageSize) + 1;
+      this.tableService.endIndex = this.tableService.startIndex + ret.content.resultList.length - 1;
+
+      console.log('Amostra: ', ret);
     });
+  }
+
+  paginate(): void {
+    this._fetchData();
   }
 
   initAdvancedTableData(): void {
@@ -156,15 +166,13 @@ export class CustomersComponent {
         console.log('Save acionado');
         break;
       case 'edit':
-        console.log();
         this.router.navigate([`apps/customers/${this.selectedCustomerId}/edit`]);
         break;
       case 'delete':
 
         break;
       case 'exit':
-        // lógica para sair
-        console.log('Sair acionado');
+        this.router.navigate([`apps/tools`]);
         break;
       case 'photos':
         // lógica para fotos
@@ -176,7 +184,6 @@ export class CustomersComponent {
         break;
     }
   }
-
 
   handleTableLoad(event: any): void {
     // product cell
@@ -190,10 +197,43 @@ export class CustomersComponent {
     });
   }
 
+  /**
+     * Search Method
+     */
   searchData(searchTerm: string): void {
-    console.log(searchTerm);
 
+    // Se o termo estiver vazio, carrega os dados iniciais
+    if (searchTerm === '') {
+      this._fetchData();
+      return;
+    }
+
+    // Requisição à API usando o método findByFilter do BaseService
+    this.service.findByFilter({ term: searchTerm }).subscribe({
+      next: (result) => {
+        if (result.statusCode === 200) {
+          this.customerList = result.content;
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Erro na Pesquisa',
+            text: result.message || 'Não foi possível realizar a pesquisa.',
+            confirmButtonText: 'Entendi',
+          });
+        }
+      },
+      error: (error) => {
+        console.error('Erro na API:', error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Erro na API',
+          text: 'Houve um problema ao buscar os dados. Tente novamente mais tarde.',
+          confirmButtonText: 'Entendi',
+        });
+      },
+    });
   }
+
 
   // formats order ID cell
   IDFormatter(customer: Customer): any {
@@ -254,7 +294,4 @@ export class CustomersComponent {
       `);
   }
 
-  updateCustomer(){
-
-  }
 }

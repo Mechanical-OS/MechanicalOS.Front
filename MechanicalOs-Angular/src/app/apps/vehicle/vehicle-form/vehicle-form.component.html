@@ -1,0 +1,151 @@
+<app-page-title [breadcrumbItems]="pageTitle" title=""></app-page-title>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="mb-4">
+                    <h4 class="fw-bold">
+                        {{ isEditMode ? 'Editar Veículo' : 'Cadastro de Veículos' }}
+                    </h4>
+                </div>
+
+                <div class="row">
+                    <!-- Coluna da imagem e histórico -->
+                    <div class="col-md-4 text-center" style="margin-top: 15%;">
+                        <div class="upload-box mb-3">
+                            <div class="upload-content">
+                                <i class="fas fa-cloud-upload-alt fa-2x mb-2"></i>
+                                <p class="mb-0">Arraste a imagem aqui, ou clique.</p>
+                                <small class="text-muted">foto do veículo</small>
+                            </div>
+                        </div>
+                        <a class="text-success fw-bold" href="#">
+                            BUSCAR PLACA <i class="fas fa-wrench"></i>
+                        </a>
+                    </div>
+
+                    <div class="col-md-8" style="border: 1px dashed #ccc;">
+                        <form [formGroup]="form">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <app-selectize  
+                                            placeholder="Selecione a marca"
+                                            [items]="brands"
+                                            [control]="brandControl"
+                                            [label]="'Marca'"
+                                            (selectionChange)="onSelectBrandChange($event)">
+                                    </app-selectize>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="model" class="form-label">Modelo</label>
+                                    <input id="model" formControlName="model" class="form-control"
+                                        [ngClass]="{'is-invalid': (form.get('model')?.invalid && form.get('model')?.touched)}" />
+
+                                    <div class="invalid-feedback">
+                                        <span
+                                            style="font-weight: bold; color: #b91c1c;">{{messageValidationService.getErrorMessage(form.get('model'),
+                                            'Modelo')}}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <!--ROW-->
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <label for="version" class="form-label">Versão</label>
+                                    <input id="version" formControlName="version" class="form-control"
+                                        [ngClass]="{'is-invalid': (form.get('version')?.invalid && form.get('version')?.touched)}" />
+
+                                    <div class="invalid-feedback">
+                                        <span
+                                            style="font-weight: bold; color: #b91c1c;">{{messageValidationService.getErrorMessage(form.get('version'),
+                                            'Versão')}}</span>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label for="year" class="form-label">Ano (fabricação)</label>
+                                    <input id="year" formControlName="year" class="form-control"
+                                        [ngClass]="{'is-invalid': (form.get('year')?.invalid && form.get('year')?.touched)}" />
+
+                                    <div class="invalid-feedback">
+                                        <span
+                                            style="font-weight: bold; color: #b91c1c;">{{messageValidationService.getErrorMessage(form.get('year'),
+                                            'Ano')}}</span>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label for="chassi" class="form-label">Chassi</label>
+                                    <input id="chassi" formControlName="chassi" class="form-control"
+                                        [ngClass]="{'is-invalid': (form.get('chassi')?.invalid && form.get('chassi')?.touched)}" />
+
+                                    <div class="invalid-feedback">
+                                        <span
+                                            style="font-weight: bold; color: #b91c1c;">{{messageValidationService.getErrorMessage(form.get('chassi'),
+                                            'Chassi')}}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <!--ROW-->
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <label for="color" class="form-label">Cor</label>
+                                    <input id="color" formControlName="color" class="form-control"
+                                        [ngClass]="{'is-invalid': (form.get('color')?.invalid && form.get('color')?.touched)}" />
+
+                                    <div class="invalid-feedback">
+                                        <span
+                                            style="font-weight: bold; color: #b91c1c;">{{messageValidationService.getErrorMessage(form.get('color'),
+                                            'Cor')}}</span>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <app-selectize  
+                                            placeholder="Selecione"
+                                            [items]="transmissions"
+                                            [control]="transmissionControl"
+                                            [label]="'Cambio (transmissão)'"
+                                            (selectionChange)="onSelectTrasmissionChange($event)">
+                                    </app-selectize>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label for="engine" class="form-label">Motor</label>
+                                    <input id="engine" formControlName="engine" class="form-control"
+                                        [ngClass]="{'is-invalid': (form.get('engine')?.invalid && form.get('engine')?.touched)}" />
+
+                                    <div class="invalid-feedback">
+                                        <span
+                                            style="font-weight: bold; color: #b91c1c;">{{messageValidationService.getErrorMessage(form.get('engine'),
+                                            'Motor')}}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <!--ROW-->
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <label for="plate" class="form-label">Placa</label>
+                                    <input id="plate" formControlName="plate" class="form-control"
+                                        [ngClass]="{'is-invalid': (form.get('plate')?.invalid && form.get('plate')?.touched)}" />
+
+                                    <div class="invalid-feedback">
+                                        <span
+                                            style="font-weight: bold; color: #b91c1c;">{{messageValidationService.getErrorMessage(form.get('plate'),
+                                            'Placa')}}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--MENU-->
+<app-metro-menu [orientation]="'horizontal'" 
+                [buttons]="menuButtons"
+                (buttonClick)="handleMenuAction($event)"></app-metro-menu>

@@ -7,15 +7,18 @@ import { AdvancedTableModule } from "src/app/shared/advanced-table/advanced-tabl
 import { WidgetModule } from "src/app/shared/widget/widget.module";
 import { PageTitleModule } from "src/app/shared/page-title/page-title.module";
 import { VehicleRoutingModule } from "./vehicle-routing.module";
+import { VehicleFormComponent } from "./vehicle-form/vehicle-form.component";
+import { SharedModule } from "src/app/shared/shared.module";
 
 @NgModule({
-    declarations: [VehicleComponent],
+    declarations: [VehicleComponent, VehicleFormComponent],
     imports:
         [
             CommonModule,
             FormsModule,
             MetroMenuModule,
             ReactiveFormsModule,
+            SharedModule,
             AdvancedTableModule,
             WidgetModule,
             PageTitleModule,

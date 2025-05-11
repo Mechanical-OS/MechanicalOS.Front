@@ -1,3 +1,5 @@
+import { FormGroup } from "@angular/forms";
+
 export class Vehicle {
     id: number;
     plate: string;
@@ -23,5 +25,20 @@ export class Vehicle {
         this.transmission = data.transmission ?? '';
         this.engine = data.engine ?? '';
         this.status = data.status ?? 0;
+    }
+
+    static fromForm(form: FormGroup): Vehicle {
+        return new Vehicle({
+            plate: form.get('plate')?.value ?? '',
+            chassi: form.get('chassi')?.value ?? '',
+            brand: form.get('brand')?.value ?? '',
+            model: form.get('model')?.value ?? '',
+            version: form.get('version')?.value ?? '',
+            year: form.get('year')?.value ?? '',
+            color: form.get('color')?.value ?? '',
+            transmission: form.get('transmission')?.value ?? '',
+            engine: form.get('engine')?.value ?? '',
+            status: 1
+        });
     }
 }

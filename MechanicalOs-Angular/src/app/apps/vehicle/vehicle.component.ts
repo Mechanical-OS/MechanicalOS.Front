@@ -202,7 +202,7 @@ export class VehicleComponent implements OnInit {
         break;
       case 'new':
         // lógica para novo
-        //this.router.navigate(['apps/customers/new']);
+        this.router.navigate(['apps/vehicles/new']);
         break;
     }
   }

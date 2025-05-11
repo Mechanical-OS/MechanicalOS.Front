@@ -126,14 +126,14 @@ export class CustomerFormComponent implements OnInit {
         });
       } else {
         console.log('Insert: ', customer);
-        // this.service.save(customer).subscribe((ret: Result<Customer>) => {
-        //   if (ret.statusCode === 200) {
-        //     this.notificationService.showMessage('Cliente cadastrado com sucesso.', 'success');
-        //     this.form.reset();
-        //   } else {
-        //     this.notificationService.showMessage('Erro ao cadastrar cliente.', 'error');
-        //   }
-        // });
+        this.service.save(customer).subscribe((ret: Result<Customer>) => {
+          if (ret.statusCode === 200) {
+            this.notificationService.showMessage('Cliente cadastrado com sucesso.', 'success');
+            this.form.reset();
+          } else {
+            this.notificationService.showMessage('Erro ao cadastrar cliente.', 'error');
+          }
+        });
       }
     } else {
       this.form.markAllAsTouched();

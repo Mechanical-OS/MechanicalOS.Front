@@ -1,0 +1,9 @@
+<div class="mb-3">
+    <label class="form-label fw-bold">{{ label }}</label>
+    <select class="form-select" [formControl]="control" (change)="onSelectionChange($event)">
+      <option value="">{{ placeholder }}</option>
+      <option *ngFor="let item of items" [value]="item.id">
+        {{ item.label }}
+      </option>
+    </select>
+  </div>

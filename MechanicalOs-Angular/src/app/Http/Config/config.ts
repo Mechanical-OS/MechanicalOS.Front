@@ -1,7 +1,7 @@
 // src/app/constants/app-urls.ts
 
 export const CUSTOMER_URL = 'https://api.mechanical-os.com.br/api/customer';
-export const VEHICLE_URL = 'https://api.mechanical-os.com.br/api/vehicles';
+export const VEHICLE_URL = 'https://api.mechanical-os.com.br/api/vehicle';
 export const SERVICES_URL = 'https://api.mechanical-os.com.br/api/Service';
 export const TOOLS_URL = 'https://api.mechanical-os.com.br/api/Bootstrap';
 export const ORDERS_URL = 'https://api.mechanical-os.com.br/api/orders';

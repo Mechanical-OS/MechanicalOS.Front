@@ -7,7 +7,7 @@ import { VehicleService } from '../vehicle.service';
 import { NotificationService } from 'src/app/shared/services/notification.service';
 import { MetroMenuService } from 'src/app/shared/metro-menu/metro-menu.service';
 import { MetroButton } from 'src/app/shared/metro-menu/metro-menu.component';
-import { Vehicle } from '../../Shared/models/vehicle.model';
+import { Vehicle, Color } from '../../Shared/models/vehicle.model';
 import { Result } from 'src/app/Http/models/operation-result.model';
 import { SelectizeModel } from 'src/app/shared/selectize/selectize.component';
 
@@ -26,6 +26,7 @@ export class VehicleFormComponent implements OnInit {
 
   brands: SelectizeModel[] = [{ id: 1, label: "HONDA" }, { id: 2, label: "TOYOTA" }];
   transmissions: SelectizeModel[] = [{ id: 1, label: "Manual" }, { id: 2, label: "Automático" }, { id: 3, label: "CVT" }, { id: 2, label: "Automatizado" }];
+  colors: SelectizeModel[] = [];
 
   constructor(
     private router: Router,
@@ -50,7 +51,9 @@ export class VehicleFormComponent implements OnInit {
     });
   }
 
-  ngOnInit(): void { }
+  ngOnInit(): void { 
+    this.loadColors();
+  }
 
   //#region FORM
   buildForm(): void {
@@ -75,12 +78,38 @@ export class VehicleFormComponent implements OnInit {
     return this.form.get("transmission") as FormControl;
   }
 
+  get colorControl(): FormControl {
+    return this.form.get("color") as FormControl;
+  }
+
   onSelectBrandChange($event: any) {
     console.log($event);
   }
 
   onSelectTrasmissionChange($event: any) {
     console.log($event);
+  }
+
+  onSelectColorChange($event: any) {
+    console.log($event);
+  }
+
+  /**
+   * Carrega as cores disponíveis da API
+   */
+  loadColors(): void {
+    this.service.getAllColors().subscribe({
+      next: (colors: Color[]) => {
+        this.colors = colors.map(color => ({
+          id: color.id,
+          label: color.name
+        }));
+      },
+      error: (error) => {
+        console.error('Erro ao carregar cores:', error);
+        this.notificationService.showMessage('Erro ao carregar lista de cores.', 'error');
+      }
+    });
   }
 
   onSubmit(): void {

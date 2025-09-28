@@ -58,17 +58,32 @@ export class VehicleComponent implements OnInit {
       {
         name: "brand",
         label: "Marca",
-        formatter: (Vehicle: Vehicle) => Vehicle.brand,
+        formatter: (vehicle: Vehicle) => vehicle.brand.name,
       },
       {
-        name: "model",
+        name: "vehicleModel",
         label: "Modelo",
-        formatter: (Vehicle: Vehicle) => Vehicle.model,
+        formatter: (vehicle: Vehicle) => vehicle.vehicleModel.name,
+      },
+      {
+        name: "version",
+        label: "Versão",
+        formatter: (vehicle: Vehicle) => vehicle.version,
+      },
+      {
+        name: "year",
+        label: "Ano",
+        formatter: (vehicle: Vehicle) => vehicle.year,
+      },
+      {
+        name: "color",
+        label: "Cor",
+        formatter: (vehicle: Vehicle) => vehicle.color.name,
       },
       {
         name: "plate",
         label: "Placa",
-        formatter: (Vehicle: Vehicle) => Vehicle.plate,
+        formatter: (vehicle: Vehicle) => vehicle.plate,
       },
       {
         name: "action",

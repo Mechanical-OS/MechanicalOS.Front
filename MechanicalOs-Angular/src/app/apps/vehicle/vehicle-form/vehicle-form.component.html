@@ -90,15 +90,13 @@
                             <!--ROW-->
                             <div class="row mb-3">
                                 <div class="col-md-4">
-                                    <label for="color" class="form-label">Cor</label>
-                                    <input id="color" formControlName="color" class="form-control"
-                                        [ngClass]="{'is-invalid': (form.get('color')?.invalid && form.get('color')?.touched)}" />
-
-                                    <div class="invalid-feedback">
-                                        <span
-                                            style="font-weight: bold; color: #b91c1c;">{{messageValidationService.getErrorMessage(form.get('color'),
-                                            'Cor')}}</span>
-                                    </div>
+                                    <app-selectize  
+                                            placeholder="Selecione a cor"
+                                            [items]="colors"
+                                            [control]="colorControl"
+                                            [label]="'Cor'"
+                                            (selectionChange)="onSelectColorChange($event)">
+                                    </app-selectize>
                                 </div>
 
                                 <div class="col-md-4">

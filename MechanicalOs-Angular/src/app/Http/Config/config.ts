@@ -7,6 +7,7 @@ export const TOOLS_URL = 'https://api.mechanical-os.com.br/api/Bootstrap';
 export const ORDERS_URL = 'https://api.mechanical-os.com.br/api/orders';
 export const AUTH_URL = 'https://api.mechanical-os.com.br/api/auth';
 export const VIA_CEP_URL = 'https://viacep.com.br/ws';
+export const COLOR_URL = 'https://api.mechanical-os.com.br/api/Color';
 
 export const MODULE_URLS = {
   customers: CUSTOMER_URL,
@@ -15,5 +16,6 @@ export const MODULE_URLS = {
   tools: TOOLS_URL,
   orders: ORDERS_URL,
   auth: AUTH_URL,
-  cep: VIA_CEP_URL
+  cep: VIA_CEP_URL,
+  colors: COLOR_URL
 };

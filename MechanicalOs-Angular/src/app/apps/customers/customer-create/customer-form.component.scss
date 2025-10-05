@@ -1,0 +1,10 @@
+label.required::after {
+    content: "*";
+    color: red;
+    font: bold;
+}
+
+.form-control:disabled {
+  background-color: #e9ecef !important; /* Cinza claro */
+  opacity: 1; /* Evita que o Bootstrap reduza a opacidade */
+}

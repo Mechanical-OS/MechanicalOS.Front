@@ -32,7 +32,7 @@
             <form [formGroup]="form">
               <div class="row mb-3">
                 <div class="col-md-4">
-                  <label for="firstName" class="form-label">Nome</label>
+                  <label for="firstName" class="form-label required">Nome</label>
                   <input id="firstName" formControlName="firstName" class="form-control"
                     [ngClass]="{'is-invalid': (form.get('firstName')?.invalid && form.get('firstName')?.touched)}" />
 
@@ -43,7 +43,7 @@
                   </div>
                 </div>
                 <div class="col-md-4">
-                  <label for="lastName" class="form-label">Sobrenome</label>
+                  <label for="lastName" class="form-label required">Sobrenome</label>
                   <input id="lastName" formControlName="lastName" class="form-control"
                     [ngClass]="{'is-invalid': (form.get('lastName')?.invalid && form.get('lastName')?.touched)}" />
 
@@ -58,7 +58,7 @@
                     <input id="birthDate" formControlName="birthDate" class="form-control" />
                   </div> -->
                 <div class="col-md-4">
-                  <label for="birthDate" class="form-label">Data de Nascimento</label>
+                  <label for="birthDate" class="form-label required">Data de Nascimento</label>
                   <div class="input-group">
                     <input id="birthDate" class="form-control" placeholder="dd/mm/aaaa" ngbDatepicker
                       #d1="ngbDatepicker" appNgbDatepickerPt formControlName="birthDate">
@@ -83,7 +83,7 @@
 
               <div class="row mb-3">
                 <div class="col-md-6">
-                  <label for="cpf" class="form-label">CPF</label>
+                  <label for="cpf" class="form-label required">CPF</label>
                   <input id="cpf" formControlName="cpf" class="form-control"
                     [ngClass]="{'is-invalid': (form.get('cpf')?.invalid && form.get('cpf')?.touched)}" />
 
@@ -101,15 +101,15 @@
 
               <div class="row mb-3">
                 <div class="col-md-4">
-                  <label for="email" class="form-label">Email</label>
+                  <label for="email" class="form-label required">Email</label>
                   <input id="email" formControlName="email" class="form-control" />
                 </div>
                 <div class="col-md-4">
-                  <label for="phone" class="form-label">Telefone</label>
+                  <label for="phone" class="form-label required">Telefone</label>
                   <input id="phone" formControlName="phone" class="form-control" />
                 </div>
                 <div class="col-md-4">
-                  <label for="whatsapp" class="form-label">WhatsApp</label>
+                  <label for="whatsapp" class="form-label required">WhatsApp</label>
                   <input id="whatsapp" formControlName="whatsapp" class="form-control" />
                 </div>
               </div>

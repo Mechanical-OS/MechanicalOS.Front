@@ -38,15 +38,13 @@
                                     </app-selectize>
                                 </div>
                                 <div class="col-md-6">
-                                    <label for="model" class="form-label">Modelo</label>
-                                    <input id="model" formControlName="model" class="form-control"
-                                        [ngClass]="{'is-invalid': (form.get('model')?.invalid && form.get('model')?.touched)}" />
-
-                                    <div class="invalid-feedback">
-                                        <span
-                                            style="font-weight: bold; color: #b91c1c;">{{messageValidationService.getErrorMessage(form.get('model'),
-                                            'Modelo')}}</span>
-                                    </div>
+                                    <app-selectize  
+                                            placeholder="Selecione o modelo"
+                                            [items]="vehicleModels"
+                                            [control]="vehicleModelControl"
+                                            [label]="'Modelo'"
+                                            (selectionChange)="onSelectVehicleModelChange($event)">
+                                    </app-selectize>
                                 </div>
                             </div>
                             <!--ROW-->

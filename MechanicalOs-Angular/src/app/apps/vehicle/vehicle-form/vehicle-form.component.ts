@@ -49,10 +49,13 @@ export class VehicleFormComponent implements OnInit {
 
   @ViewChild('brandModal', { static: false }) brandModal!: TemplateRef<any>;
   @ViewChild('modelModal', { static: false }) modelModal!: TemplateRef<any>;
+  @ViewChild('colorModal', { static: false }) colorModal!: TemplateRef<any>;
   newBrandName: string = '';
   newBrandDescription: string = '';
   newModelName: string = '';
   newModelDescription: string = '';
+  newColorName: string = '';
+  newColorDescription: string = '';
   selectedBrandName: string = '';
 
   constructor(
@@ -377,6 +380,67 @@ export class VehicleFormComponent implements OnInit {
       error: (error) => {
         console.error('Erro ao salvar modelo:', error);
         this.notificationService.showMessage('Erro ao cadastrar modelo.', 'error');
+      }
+    });
+  }
+
+  openColorModal(): void {
+    this.newColorName = '';
+    this.newColorDescription = '';
+    this.modalService.open(this.colorModal, { centered: true, backdrop: 'static' });
+  }
+
+  SaveNewColor(modalRef?: any): void {
+    if (!this.newColorName || !this.newColorName.trim()) {
+      this.notificationService.showMessage('Nome da cor é obrigatório.', 'error');
+      return;
+    }
+
+    const colorData = {
+      name: this.newColorName.trim(),
+      description: this.newColorDescription.trim() || this.newColorName.trim()
+    };
+
+    this.service.saveColor(colorData).subscribe({
+      next: (result: Result<Color>) => {
+        if (result.statusCode === 200) {
+          this.notificationService.showMessage('Cor cadastrada com sucesso.', 'success');
+          
+          // Atualiza a lista de cores
+          this.loadColors();
+          
+          // Fecha o modal
+          if (modalRef) {
+            modalRef.close();
+          } else {
+            this.modalService.dismissAll();
+          }
+        } else {
+          this.notificationService.showMessage('Erro ao cadastrar cor.', 'error');
+        }
+      },
+      error: (error) => {
+        console.error('Erro ao salvar cor:', error);
+        this.notificationService.showMessage('Erro ao cadastrar cor.', 'error');
+      }
+    });
+  }
+
+  /**
+   * Carrega apenas as cores (método auxiliar para atualizar a lista após cadastro)
+   */
+  private loadColors(): void {
+    this.service.getAllColors().subscribe({
+      next: (colors: Color[]) => {
+        this.colors = colors.map(color => ({
+          id: color.id,
+          label: color.name
+        }));
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Erro ao carregar cores:', error);
+        this.notificationService.showMessage('Erro ao carregar cores.', 'error');
       }
     });
   }

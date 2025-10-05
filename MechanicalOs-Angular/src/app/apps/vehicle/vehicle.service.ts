@@ -115,4 +115,13 @@ export class VehicleService extends BaseService<Vehicle> {
     saveVehicleModel(modelData: { brandId: number; name: string; description: string }): Observable<Result<VehicleModel>> {
         return this.http.post<Result<VehicleModel>>(VEHICLE_MODEL_URL, modelData);
     }
+
+    /**
+     * Salva uma nova cor
+     * @param colorData Dados da cor (name e description)
+     * @returns Observable<Result<Color>>
+     */
+    saveColor(colorData: { name: string; description: string }): Observable<Result<Color>> {
+        return this.http.post<Result<Color>>(COLOR_URL, colorData);
+    }
 }

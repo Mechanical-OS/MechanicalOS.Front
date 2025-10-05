@@ -106,13 +106,22 @@
                             <!--ROW-->
                             <div class="row mb-3">
                                 <div class="col-md-4">
-                                    <app-selectize  
-                                            placeholder="Selecione a cor"
-                                            [items]="colors"
-                                            [control]="colorControl"
-                                            [label]="'Cor'"
-                                            (selectionChange)="onSelectColorChange($event)">
-                                    </app-selectize>
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <div style="flex:1;">
+                                            <app-selectize  
+                                                    placeholder="Selecione a cor"
+                                                    [items]="colors"
+                                                    [control]="colorControl"
+                                                    [label]="'Cor'"
+                                                    (selectionChange)="onSelectColorChange($event)">
+                                            </app-selectize>
+                                        </div>
+                                        <div class="ms-2">
+                                            <button type="button" class="btn btn-link p-0 text-success" (click)="openColorModal()" aria-label="Adicionar cor" title="Adicionar cor">
+                                                <i class="fas fa-plus-circle"></i>
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <div class="col-md-4">
@@ -211,5 +220,27 @@
     <div class="modal-footer">
         <button type="button" class="btn btn-light" (click)="modal.dismiss()">Cancelar</button>
         <button type="button" class="btn btn-primary" (click)="SaveNewModel(modal)" [disabled]="!brandControl.value">Salvar</button>
+    </div>
+</ng-template>
+
+<!-- Modal: Nova Cor -->
+<ng-template #colorModal let-modal>
+    <div class="modal-header">
+        <h5 class="modal-title">Nova Cor</h5>
+        <button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss('Cross click')"></button>
+    </div>
+    <div class="modal-body">
+        <div class="mb-3">
+            <label for="newColorName" class="form-label">Nome da cor</label>
+            <input id="newColorName" type="text" class="form-control" [(ngModel)]="newColorName" placeholder="Digite o nome da cor" />
+        </div>
+        <div class="mb-3">
+            <label for="newColorDescription" class="form-label">Descrição</label>
+            <input id="newColorDescription" type="text" class="form-control" [(ngModel)]="newColorDescription" placeholder="Digite a descrição da cor" />
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-light" (click)="modal.dismiss()">Cancelar</button>
+        <button type="button" class="btn btn-primary" (click)="SaveNewColor(modal)">Salvar</button>
     </div>
 </ng-template>

@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, TemplateRef, ViewChild } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { BreadcrumbItem } from 'src/app/shared/page-title/page-title.model';
@@ -11,6 +11,7 @@ import { Vehicle, Color, Brand, VehicleModel } from '../../Shared/models/vehicle
 import { Result } from 'src/app/Http/models/operation-result.model';
 import { SelectizeModel } from 'src/app/shared/selectize/selectize.component';
 import { forkJoin } from 'rxjs';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 
 // Interface para o modelo de dados enviado para a API
 interface VehicleApiModel {
@@ -46,6 +47,14 @@ export class VehicleFormComponent implements OnInit {
   transmissions: SelectizeModel[] = [{ id: 1, label: "Manual" }, { id: 2, label: "Automático" }, { id: 3, label: "CVT" }, { id: 2, label: "Automatizado" }];
   colors: SelectizeModel[] = [];
 
+  @ViewChild('brandModal', { static: false }) brandModal!: TemplateRef<any>;
+  @ViewChild('modelModal', { static: false }) modelModal!: TemplateRef<any>;
+  newBrandName: string = '';
+  newBrandDescription: string = '';
+  newModelName: string = '';
+  newModelDescription: string = '';
+  selectedBrandName: string = '';
+
   constructor(
     private router: Router,
     private route: ActivatedRoute,
@@ -54,7 +63,8 @@ export class VehicleFormComponent implements OnInit {
     private service: VehicleService,
     private notificationService: NotificationService,
     private metroMenuService: MetroMenuService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private modalService: NgbModal
   ) {
     const initialButtons = this.menuButtons;
     this.metroMenuService.setButtons(initialButtons);
@@ -114,9 +124,14 @@ export class VehicleFormComponent implements OnInit {
     this.vehicleModels = [];
     
     if ($event) {
+      // Atualiza o nome da marca selecionada
+      const selectedBrand = this.brands.find(brand => brand.id == $event);
+      this.selectedBrandName = selectedBrand ? selectedBrand.label : '';
+      
       // Carrega os modelos apenas quando uma marca válida for selecionada
       this.loadVehicleModelsByBrand($event);
     } else {
+      this.selectedBrandName = '';
       console.log('Nenhuma marca selecionada - lista de modelos limpa');
     }
     
@@ -251,6 +266,120 @@ export class VehicleFormComponent implements OnInit {
     }
   }
   //#endregion
+
+  openBrandModal(): void {
+    this.newBrandName = '';
+    this.newBrandDescription = '';
+    this.modalService.open(this.brandModal, { centered: true, backdrop: 'static' });
+  }
+
+  SaveNewBrand(modalRef?: any): void {
+    if (!this.newBrandName || !this.newBrandName.trim()) {
+      this.notificationService.showMessage('Nome da marca é obrigatório.', 'error');
+      return;
+    }
+
+    const brandData = {
+      name: this.newBrandName.trim(),
+      description: this.newBrandDescription.trim() || this.newBrandName.trim()
+    };
+
+    this.service.saveBrand(brandData).subscribe({
+      next: (result: Result<Brand>) => {
+        if (result.statusCode === 200) {
+          this.notificationService.showMessage('Marca cadastrada com sucesso.', 'success');
+          
+          // Atualiza a lista de marcas
+          this.loadBrands();
+          
+          // Fecha o modal
+          if (modalRef) {
+            modalRef.close();
+          } else {
+            this.modalService.dismissAll();
+          }
+        } else {
+          this.notificationService.showMessage('Erro ao cadastrar marca.', 'error');
+        }
+      },
+      error: (error) => {
+        console.error('Erro ao salvar marca:', error);
+        this.notificationService.showMessage('Erro ao cadastrar marca.', 'error');
+      }
+    });
+  }
+
+  /**
+   * Carrega apenas as marcas (método auxiliar para atualizar a lista após cadastro)
+   */
+  private loadBrands(): void {
+    this.service.getAllBrands().subscribe({
+      next: (brands: Brand[]) => {
+        this.brands = brands.map(brand => ({
+          id: brand.id,
+          label: brand.name
+        }));
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Erro ao carregar marcas:', error);
+        this.notificationService.showMessage('Erro ao carregar marcas.', 'error');
+      }
+    });
+  }
+
+  openModelModal(): void {
+    if (!this.brandControl.value) {
+      this.notificationService.showMessage('Selecione uma marca antes de adicionar um modelo.', 'warning');
+      return;
+    }
+    
+    this.newModelName = '';
+    this.newModelDescription = '';
+    this.modalService.open(this.modelModal, { centered: true, backdrop: 'static' });
+  }
+
+  SaveNewModel(modalRef?: any): void {
+    if (!this.newModelName || !this.newModelName.trim()) {
+      this.notificationService.showMessage('Nome do modelo é obrigatório.', 'error');
+      return;
+    }
+
+    if (!this.brandControl.value) {
+      this.notificationService.showMessage('Selecione uma marca antes de salvar o modelo.', 'error');
+      return;
+    }
+
+    const modelData = {
+      brandId: this.brandControl.value,
+      name: this.newModelName.trim(),
+      description: this.newModelDescription.trim() || this.newModelName.trim()
+    };
+
+    this.service.saveVehicleModel(modelData).subscribe({
+      next: (result: Result<VehicleModel>) => {
+        if (result.statusCode === 200) {
+          this.notificationService.showMessage('Modelo cadastrado com sucesso.', 'success');
+          
+          // Atualiza a lista de modelos para a marca selecionada
+          this.loadVehicleModelsByBrand(this.brandControl.value);
+          
+          // Fecha o modal
+          if (modalRef) {
+            modalRef.close();
+          } else {
+            this.modalService.dismissAll();
+          }
+        } else {
+          this.notificationService.showMessage('Erro ao cadastrar modelo.', 'error');
+        }
+      },
+      error: (error) => {
+        console.error('Erro ao salvar modelo:', error);
+        this.notificationService.showMessage('Erro ao cadastrar modelo.', 'error');
+      }
+    });
+  }
 
   //#region MENU
   menuButtons: MetroButton[] = [

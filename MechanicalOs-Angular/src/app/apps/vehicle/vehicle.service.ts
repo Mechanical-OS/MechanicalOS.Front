@@ -97,4 +97,22 @@ export class VehicleService extends BaseService<Vehicle> {
     updateVehicle(vehicleApiData: VehicleApiModel): Observable<Result<Vehicle>> {
         return this.http.put<Result<Vehicle>>(`${this.vehicleUrl}`, vehicleApiData);
     }
+
+    /**
+     * Salva uma nova marca
+     * @param brandData Dados da marca (name e description)
+     * @returns Observable<Result<Brand>>
+     */
+    saveBrand(brandData: { name: string; description: string }): Observable<Result<Brand>> {
+        return this.http.post<Result<Brand>>(BRAND_URL, brandData);
+    }
+
+    /**
+     * Salva um novo modelo de veículo
+     * @param modelData Dados do modelo (brandId, name e description)
+     * @returns Observable<Result<VehicleModel>>
+     */
+    saveVehicleModel(modelData: { brandId: number; name: string; description: string }): Observable<Result<VehicleModel>> {
+        return this.http.post<Result<VehicleModel>>(VEHICLE_MODEL_URL, modelData);
+    }
 }

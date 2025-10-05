@@ -29,22 +29,40 @@
                         <form [formGroup]="form">
                             <div class="row mb-3">
                                 <div class="col-md-6">
-                                    <app-selectize  
-                                            placeholder="Selecione a marca"
-                                            [items]="brands"
-                                            [control]="brandControl"
-                                            [label]="'Marca'"
-                                            (selectionChange)="onSelectBrandChange($event)">
-                                    </app-selectize>
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <div style="flex:1;">
+                                            <app-selectize  
+                                                    placeholder="Selecione a marca"
+                                                    [items]="brands"
+                                                    [control]="brandControl"
+                                                    [label]="'Marca'"
+                                                    (selectionChange)="onSelectBrandChange($event)">
+                                            </app-selectize>
+                                        </div>
+                                        <div class="ms-2">
+                                            <button type="button" class="btn btn-link p-0 text-success" (click)="openBrandModal()" aria-label="Adicionar marca" title="Adicionar marca">
+                                                <i class="fas fa-plus-circle"></i>
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                                 <div class="col-md-6">
-                                    <app-selectize  
-                                            placeholder="Selecione o modelo"
-                                            [items]="vehicleModels"
-                                            [control]="vehicleModelControl"
-                                            [label]="'Modelo'"
-                                            (selectionChange)="onSelectVehicleModelChange($event)">
-                                    </app-selectize>
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <div style="flex:1;">
+                                            <app-selectize  
+                                                    placeholder="Selecione o modelo"
+                                                    [items]="vehicleModels"
+                                                    [control]="vehicleModelControl"
+                                                    [label]="'Modelo'"
+                                                    (selectionChange)="onSelectVehicleModelChange($event)">
+                                            </app-selectize>
+                                        </div>
+                                        <div class="ms-2">
+                                            <button type="button" class="btn btn-link p-0 text-success" (click)="openModelModal()" aria-label="Adicionar modelo" title="Adicionar modelo">
+                                                <i class="fas fa-plus-circle"></i>
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             <!--ROW-->
@@ -145,3 +163,53 @@
 <app-metro-menu [orientation]="'horizontal'" 
                 [buttons]="menuButtons"
                 (buttonClick)="handleMenuAction($event)"></app-metro-menu>
+<!-- Modal: Nova Marca -->
+<ng-template #brandModal let-modal>
+    <div class="modal-header">
+        <h5 class="modal-title">Nova Marca</h5>
+        <button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss('Cross click')"></button>
+    </div>
+    <div class="modal-body">
+        <div class="mb-3">
+            <label for="newBrandName" class="form-label">Nome da marca</label>
+            <input id="newBrandName" type="text" class="form-control" [(ngModel)]="newBrandName" placeholder="Digite o nome da marca" />
+        </div>
+        <div class="mb-3">
+            <label for="newBrandDescription" class="form-label">Descrição</label>
+            <input id="newBrandDescription" type="text" class="form-control" [(ngModel)]="newBrandDescription" placeholder="Digite a descrição da marca" />
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-light" (click)="modal.dismiss()">Cancelar</button>
+        <button type="button" class="btn btn-primary" (click)="SaveNewBrand(modal)">Salvar</button>
+    </div>
+</ng-template>
+
+<!-- Modal: Novo Modelo -->
+<ng-template #modelModal let-modal>
+    <div class="modal-header">
+        <h5 class="modal-title">Novo Modelo</h5>
+        <button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss('Cross click')"></button>
+    </div>
+    <div class="modal-body">
+        <div class="mb-3">
+            <label for="newModelName" class="form-label">Nome do modelo</label>
+            <input id="newModelName" type="text" class="form-control" [(ngModel)]="newModelName" placeholder="Digite o nome do modelo" />
+        </div>
+        <div class="mb-3">
+            <label for="newModelDescription" class="form-label">Descrição</label>
+            <input id="newModelDescription" type="text" class="form-control" [(ngModel)]="newModelDescription" placeholder="Digite a descrição do modelo" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Marca</label>
+            <div class="alert alert-info" role="alert">
+                <i class="fas fa-info-circle me-2"></i>
+                {{ selectedBrandName || 'Nenhuma marca selecionada' }}
+            </div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-light" (click)="modal.dismiss()">Cancelar</button>
+        <button type="button" class="btn btn-primary" (click)="SaveNewModel(modal)" [disabled]="!brandControl.value">Salvar</button>
+    </div>
+</ng-template>

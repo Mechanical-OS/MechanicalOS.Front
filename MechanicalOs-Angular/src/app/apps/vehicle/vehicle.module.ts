@@ -9,6 +9,7 @@ import { PageTitleModule } from "src/app/shared/page-title/page-title.module";
 import { VehicleRoutingModule } from "./vehicle-routing.module";
 import { VehicleFormComponent } from "./vehicle-form/vehicle-form.component";
 import { SharedModule } from "src/app/shared/shared.module";
+import { NgbModalModule } from '@ng-bootstrap/ng-bootstrap';
 
 @NgModule({
     declarations: [VehicleComponent, VehicleFormComponent],
@@ -18,6 +19,7 @@ import { SharedModule } from "src/app/shared/shared.module";
             FormsModule,
             MetroMenuModule,
             ReactiveFormsModule,
+            NgbModalModule,
             SharedModule,
             AdvancedTableModule,
             WidgetModule,

@@ -57,6 +57,7 @@ export class VehicleFormComponent implements OnInit {
   newColorName: string = '';
   newColorDescription: string = '';
   selectedBrandName: string = '';
+  originalVehicleStatus: number = 1; // Status original do veículo em edição
 
   constructor(
     private router: Router,
@@ -84,7 +85,94 @@ export class VehicleFormComponent implements OnInit {
   }
 
   ngOnInit(): void { 
+    this.setupPageTitle();
+    this.checkEditMode();
     this.loadInitialData();
+  }
+
+  /**
+   * Configura o título da página baseado no modo
+   */
+  setupPageTitle(): void {
+    this.pageTitle = [
+      { label: "Home", path: "/" },
+      { label: "Veículos", path: "/apps/vehicles" },
+      { label: this.isEditMode ? "Editar Veículo" : "Novo Veículo", path: "/", active: true }
+    ];
+  }
+
+  /**
+   * Verifica se está em modo de edição baseado na rota
+   */
+  checkEditMode(): void {
+    this.vehicleId = this.route.snapshot.paramMap.get('id');
+    this.isEditMode = !!this.vehicleId;
+    
+    // Atualiza o título após detectar o modo
+    this.setupPageTitle();
+    
+    if (this.isEditMode) {
+      console.log('Modo de edição ativado para veículo ID:', this.vehicleId);
+      this.loadVehicleForEdit();
+    } else {
+      console.log('Modo de cadastro novo');
+    }
+  }
+
+  /**
+   * Carrega os dados do veículo para edição
+   */
+  loadVehicleForEdit(): void {
+    if (!this.vehicleId) return;
+
+    this.service.findById(parseInt(this.vehicleId)).subscribe({
+      next: (result: Result<Vehicle>) => {
+        if (result.statusCode === 200 && result.content) {
+          this.populateFormWithVehicleData(result.content);
+        } else {
+          this.notificationService.showMessage('Erro ao carregar dados do veículo.', 'error');
+          this.router.navigate(['apps/vehicles']);
+        }
+      },
+      error: (error) => {
+        console.error('Erro ao carregar veículo:', error);
+        this.notificationService.showMessage('Erro ao carregar dados do veículo.', 'error');
+        this.router.navigate(['apps/vehicle']);
+      }
+    });
+  }
+
+  /**
+   * Popula o formulário com os dados do veículo
+   */
+  populateFormWithVehicleData(vehicle: Vehicle): void {
+    console.log('Populando formulário com dados:', vehicle);
+    
+    // Armazena o status original do veículo
+    this.originalVehicleStatus = vehicle.status || 1;
+    
+    // Aguarda os dados iniciais carregarem antes de popular o form
+    setTimeout(() => {
+      this.form.patchValue({
+        brand: vehicle.brand?.id || '',
+        vehicleModel: vehicle.vehicleModel?.id || '',
+        version: vehicle.version || '',
+        year: vehicle.year || '',
+        chassi: vehicle.chassi || '',
+        color: vehicle.color?.id || '',
+        transmission: vehicle.transmission || '',
+        engine: vehicle.engine || '',
+        plate: vehicle.plate || ''
+      });
+
+      // Se tem marca, carrega os modelos
+      if (vehicle.brand?.id) {
+        this.selectedBrandName = vehicle.brand.name;
+        this.loadVehicleModelsByBrand(vehicle.brand.id);
+      }
+
+      console.log('Formulário populado com sucesso');
+    }, 1000); // Aguarda 1 segundo para garantir que os dados iniciais foram carregados
   }
 
   //#region FORM
@@ -229,43 +317,84 @@ export class VehicleFormComponent implements OnInit {
 
   onSubmit(): void {
     if (this.form.valid) {
+      // Validações adicionais
+      const brandId = this.form.get('brand')?.value;
+      const vehicleModelId = this.form.get('vehicleModel')?.value;
+      const year = this.form.get('year')?.value;
+
+      if (!brandId) {
+        this.notificationService.showMessage('Selecione uma marca.', 'error');
+        return;
+      }
+
+      if (!vehicleModelId) {
+        this.notificationService.showMessage('Selecione um modelo.', 'error');
+        return;
+      }
+
+      if (!year) {
+        this.notificationService.showMessage('Informe o ano do veículo.', 'error');
+        return;
+      }
+
       // Cria o objeto no formato esperado pela API
       const vehicleApiData: VehicleApiModel = {
         id: this.isEditMode && this.vehicleId ? parseInt(this.vehicleId) : 0,
         customerId: 0, // TODO: Implementar customerId quando necessário
         plate: this.form.get('plate')?.value || '',
         chassi: this.form.get('chassi')?.value || '',
-        brandId: this.form.get('brand')?.value || 0,
-        vehicleModelId: this.form.get('vehicleModel')?.value || 0,
+        brandId: brandId,
+        vehicleModelId: vehicleModelId,
         version: this.form.get('version')?.value || '',
-        year: this.form.get('year')?.value || '',
+        year: year,
         colorId: this.form.get('color')?.value || 0,
         transmission: this.form.get('transmission')?.value || '',
         engine: this.form.get('engine')?.value || '',
-        status: 1 // Status padrão ativo
+        status: this.isEditMode ? this.originalVehicleStatus : 0 // Mantém status original em edição, 0 para novo
       };
 
+      console.log('Dados enviados para API:', vehicleApiData);
+
       if (this.isEditMode && this.vehicleId) {
-        this.service.updateVehicle(vehicleApiData).subscribe((ret: Result<Vehicle>) => {
-          if (ret.statusCode === 200) {
-            this.notificationService.showMessage('Veículo atualizado com sucesso.', 'success');
-          } else {
+        // Modo de edição - usa updateVehicle
+        this.service.updateVehicle(vehicleApiData).subscribe({
+          next: (ret: Result<Vehicle>) => {
+            if (ret.statusCode === 200) {
+              this.notificationService.showMessage('Veículo atualizado com sucesso.', 'success');
+              // Navega de volta para a listagem após sucesso
+              this.router.navigate(['apps/vehicles']);
+            } else {
+              this.notificationService.showMessage('Erro ao atualizar veículo.', 'error');
+            }
+          },
+          error: (error) => {
+            console.error('Erro ao atualizar veículo:', error);
             this.notificationService.showMessage('Erro ao atualizar veículo.', 'error');
           }
         });
       } else {
-        this.service.saveVehicle(vehicleApiData).subscribe((ret: Result<Vehicle>) => {
-          if (ret.statusCode === 200) {
-            this.notificationService.showMessage('Veículo cadastrado com sucesso.', 'success');
-            this.form.reset();
-          } else {
+        // Modo de cadastro - usa saveVehicle
+        this.service.saveVehicle(vehicleApiData).subscribe({
+          next: (ret: Result<Vehicle>) => {
+            if (ret.statusCode === 200) {
+              this.notificationService.showMessage('Veículo cadastrado com sucesso.', 'success');
+              this.form.reset();
+              // Limpa as listas de modelos e marca selecionada
+              this.vehicleModels = [];
+              this.selectedBrandName = '';
+            } else {
+              this.notificationService.showMessage('Erro ao cadastrar veículo.', 'error');
+            }
+          },
+          error: (error) => {
+            console.error('Erro ao cadastrar veículo:', error);
             this.notificationService.showMessage('Erro ao cadastrar veículo.', 'error');
           }
         });
       }
-      console.log('Dados enviados para API:', vehicleApiData);
     } else {
       this.form.markAllAsTouched();
+      this.notificationService.showMessage('Preencha todos os campos obrigatórios.', 'error');
     }
   }
   //#endregion

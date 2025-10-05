@@ -124,4 +124,13 @@ export class VehicleService extends BaseService<Vehicle> {
     saveColor(colorData: { name: string; description: string }): Observable<Result<Color>> {
         return this.http.post<Result<Color>>(COLOR_URL, colorData);
     }
+
+    /**
+     * Exclui um veículo
+     * @param id ID do veículo a ser excluído
+     * @returns Observable<Result<any>>
+     */
+    delete(id: number): Observable<Result<any>> {
+        return this.http.delete<Result<any>>(`${this.vehicleUrl}/${id}`);
+    }
 }

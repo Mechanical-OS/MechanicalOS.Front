@@ -10,6 +10,7 @@ import { VehicleRoutingModule } from "./vehicle-routing.module";
 import { VehicleFormComponent } from "./vehicle-form/vehicle-form.component";
 import { SharedModule } from "src/app/shared/shared.module";
 import { NgbModalModule } from '@ng-bootstrap/ng-bootstrap';
+import { UiModule } from 'src/app/shared/ui/ui.module';
 
 @NgModule({
     declarations: [VehicleComponent, VehicleFormComponent],
@@ -24,6 +25,7 @@ import { NgbModalModule } from '@ng-bootstrap/ng-bootstrap';
             AdvancedTableModule,
             WidgetModule,
             PageTitleModule,
+            UiModule,
             VehicleRoutingModule
         ]
 })

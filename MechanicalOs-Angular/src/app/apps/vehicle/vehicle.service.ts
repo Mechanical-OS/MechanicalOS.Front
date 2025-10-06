@@ -133,4 +133,13 @@ export class VehicleService extends BaseService<Vehicle> {
     delete(id: number): Observable<Result<any>> {
         return this.http.delete<Result<any>>(`${this.vehicleUrl}/${id}`);
     }
+
+    /**
+     * Busca um veículo pela placa
+     * @param plate Placa do veículo
+     * @returns Observable<Result<Vehicle>>
+     */
+    getByPlate(plate: string): Observable<Result<Vehicle>> {
+        return this.http.get<Result<Vehicle>>(`${this.vehicleUrl}/GetByPlate/${plate}`);
+    }
 }

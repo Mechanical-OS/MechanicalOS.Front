@@ -10,6 +10,7 @@ import { MetroButton } from 'src/app/shared/metro-menu/metro-menu.component';
 import { GetAllRequest } from 'src/app/Http/models/Input/get-all-request.model';
 import { VehicleService } from './vehicle.service';
 import { NotificationService } from 'src/app/shared/services/notification.service';
+import { FilterConfig, FilterOption } from 'src/app/shared/ui/advanced-filter/advanced-filter.component';
 
 @Component({
   selector: 'app-vehicle',
@@ -25,6 +26,44 @@ export class VehicleComponent implements OnInit {
   list: Vehicle[] = [];
   isDisabled: boolean = false;
   selectedRowId: number = 0;
+  
+  // Configuração do filtro avançado
+  filterConfig: FilterConfig = {
+    title: 'Filtro de Veículos',
+    searchPlaceholder: 'Digite para pesquisar veículos',
+    showSearch: true,
+    showRange: false,
+    options: [
+      {
+        id: 'plate',
+        label: 'Placa',
+        type: 'checkbox'
+      },
+      {
+        id: 'model',
+        label: 'Modelo',
+        type: 'checkbox'
+      },
+      {
+        id: 'brand',
+        label: 'Marca',
+        type: 'checkbox'
+      },
+      {
+        id: 'year',
+        label: 'Ano',
+        type: 'range',
+        min: 1990,
+        max: new Date().getFullYear() + 1,
+        step: 1
+      },
+      {
+        id: 'color',
+        label: 'Cor',
+        type: 'text'
+      }
+    ]
+  };
 
   constructor(private router: Router,
     private route: ActivatedRoute,
@@ -181,6 +220,65 @@ export class VehicleComponent implements OnInit {
     } else {
       this._fetchData();
     }
+  }
+
+  /**
+   * Aplica filtros avançados
+   * @param filterData Dados dos filtros aplicados
+   */
+  onFilterApplied(filterData: any) {
+    console.log('Filtros aplicados:', filterData);
+    
+    // Verifica se o filtro por placa está ativo e há texto de busca
+    if (filterData.plate && filterData.search && filterData.search.trim()) {
+      this.searchByPlate(filterData.search.trim());
+    } else {
+      // Se não há filtro específico, recarrega todos os dados
+      this._fetchData();
+    }
+  }
+
+  /**
+   * Busca veículo por placa
+   * @param plate Placa do veículo
+   */
+  private searchByPlate(plate: string) {
+    this.service.getByPlate(plate).subscribe({
+      next: (result: any) => {
+        console.log('Resultado da busca por placa:', result);
+        
+        if (result && result.content) {
+          // Se encontrou um veículo, cria uma lista com ele
+          this.list = [result.content];
+          this.tableService.totalRecords = 1;
+          this.tableService.startIndex = 1;
+          this.tableService.endIndex = 1;
+          
+        } else {
+          // Se não encontrou, limpa a lista
+          this.list = [];
+          this.tableService.totalRecords = 0;
+          this.tableService.startIndex = 0;
+          this.tableService.endIndex = 0;
+          
+          this.notificationService.showMessage(`Nenhum veículo encontrado com a placa: ${plate}`, 'warning');
+        }
+      },
+      error: (error) => {
+        console.error('Erro ao buscar veículo por placa:', error);
+        this.notificationService.showMessage('Erro ao buscar veículo por placa.', 'error');
+        this.list = [];
+        this.tableService.totalRecords = 0;
+      }
+    });
+  }
+
+  /**
+   * Limpa todos os filtros
+   */
+  onFilterCleared() {
+    console.log('Filtros limpos');
+    this._fetchData(); // Recarrega dados sem filtros
   }
 
   /**

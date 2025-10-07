@@ -9,12 +9,11 @@
           <h4 class="fw-bold">
             {{ isEditMode ? 'Editar Cliente' : 'Cadastro de Clientes' }}
           </h4>
-
         </div>
 
         <div class="row">
           <!-- Coluna da imagem e histórico -->
-          <div class="col-md-4 text-center" style="margin-top: 15%;">
+          <div class="col-md-4 text-center" style="margin-top: 15%">
             <div class="upload-box mb-3">
               <div class="upload-content">
                 <i class="fas fa-cloud-upload-alt fa-2x mb-2"></i>
@@ -28,29 +27,55 @@
           </div>
 
           <!-- Formulário -->
-          <div class="col-md-8" style="border: 1px dashed #ccc;">
+          <div class="col-md-8" style="border: 1px dashed #ccc">
             <form [formGroup]="form">
               <div class="row mb-3">
                 <div class="col-md-4">
-                  <label for="firstName" class="form-label required">Nome</label>
-                  <input id="firstName" formControlName="firstName" class="form-control"
-                    [ngClass]="{'is-invalid': (form.get('firstName')?.invalid && form.get('firstName')?.touched)}" />
+                  <label for="firstName" class="form-label required"
+                    >Nome</label
+                  >
+                  <input
+                    id="firstName"
+                    formControlName="firstName"
+                    class="form-control"
+                    [ngClass]="{
+                      'is-invalid':
+                        form.get('firstName')?.invalid &&
+                        form.get('firstName')?.touched
+                    }"
+                  />
 
                   <div class="invalid-feedback">
-                    <span
-                      style="font-weight: bold; color: #b91c1c;">{{messageValidationService.getErrorMessage(form.get('firstName'),
-                      'Nome')}}</span>
+                    <span style="font-weight: bold; color: #b91c1c">{{
+                      messageValidationService.getErrorMessage(
+                        form.get('firstName'),
+                        'Nome'
+                      )
+                    }}</span>
                   </div>
                 </div>
                 <div class="col-md-4">
-                  <label for="lastName" class="form-label required">Sobrenome</label>
-                  <input id="lastName" formControlName="lastName" class="form-control"
-                    [ngClass]="{'is-invalid': (form.get('lastName')?.invalid && form.get('lastName')?.touched)}" />
+                  <label for="lastName" class="form-label required"
+                    >Sobrenome</label
+                  >
+                  <input
+                    id="lastName"
+                    formControlName="lastName"
+                    class="form-control"
+                    [ngClass]="{
+                      'is-invalid':
+                        form.get('lastName')?.invalid &&
+                        form.get('lastName')?.touched
+                    }"
+                  />
 
                   <div class="invalid-feedback">
-                    <span
-                      style="font-weight: bold; color: #b91c1c;">{{messageValidationService.getErrorMessage(form.get('lastName'),
-                      'Sobrenome')}}</span>
+                    <span style="font-weight: bold; color: #b91c1c">{{
+                      messageValidationService.getErrorMessage(
+                        form.get('lastName'),
+                        'Sobrenome'
+                      )
+                    }}</span>
                   </div>
                 </div>
                 <!-- <div class="col-md-4">
@@ -58,24 +83,46 @@
                     <input id="birthDate" formControlName="birthDate" class="form-control" />
                   </div> -->
                 <div class="col-md-4">
-                  <label for="birthDate" class="form-label required">Data de Nascimento</label>
+                  <label for="birthDate" class="form-label required"
+                    >Data de Nascimento</label
+                  >
                   <div class="input-group">
-                    <input id="birthDate" class="form-control" placeholder="dd/mm/aaaa" ngbDatepicker
-                      #d1="ngbDatepicker" appNgbDatepickerPt formControlName="birthDate">
+                    <input
+                      id="birthDate"
+                      class="form-control"
+                      placeholder="dd/mm/aaaa"
+                      ngbDatepicker
+                      #d1="ngbDatepicker"
+                      appNgbDatepickerPt
+                      formControlName="birthDate"
+                    />
 
-                    <button class="btn btn-outline-secondary" (click)="d1.toggle()" type="button"
-                      [disabled]="this.isDisabled">
+                    <button
+                      class="btn btn-outline-secondary"
+                      (click)="d1.toggle()"
+                      type="button"
+                      [disabled]="this.isDisabled"
+                    >
                       <i class="far fa-calendar-alt"></i>
                     </button>
-                    <button class="btn btn-outline-danger" *ngIf="form.controls['birthDate'].value"
-                      (click)="clearDate('birthDate')" type="button" [disabled]="this.isDisabled">
+                    <button
+                      class="btn btn-outline-danger"
+                      *ngIf="form.controls['birthDate'].value"
+                      (click)="clearDate('birthDate')"
+                      type="button"
+                      [disabled]="this.isDisabled"
+                    >
                       <i class="fas fa-times"></i>
                     </button>
                   </div>
                   <ng-template #footerTemplate>
                     <div class="d-flex justify-content-end p-2">
-                      <button class="btn btn-sm btn-danger" (click)="clearDate('birthDate')">Limpar
-                        Data</button>
+                      <button
+                        class="btn btn-sm btn-danger"
+                        (click)="clearDate('birthDate')"
+                      >
+                        Limpar Data
+                      </button>
                     </div>
                   </ng-template>
                 </div>
@@ -84,13 +131,23 @@
               <div class="row mb-3">
                 <div class="col-md-6">
                   <label for="cpf" class="form-label required">CPF</label>
-                  <input id="cpf" formControlName="cpf" class="form-control"
-                    [ngClass]="{'is-invalid': (form.get('cpf')?.invalid && form.get('cpf')?.touched)}" />
+                  <input
+                    id="cpf"
+                    formControlName="cpf"
+                    class="form-control"
+                    [ngClass]="{
+                      'is-invalid':
+                        form.get('cpf')?.invalid && form.get('cpf')?.touched
+                    }"
+                  />
 
                   <div class="invalid-feedback">
-                    <span
-                      style="font-weight: bold; color: #b91c1c;">{{messageValidationService.getErrorMessage(form.get('cpf'),
-                      'CPF')}}</span>
+                    <span style="font-weight: bold; color: #b91c1c">{{
+                      messageValidationService.getErrorMessage(
+                        form.get('cpf'),
+                        'CPF'
+                      )
+                    }}</span>
                   </div>
                 </div>
                 <div class="col-md-6">
@@ -102,15 +159,31 @@
               <div class="row mb-3">
                 <div class="col-md-4">
                   <label for="email" class="form-label required">Email</label>
-                  <input id="email" formControlName="email" class="form-control" />
+                  <input
+                    id="email"
+                    formControlName="email"
+                    class="form-control"
+                  />
                 </div>
                 <div class="col-md-4">
-                  <label for="phone" class="form-label required">Telefone</label>
-                  <input id="phone" formControlName="phone" class="form-control" />
+                  <label for="phone" class="form-label required"
+                    >Telefone</label
+                  >
+                  <input
+                    id="phone"
+                    formControlName="phone"
+                    class="form-control"
+                  />
                 </div>
                 <div class="col-md-4">
-                  <label for="whatsapp" class="form-label required">WhatsApp</label>
-                  <input id="whatsapp" formControlName="whatsapp" class="form-control" />
+                  <label for="whatsapp" class="form-label required"
+                    >WhatsApp</label
+                  >
+                  <input
+                    id="whatsapp"
+                    formControlName="whatsapp"
+                    class="form-control"
+                  />
                 </div>
               </div>
 
@@ -119,11 +192,20 @@
               <div class="row mb-3">
                 <div class="col-md-4">
                   <label for="zipcode" class="form-label">CEP</label>
-                  <input id="zipcode" formControlName="zipcode" class="form-control" (blur)="getZipCode()" />
+                  <input
+                    id="zipcode"
+                    formControlName="zipcode"
+                    class="form-control"
+                    (blur)="getZipCode()"
+                  />
                 </div>
                 <div class="col-md-4">
                   <label for="street" class="form-label">Rua</label>
-                  <input id="street" formControlName="street" class="form-control" />
+                  <input
+                    id="street"
+                    formControlName="street"
+                    class="form-control"
+                  />
                 </div>
               </div>
 
@@ -134,33 +216,51 @@
                 </div>
                 <div class="col-md-4">
                   <label for="city" class="form-label">Cidade</label>
-                  <input id="city" formControlName="city" class="form-control" />
+                  <input
+                    id="city"
+                    formControlName="city"
+                    class="form-control"
+                  />
                 </div>
                 <div class="col-md-6">
                   <label for="neighborhood" class="form-label">Bairro</label>
-                  <input id="neighborhood" formControlName="neighborhood" class="form-control" />
+                  <input
+                    id="neighborhood"
+                    formControlName="neighborhood"
+                    class="form-control"
+                  />
                 </div>
               </div>
 
               <div class="row mb-4">
                 <div class="col-md-4">
                   <label for="number" class="form-label">Número</label>
-                  <input id="number" formControlName="number" class="form-control" />
+                  <input
+                    id="number"
+                    formControlName="number"
+                    class="form-control"
+                  />
                 </div>
                 <div class="col-md-8">
                   <label for="complement" class="form-label">Complemento</label>
-                  <input id="complement" formControlName="complement" class="form-control" />
+                  <input
+                    id="complement"
+                    formControlName="complement"
+                    class="form-control"
+                  />
                 </div>
               </div>
             </form>
           </div>
         </div>
-
       </div>
     </div>
   </div>
 </div>
 
 <!--MENU-->
-<app-metro-menu [orientation]="'horizontal'" [buttons]="menuButtons"
-  (buttonClick)="handleMenuAction($event)"></app-metro-menu>
+<app-metro-menu
+  [orientation]="'horizontal'"
+  [buttons]="menuButtons"
+  (buttonClick)="handleMenuAction($event)"
+></app-metro-menu>

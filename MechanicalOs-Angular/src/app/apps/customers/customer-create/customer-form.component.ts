@@ -1,18 +1,18 @@
-import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { MetroButton } from 'src/app/shared/metro-menu/metro-menu.component';
-import { BreadcrumbItem } from 'src/app/shared/page-title/page-title.model';
-import { FormValidationService } from 'src/app/shared/services/form-validation.service';
-import { CustomerFactory } from './customer-factory';
-import { CustomerService } from '../customer.service';
-import { Result } from 'src/app/Http/models/operation-result.model';
-import { Customer } from '../../Shared/models/customer.model';
-import { NotificationService } from 'src/app/shared/services/notification.service';
-import { Router, ActivatedRoute } from '@angular/router';
-import { MetroMenuService } from 'src/app/shared/metro-menu/metro-menu.service';
-import { NgbDateStruct } from '@ng-bootstrap/ng-bootstrap';
-import { ViaCepService } from 'src/app/Http/via-cep/via-cep.service';
-import { ZipCodeResponse } from 'src/app/Http/via-cep/zipcode-response';
+import { Component, OnInit } from '@angular/core'
+import { FormBuilder, FormGroup, Validators } from '@angular/forms'
+import { MetroButton } from 'src/app/shared/metro-menu/metro-menu.component'
+import { BreadcrumbItem } from 'src/app/shared/page-title/page-title.model'
+import { FormValidationService } from 'src/app/shared/services/form-validation.service'
+import { CustomerFactory } from './customer-factory'
+import { CustomerService } from '../customer.service'
+import { Result } from 'src/app/Http/models/operation-result.model'
+import { Customer } from '../../Shared/models/customer.model'
+import { NotificationService } from 'src/app/shared/services/notification.service'
+import { Router, ActivatedRoute } from '@angular/router'
+import { MetroMenuService } from 'src/app/shared/metro-menu/metro-menu.service'
+import { NgbDateStruct } from '@ng-bootstrap/ng-bootstrap'
+import { ViaCepService } from 'src/app/Http/via-cep/via-cep.service'
+import { ZipCodeResponse } from 'src/app/Http/via-cep/zipcode-response'
 
 @Component({
   selector: 'app-customer-form',
@@ -20,13 +20,13 @@ import { ZipCodeResponse } from 'src/app/Http/via-cep/zipcode-response';
   styleUrls: ['./customer-form.component.scss']
 })
 export class CustomerFormComponent implements OnInit {
-  pageTitle: BreadcrumbItem[] = [];
-  form!: FormGroup;
+  pageTitle: BreadcrumbItem[] = []
+  form!: FormGroup
 
-  isEditMode = false;
-  customerId: string | null = null;
+  isEditMode = false
+  customerId: string | null = null
 
-  isDisabled: boolean = false;
+  isDisabled: boolean = false
 
   constructor(
     private router: Router,
@@ -37,32 +37,33 @@ export class CustomerFormComponent implements OnInit {
     private viaCepService: ViaCepService,
     private notificationService: NotificationService,
     private metroMenuService: MetroMenuService
-  ) { }
+  ) {}
 
   ngOnInit(): void {
-    const initialButtons = this.menuButtons;
-    this.metroMenuService.setButtons(initialButtons);
+    const initialButtons = this.menuButtons
+    this.metroMenuService.setButtons(initialButtons)
 
-    this.buildForm();
+    this.buildForm()
 
-    this.customerId = this.route.snapshot.paramMap.get('id');
+    this.customerId = this.route.snapshot.paramMap.get('id')
     if (this.customerId) {
-      console.log(this.customerId);
-      this.isEditMode = true;
-      this.loadCustomer(this.customerId);
+      console.log(this.customerId)
+      this.isEditMode = true
+      this.loadCustomer(this.customerId)
     }
 
     this.form.valueChanges.subscribe(() => {
       if (this.form.valid) {
-        this.metroMenuService.enableButton('save');
+        this.metroMenuService.enableButton('save')
       } else {
-        this.metroMenuService.disableButton('save');
+        this.metroMenuService.disableButton('save')
       }
-    });
+    })
   }
 
   buildForm(): void {
     this.form = this.fb.group({
+      id: [null],
       firstName: ['', [Validators.required]],
       lastName: ['', [Validators.required]],
       birthDate: ['', [Validators.required]],
@@ -73,28 +74,32 @@ export class CustomerFormComponent implements OnInit {
       whatsapp: [''],
       zipcode: ['', [Validators.required]],
       street: ['', [Validators.required]],
-      uf: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(2)]],
+      uf: [
+        '',
+        [Validators.required, Validators.minLength(2), Validators.maxLength(2)]
+      ],
       city: ['', [Validators.required]],
       neighborhood: ['', [Validators.required]],
       number: [''],
       complement: ['']
-    });
+    })
   }
 
   loadCustomer(id: string): void {
     this.service.findById(id).subscribe((customer: Result<Customer>) => {
-      console.log('Cliente para atualziar', customer);
-      const formValue = this.mapCustomerToForm(customer.content);
-      this.form.patchValue(formValue);
-    });
+      console.log('Cliente para atualziar', customer)
+      const formValue = this.mapCustomerToForm(customer.content)
+      this.form.patchValue(formValue)
+    })
   }
 
   mapCustomerToForm(customer: Customer): any {
-    const [firstName, ...rest] = customer.name.split(' ');
+    const [firstName, ...rest] = customer.name.split(' ')
     return {
+      id: customer.id,
       firstName,
       lastName: rest.join(' '),
-      birthDate: customer.dateOfBith,
+      birthDate: customer.dateOfBirth,
       cpf: customer.socialNumber,
       rg: customer.nationalId,
       email: customer.email,
@@ -107,41 +112,53 @@ export class CustomerFormComponent implements OnInit {
       neighborhood: customer.address.neighborhood,
       number: customer.address.number,
       complement: customer.address.complement
-    };
+    }
   }
 
   onSubmit(): void {
     if (this.form.valid) {
-      const customer = CustomerFactory.fromForm(this.form.value);
+      const customer = CustomerFactory.fromForm(this.form.value)
 
       if (this.isEditMode && this.customerId) {
-        console.log('Update: ', customer);
+        console.log('Update: ', customer)
         this.service.update(customer).subscribe((ret: Result<Customer>) => {
           if (ret.statusCode === 200) {
-            console.log(ret);
-            this.notificationService.showMessage('Cliente atualizado com sucesso.', 'success');
+            console.log(ret)
+            this.notificationService.showMessage(
+              'Cliente atualizado com sucesso.',
+              'success'
+            )
           } else {
-            this.notificationService.showMessage('Erro ao atualizar cliente.', 'error');
+            this.notificationService.showMessage(
+              'Erro ao atualizar cliente.',
+              'error'
+            )
           }
-        });
+        })
       } else {
-        console.log('Insert: ', customer);
+        console.log('Insert: ', customer)
         this.service.save(customer).subscribe((ret: Result<Customer>) => {
           if (ret.statusCode === 200) {
-            this.notificationService.showMessage('Cliente cadastrado com sucesso.', 'success');
-            this.form.reset();
+            this.notificationService.showMessage(
+              'Cliente cadastrado com sucesso.',
+              'success'
+            )
+            this.form.reset()
           } else {
-            this.notificationService.showMessage('Erro ao cadastrar cliente.', 'error');
+            this.notificationService.showMessage(
+              'Erro ao cadastrar cliente.',
+              'error'
+            )
           }
-        });
+        })
       }
     } else {
-      this.form.markAllAsTouched();
+      this.form.markAllAsTouched()
     }
   }
 
   getZipCode(): void {
-    const value = this.form.controls['zipcode'].value;
+    const value = this.form.controls['zipcode'].value
     if (value.length === 8) {
       this.viaCepService.getCep(value).subscribe((ret: ZipCodeResponse) => {
         this.form.patchValue({
@@ -150,8 +167,8 @@ export class CustomerFormComponent implements OnInit {
           city: ret.localidade,
           neighborhood: ret.bairro,
           complement: ret.complemento
-        });
-      });
+        })
+      })
     }
   }
 
@@ -181,37 +198,47 @@ export class CustomerFormComponent implements OnInit {
       visible: true,
       enabled: true
     }
-  ];
+  ]
 
   handleMenuAction(action: string) {
     switch (action) {
       case 'save':
-        this.onSubmit();
-        break;
+        this.onSubmit()
+        break
       case 'exit':
-        this.router.navigate(['apps/customers']);
-        break;
+        this.router.navigate(['apps/customers'])
+        break
       case 'new':
-        this.router.navigate(['apps/customers/new']);
-        break;
+        this.router.navigate(['apps/customers/new'])
+        break
     }
   }
   //#endregion
 
   //#region HELPERS
   clearDate(control: string) {
-    this.form.controls[control].setValue(null);
+    this.form.controls[control].setValue(null)
   }
 
-  private convertDateToNgbDateStruct(dateString: string | null): NgbDateStruct | null {
-    if (!dateString) return null;
-    const date = new Date(dateString);
-    return { year: date.getFullYear(), month: date.getMonth() + 1, day: date.getDate() };
+  private convertDateToNgbDateStruct(
+    dateString: string | null
+  ): NgbDateStruct | null {
+    if (!dateString) return null
+    const date = new Date(dateString)
+    return {
+      year: date.getFullYear(),
+      month: date.getMonth() + 1,
+      day: date.getDate()
+    }
   }
 
-  private convertNgbDateStructToString(date: NgbDateStruct | null): string | null {
-    if (!date) return null;
-    return `${date.year}-${date.month.toString().padStart(2, '0')}-${date.day.toString().padStart(2, '0')}T00:00:00`;
+  private convertNgbDateStructToString(
+    date: NgbDateStruct | null
+  ): string | null {
+    if (!date) return null
+    return `${date.year}-${date.month.toString().padStart(2, '0')}-${date.day
+      .toString()
+      .padStart(2, '0')}T00:00:00`
   }
   //#endregion
 }

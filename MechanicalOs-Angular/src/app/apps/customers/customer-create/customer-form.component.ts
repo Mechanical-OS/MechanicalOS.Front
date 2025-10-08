@@ -67,12 +67,12 @@ export class CustomerFormComponent implements OnInit {
       firstName: ['', [Validators.required]],
       lastName: ['', [Validators.required]],
       birthDate: ['', [Validators.required]],
-      cpf: ['', [Validators.required]],
-      rg: [''],
+      cpf: ['', [Validators.required, Validators.pattern(/^\d{11}$/)]],
+      rg: ['', [Validators.required, Validators.pattern(/^\d{7,9}$/)]],
       email: ['', [Validators.required, Validators.email]],
-      phone: [''],
-      whatsapp: [''],
-      zipcode: ['', [Validators.required]],
+      phone: ['', [Validators.required, Validators.pattern(/^\d{10,11}$/)]],
+      whatsapp: ['', [Validators.required, Validators.pattern(/^\d{10,11}$/)]],
+      zipcode: ['', [Validators.required, Validators.pattern(/^\d{8}$/)]],
       street: ['', [Validators.required]],
       uf: [
         '',
@@ -80,10 +80,20 @@ export class CustomerFormComponent implements OnInit {
       ],
       city: ['', [Validators.required]],
       neighborhood: ['', [Validators.required]],
-      number: [''],
+      number: ['', [Validators.required]],
       complement: ['']
     })
   }
+
+  onlyNumber(event: KeyboardEvent) {
+    const pattern = /[0-9]/;
+    const inputChar = String.fromCharCode(event.keyCode);
+
+    if (!pattern.test(inputChar)) {
+      event.preventDefault();
+    }
+  }
+
 
   loadCustomer(id: string): void {
     this.service.findById(id).subscribe((customer: Result<Customer>) => {
@@ -93,13 +103,27 @@ export class CustomerFormComponent implements OnInit {
     })
   }
 
+  private convertStringToNgbDateStruct(dateString: string): NgbDateStruct | null {
+  if (!dateString) return null;
+  const parts = dateString.split('-'); // esperado "YYYY-MM-DD"
+  if (parts.length !== 3) return null;
+
+  return {
+    year: +parts[0],
+    month: +parts[1],
+    day: +parts[2]
+  };
+}
+
   mapCustomerToForm(customer: Customer): any {
     const [firstName, ...rest] = customer.name.split(' ')
     return {
       id: customer.id,
       firstName,
       lastName: rest.join(' '),
-      birthDate: customer.dateOfBirth,
+      birthDate: customer.dateOfBirth 
+      ? this.convertStringToNgbDateStruct(customer.dateOfBirth) 
+      : null,
       cpf: customer.socialNumber,
       rg: customer.nationalId,
       email: customer.email,

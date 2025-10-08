@@ -148,28 +148,28 @@
                     formControlName="cpf"
                     (keypress)="onlyNumber($event)"
                     class="form-control"
+                    [value]="form.get('cpf')?.value | cpf"
+                    (input)="onCpfInput($event)"
                     [ngClass]="{
-                      'is-invalid':
-                        form.get('cpf')?.invalid && form.get('cpf')?.touched
+                      'is-invalid': form.get('cpf')?.invalid && form.get('cpf')?.touched
                     }"
                   />
 
                   <div class="invalid-feedback">
-                    <span style="font-weight: bold; color: #b91c1c">{{
-                      messageValidationService.getErrorMessage(
-                        form.get('cpf'),
-                        'CPF'
-                      )
-                    }}</span>
+                    <span style="font-weight: bold; color: #b91c1c">
+                      {{ messageValidationService.getErrorMessage(form.get('cpf'), 'CPF') }}
+                    </span>
                   </div>
                 </div>
                 <div class="col-md-6">
                   <label for="rg" class="form-label">RG</label>
                   <input 
-                  id="rg" 
-                  formControlName="rg"
-                  (keypress)="onlyNumber($event)"
-                  class="form-control" 
+                    id="rg" 
+                    formControlName="rg"
+                    (keypress)="onlyNumber($event)"
+                    class="form-control" 
+                    [value]="form.get('rg')?.value | rg"
+                    (input)="onRgInput($event)"
                   />
                 </div>
               </div>
@@ -205,6 +205,8 @@
                     formControlName="phone"
                     (keypress)="onlyNumber($event)"
                     class="form-control"
+                    [value]="form.get('phone')?.value | phone"
+                    (input)="onPhoneInput($event)"
                     [ngClass]="{
                       'is-invalid':
                         form.get('phone')?.invalid && form.get('phone')?.touched
@@ -229,6 +231,8 @@
                     formControlName="whatsapp"
                     (keypress)="onlyNumber($event)"
                     class="form-control"
+                    [value]="form.get('whatsapp')?.value | phone"
+                    (input)="onWhatsappInput($event)"
                   />
                 </div>
               </div>
@@ -244,6 +248,8 @@
                     class="form-control"
                     (blur)="getZipCode()"
                     (keypress)="onlyNumber($event)"
+                    [value]="form.get('zipcode')?.value | cep"
+                    (input)="onCepInput($event)"
                     [ngClass]="{
                       'is-invalid':
                         form.get('zipcode')?.invalid && form.get('zipcode')?.touched

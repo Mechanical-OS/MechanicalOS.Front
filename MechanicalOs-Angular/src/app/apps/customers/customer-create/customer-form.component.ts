@@ -196,6 +196,32 @@ export class CustomerFormComponent implements OnInit {
     }
   }
 
+  onCpfInput(event: any) {
+    const value = event.target.value.replace(/\D/g, ''); // remove tudo que não é número
+    this.form.get('cpf')?.setValue(value, { emitEvent: false });
+  }
+
+  onRgInput(event: any) {
+    const value = event.target.value.replace(/\D/g, '');
+    this.form.get('rg')?.setValue(value, { emitEvent: false });
+  }
+
+  onPhoneInput(event: any) {
+    const value = event.target.value.replace(/\D/g, '');
+    this.form.get('phone')?.setValue(value, { emitEvent: false });
+  }
+
+  onWhatsappInput(event: any) {
+    const value = event.target.value.replace(/\D/g, '');
+    this.form.get('whatsapp')?.setValue(value, { emitEvent: false });
+  }
+
+  onCepInput(event: any) {
+    const value = event.target.value.replace(/\D/g, '');
+    this.form.get('zipcode')?.setValue(value, { emitEvent: false });
+  }
+
+
   //#region MENU
   menuButtons: MetroButton[] = [
     {

@@ -1,0 +1,38 @@
+<app-page-title [breadcrumbItems]="pageTitle" title=""></app-page-title>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <!-- Header com número da ordem -->
+                <div class="mb-4">
+                    <h4 class="mb-0">Ordens de Serviços</h4>
+                    <p class="text-muted mb-3">
+                        <strong>N. {{ currentDraft?.orderNumber }}</strong>
+                    </p>
+                </div>
+
+                <!-- Router outlet para as etapas -->
+                <router-outlet></router-outlet>
+
+                <!-- Botões de navegação -->
+                <div class="d-flex justify-content-between mt-4">
+                    <div>
+                        <button type="button" class="btn btn-outline-secondary me-2" (click)="onBack()" 
+                                [disabled]="currentStep === 'vehicle'">
+                            <i class="fas fa-arrow-left me-2"></i>Voltar
+                        </button>
+                        <button type="button" class="btn btn-outline-danger" (click)="onCancel()">
+                            <i class="fas fa-times me-2"></i>Cancelar
+                        </button>
+                    </div>
+                    <div *ngIf="currentStep !== 'services'">
+                        <button type="button" class="btn btn-success" (click)="onSaveAndNext()">
+                            <i class="fas fa-save me-2"></i>Salvar e Avançar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

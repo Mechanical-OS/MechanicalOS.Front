@@ -1,0 +1,139 @@
+<div class="row">
+    <!-- Seção de busca por CEP -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Buscar Endereço</h5>
+                <div class="input-group">
+                    <input 
+                        type="text" 
+                        class="form-control" 
+                        placeholder="Buscar CEP"
+                        [(ngModel)]="zipCodeSearchValue"
+                        (keyup.enter)="onSearchZipCode()">
+                    <button 
+                        class="btn btn-success" 
+                        type="button" 
+                        (click)="onSearchZipCode()">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Formulário de cadastro do endereço -->
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Endereço</h5>
+                
+                <form [formGroup]="addressForm" (ngSubmit)="onSaveAddress()">
+                    <!-- Primeira linha - Cidade e UF -->
+                    <div class="row mb-3">
+                        <div class="col-md-8">
+                            <label for="city" class="form-label">CIDADE</label>
+                            <input 
+                                type="text" 
+                                class="form-control" 
+                                id="city"
+                                formControlName="city"
+                                [class.is-invalid]="isFieldInvalid('city')"
+                                placeholder="Ex: Indaiatuba">
+                            <div class="invalid-feedback" *ngIf="isFieldInvalid('city')">
+                                Cidade é obrigatória
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="state" class="form-label">UF</label>
+                            <input 
+                                type="text" 
+                                class="form-control" 
+                                id="state"
+                                formControlName="state"
+                                [class.is-invalid]="isFieldInvalid('state')"
+                                placeholder="Ex: SP">
+                            <div class="invalid-feedback" *ngIf="isFieldInvalid('state')">
+                                UF é obrigatória
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Segunda linha - Bairro e CEP -->
+                    <div class="row mb-3">
+                        <div class="col-md-8">
+                            <label for="neighborhood" class="form-label">BAIRRO</label>
+                            <input 
+                                type="text" 
+                                class="form-control" 
+                                id="neighborhood"
+                                formControlName="neighborhood"
+                                [class.is-invalid]="isFieldInvalid('neighborhood')"
+                                placeholder="Ex: Jardim Bela Vista">
+                            <div class="invalid-feedback" *ngIf="isFieldInvalid('neighborhood')">
+                                Bairro é obrigatório
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="zipCode" class="form-label">CEP</label>
+                            <input 
+                                type="text" 
+                                class="form-control" 
+                                id="zipCode"
+                                formControlName="zipCode"
+                                [class.is-invalid]="isFieldInvalid('zipCode')"
+                                placeholder="00000-000"
+                                (input)="formatZipCode($event)">
+                            <div class="invalid-feedback" *ngIf="isFieldInvalid('zipCode')">
+                                CEP é obrigatório e deve ter formato válido
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Terceira linha - Rua -->
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <label for="street" class="form-label">RUA</label>
+                            <input 
+                                type="text" 
+                                class="form-control" 
+                                id="street"
+                                formControlName="street"
+                                [class.is-invalid]="isFieldInvalid('street')"
+                                placeholder="Ex: Av Ary Barnabé">
+                            <div class="invalid-feedback" *ngIf="isFieldInvalid('street')">
+                                Rua é obrigatória
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quarta linha - Número e Complemento -->
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="number" class="form-label">NUMERO</label>
+                            <input 
+                                type="text" 
+                                class="form-control" 
+                                id="number"
+                                formControlName="number"
+                                [class.is-invalid]="isFieldInvalid('number')"
+                                placeholder="Ex: 251">
+                            <div class="invalid-feedback" *ngIf="isFieldInvalid('number')">
+                                Número é obrigatório
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <label for="complement" class="form-label">COMPLEMENTO</label>
+                            <input 
+                                type="text" 
+                                class="form-control" 
+                                id="complement"
+                                formControlName="complement"
+                                placeholder="Ex: Sem complemento">
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

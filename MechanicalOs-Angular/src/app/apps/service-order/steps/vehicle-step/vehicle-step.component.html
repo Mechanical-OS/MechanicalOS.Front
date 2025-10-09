@@ -1,0 +1,156 @@
+<div class="row">
+    <!-- Seção de busca por placa -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Buscar Veículo</h5>
+                <div class="input-group">
+                    <input 
+                        type="text" 
+                        class="form-control" 
+                        placeholder="Buscar Placa"
+                        [(ngModel)]="plateSearchValue"
+                        (keyup.enter)="onSearchPlate()">
+                    <button 
+                        class="btn btn-success" 
+                        type="button" 
+                        (click)="onSearchPlate()">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Formulário de cadastro do veículo -->
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Cadastro de Veículo</h5>
+                
+                <form [formGroup]="vehicleForm" (ngSubmit)="onSaveVehicle()">
+                    <!-- Primeira linha -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="brand" class="form-label">Marca</label>
+                            <input 
+                                type="text" 
+                                class="form-control" 
+                                id="brand"
+                                formControlName="brand"
+                                [class.is-invalid]="isFieldInvalid('brand')"
+                                placeholder="Ex: Hyundai">
+                            <div class="invalid-feedback" *ngIf="isFieldInvalid('brand')">
+                                Marca é obrigatória
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="model" class="form-label">Modelo</label>
+                            <input 
+                                type="text" 
+                                class="form-control" 
+                                id="model"
+                                formControlName="model"
+                                [class.is-invalid]="isFieldInvalid('model')"
+                                placeholder="Ex: HB20">
+                            <div class="invalid-feedback" *ngIf="isFieldInvalid('model')">
+                                Modelo é obrigatório
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Segunda linha -->
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="version" class="form-label">Versão</label>
+                            <input 
+                                type="text" 
+                                class="form-control" 
+                                id="version"
+                                formControlName="version"
+                                placeholder="Ex: 1.6 Sedan">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="year" class="form-label">Ano</label>
+                            <input 
+                                type="text" 
+                                class="form-control" 
+                                id="year"
+                                formControlName="year"
+                                [class.is-invalid]="isFieldInvalid('year')"
+                                placeholder="Ex: 2020">
+                            <div class="invalid-feedback" *ngIf="isFieldInvalid('year')">
+                                Ano é obrigatório
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="chassi" class="form-label">CHASSI</label>
+                            <input 
+                                type="text" 
+                                class="form-control" 
+                                id="chassi"
+                                formControlName="chassi"
+                                placeholder="Número do chassi">
+                        </div>
+                    </div>
+
+                    <!-- Terceira linha -->
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="color" class="form-label">COR</label>
+                            <input 
+                                type="text" 
+                                class="form-control" 
+                                id="color"
+                                formControlName="color"
+                                [class.is-invalid]="isFieldInvalid('color')"
+                                placeholder="Ex: Branco">
+                            <div class="invalid-feedback" *ngIf="isFieldInvalid('color')">
+                                Cor é obrigatória
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="transmission" class="form-label">CÂMBIO</label>
+                            <input 
+                                type="text" 
+                                class="form-control" 
+                                id="transmission"
+                                formControlName="transmission"
+                                [class.is-invalid]="isFieldInvalid('transmission')"
+                                placeholder="Ex: Manual">
+                            <div class="invalid-feedback" *ngIf="isFieldInvalid('transmission')">
+                                Câmbio é obrigatório
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="engine" class="form-label">MOTOR</label>
+                            <input 
+                                type="text" 
+                                class="form-control" 
+                                id="engine"
+                                formControlName="engine"
+                                placeholder="Ex: 1.6 16V">
+                        </div>
+                    </div>
+
+                    <!-- Quarta linha -->
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="plate" class="form-label">PLACA</label>
+                            <input 
+                                type="text" 
+                                class="form-control" 
+                                id="plate"
+                                formControlName="plate"
+                                [class.is-invalid]="isFieldInvalid('plate')"
+                                placeholder="Ex: ABC1234">
+                            <div class="invalid-feedback" *ngIf="isFieldInvalid('plate')">
+                                Placa é obrigatória
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

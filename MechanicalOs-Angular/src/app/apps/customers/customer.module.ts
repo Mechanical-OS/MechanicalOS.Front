@@ -10,7 +10,7 @@ import { SharedModule } from "../calendar/shared/shared.module";
 import { MetroMenuModule } from "src/app/shared/metro-menu/metro-menu.module";
 import { CustomerFormComponent } from "./customer-create/customer-form.component";
 import { NgbModule } from "@ng-bootstrap/ng-bootstrap";
-import { CpfPipe, RgPipe, PhonePipe, CepPipe } from 'src/app/shared/directives/customerPipes.directive';
+import { CpfPipe, RgPipe, PhonePipe, CepPipe } from 'src/app/shared/directives/mask-pipes.directive';
 
 @NgModule({
     declarations: [CustomersComponent, CustomerFormComponent, CpfPipe, RgPipe, PhonePipe, CepPipe],

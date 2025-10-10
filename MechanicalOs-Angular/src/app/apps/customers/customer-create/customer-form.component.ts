@@ -68,10 +68,10 @@ export class CustomerFormComponent implements OnInit {
       lastName: ['', [Validators.required]],
       birthDate: ['', [Validators.required]],
       cpf: ['', [Validators.required, Validators.pattern(/^\d{11}$/)]],
-      rg: ['', [Validators.required, Validators.pattern(/^\d{7,9}$/)]],
+      rg: ['', [Validators.pattern(/^\d{7,9}$/)]],
       email: ['', [Validators.required, Validators.email]],
       phone: ['', [Validators.required, Validators.pattern(/^\d{10,11}$/)]],
-      whatsapp: ['', [Validators.required, Validators.pattern(/^\d{10,11}$/)]],
+      whatsapp: ['', [Validators.pattern(/^\d{10,11}$/)]],
       zipcode: ['', [Validators.required, Validators.pattern(/^\d{8}$/)]],
       street: ['', [Validators.required]],
       uf: [

@@ -146,6 +146,7 @@
                   <input
                     id="cpf"
                     formControlName="cpf"
+                    maxlength="11"
                     (keypress)="onlyNumber($event)"
                     class="form-control"
                     [value]="form.get('cpf')?.value | cpf"
@@ -166,6 +167,7 @@
                   <input 
                     id="rg" 
                     formControlName="rg"
+                    maxlength="9"
                     (keypress)="onlyNumber($event)"
                     class="form-control" 
                     [value]="form.get('rg')?.value | rg"
@@ -203,6 +205,7 @@
                   <input
                     id="phone"
                     formControlName="phone"
+                    maxlength="11"
                     (keypress)="onlyNumber($event)"
                     class="form-control"
                     [value]="form.get('phone')?.value | phone"
@@ -229,6 +232,7 @@
                   <input
                     id="whatsapp"
                     formControlName="whatsapp"
+                    maxlength="11"
                     (keypress)="onlyNumber($event)"
                     class="form-control"
                     [value]="form.get('whatsapp')?.value | phone"
@@ -245,6 +249,7 @@
                   <input
                     id="zipcode"
                     formControlName="zipcode"
+                    maxlength="8"
                     class="form-control"
                     (blur)="getZipCode()"
                     (keypress)="onlyNumber($event)"
@@ -291,7 +296,8 @@
                   <label for="uf" class="form-label required">UF</label>
                   <input 
                   id="uf" 
-                  formControlName="uf" 
+                  formControlName="uf"
+                  maxlength="2" 
                   class="form-control"
                   [ngClass]="{
                       'is-invalid':

@@ -20,6 +20,9 @@ import { OwnerStepComponent } from "./steps/owner-step/owner-step.component";
 import { AddressStepComponent } from "./steps/address-step/address-step.component";
 import { ServicesStepComponent } from "./steps/services-step/services-step.component";
 
+// Edit Component
+import { ServiceOrderEditComponent } from "./service-order-edit/service-order-edit.component";
+
 @NgModule({
     declarations: [
         ServiceOrderComponent,
@@ -27,7 +30,8 @@ import { ServicesStepComponent } from "./steps/services-step/services-step.compo
         VehicleStepComponent,
         OwnerStepComponent,
         AddressStepComponent,
-        ServicesStepComponent
+        ServicesStepComponent,
+        ServiceOrderEditComponent
     ],
     imports: [
         CommonModule,

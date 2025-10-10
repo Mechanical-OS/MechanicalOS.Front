@@ -316,7 +316,7 @@ export class ServiceOrderComponent implements OnInit {
     switch (action) {
       case 'edit':
         if (this.selectedRowId) {
-          this.router.navigate([`apps/service-orders/${this.selectedRowId}/edit`]);
+          this.router.navigate([`/apps/service-orders/${this.selectedRowId}/edit`]);
         }
         break;
       case 'delete':

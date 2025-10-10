@@ -6,6 +6,7 @@ import { VehicleStepComponent } from "./steps/vehicle-step/vehicle-step.componen
 import { OwnerStepComponent } from "./steps/owner-step/owner-step.component";
 import { AddressStepComponent } from "./steps/address-step/address-step.component";
 import { ServicesStepComponent } from "./steps/services-step/services-step.component";
+import { ServiceOrderEditComponent } from "./service-order-edit/service-order-edit.component";
 
 const routes: Routes = [
     { path: '', component: ServiceOrderComponent },
@@ -19,7 +20,8 @@ const routes: Routes = [
             { path: 'address', component: AddressStepComponent },
             { path: 'services', component: ServicesStepComponent }
         ]
-    }
+    },
+    { path: ':id/edit', component: ServiceOrderEditComponent }
 ];
 
 @NgModule({

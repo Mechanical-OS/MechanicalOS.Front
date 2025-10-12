@@ -1,16 +1,16 @@
 // src/app/constants/app-urls.ts
 
-export const CUSTOMER_URL = 'https://api.mechanical-os.com.br/api/customer';
-export const VEHICLE_URL = 'https://api.mechanical-os.com.br/api/Vehicle';
-export const SERVICES_URL = 'https://api.mechanical-os.com.br/api/Service';
-export const TOOLS_URL = 'https://api.mechanical-os.com.br/api/Bootstrap';
-export const ORDERS_URL = 'https://api.mechanical-os.com.br/api/orders';
-export const SERVICE_ORDER_URL = 'https://api.mechanical-os.com.br/api/ServiceOrder';
-export const AUTH_URL = 'https://api.mechanical-os.com.br/api/auth';
+export const CUSTOMER_URL = 'https://localhost:5001/api/customer';
+export const VEHICLE_URL = 'https://localhost:5001/api/Vehicle';
+export const SERVICES_URL = 'https://localhost:5001/api/Service';
+export const TOOLS_URL = 'https://localhost:5001/api/Bootstrap';
+export const ORDERS_URL = 'https://localhost:5001/api/orders';
+export const SERVICE_ORDER_URL = 'https://localhost:5001/api/ServiceOrder';
+export const AUTH_URL = 'https://localhost:5001/api/auth';
 export const VIA_CEP_URL = 'https://viacep.com.br/ws';
-export const COLOR_URL = 'https://api.mechanical-os.com.br/api/Color';
-export const BRAND_URL = 'https://api.mechanical-os.com.br/api/Brand';
-export const VEHICLE_MODEL_URL = 'https://api.mechanical-os.com.br/api/VehicleModel';
+export const COLOR_URL = 'https://localhost:5001/api/Color';
+export const BRAND_URL = 'https://localhost:5001/api/Brand';
+export const VEHICLE_MODEL_URL = 'https://localhost:5001/api/VehicleModel';
 
 export const MODULE_URLS = {
   customers: CUSTOMER_URL,

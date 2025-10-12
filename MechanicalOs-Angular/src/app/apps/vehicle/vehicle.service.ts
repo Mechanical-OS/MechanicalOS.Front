@@ -7,6 +7,7 @@ import { VEHICLE_URL, COLOR_URL, BRAND_URL, VEHICLE_MODEL_URL } from "src/app/Ht
 import { Observable } from "rxjs";
 import { map } from "rxjs/operators";
 import { Result } from "src/app/Http/models/operation-result.model";
+import { PlateConsultationResponse } from "../Shared/models/plate-consultation.model";
 
 // Interface para o modelo de dados enviado para a API
 interface VehicleApiModel {
@@ -140,6 +141,19 @@ export class VehicleService extends BaseService<Vehicle> {
      * @returns Observable<Result<Vehicle>>
      */
     getByPlate(plate: string): Observable<Result<Vehicle>> {
+        console.log(plate);
         return this.http.get<Result<Vehicle>>(`${this.vehicleUrl}/GetByPlate/${plate}`);
+    }
+
+    /**
+     * Consulta dados da placa via API interna .NET
+     * @param plate Placa do veículo
+     * @returns Observable<PlateConsultationResponse>
+     */
+    consultPlateExternal(plate: string): Observable<PlateConsultationResponse> {
+        console.log('Consultando placa via API interna:', plate);
+        const url = `${VEHICLE_URL}/ConsultPlateApi/${plate}`;
+        console.log('URL da consulta:', url);
+        return this.http.get<PlateConsultationResponse>(url);
     }
 }

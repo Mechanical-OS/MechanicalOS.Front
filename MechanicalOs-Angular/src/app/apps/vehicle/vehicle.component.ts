@@ -182,7 +182,6 @@ export class VehicleComponent implements OnInit {
 
     this.service.getAll(request).subscribe({
       next: (ret: any) => {
-        console.log('Dados recebidos da API:', ret);
         
         if (ret && ret.content && ret.content.resultList) {
           this.list = ret.content.resultList;

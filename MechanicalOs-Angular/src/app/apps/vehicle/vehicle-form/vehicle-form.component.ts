@@ -10,8 +10,9 @@ import { MetroButton } from 'src/app/shared/metro-menu/metro-menu.component';
 import { Vehicle, Color, Brand, VehicleModel } from '../../Shared/models/vehicle.model';
 import { Result } from 'src/app/Http/models/operation-result.model';
 import { SelectizeModel } from 'src/app/shared/selectize/selectize.component';
-import { forkJoin } from 'rxjs';
+import { forkJoin, concat } from 'rxjs';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { PlateConsultationResponse } from '../../Shared/models/plate-consultation.model';
 
 // Interface para o modelo de dados enviado para a API
 interface VehicleApiModel {
@@ -41,6 +42,10 @@ export class VehicleFormComponent implements OnInit {
   isEditMode = false;
   vehicleId: string | null = null;
   isDisabled: boolean = false;
+  
+  // Propriedades para busca de placa
+  searchedPlate: string = '';
+  isSearchingPlate: boolean = false;
 
   brands: SelectizeModel[] = [];
   vehicleModels: SelectizeModel[] = [];
@@ -278,39 +283,57 @@ export class VehicleFormComponent implements OnInit {
 
 
   /**
-   * Carrega dados iniciais (cores e marcas) da API usando forkJoin
-   * Modelos serão carregados apenas quando uma marca for selecionada
+   * Carrega dados iniciais (cores e marcas) da API de forma sequencial
+   * para evitar erro de mapeamento duplicado no backend
    */
   loadInitialData(): void {
-    forkJoin({
-      colors: this.service.getAllColors(),
-      brands: this.service.getAllBrands()
-    }).subscribe({
-      next: (data) => {
-        // Processa cores
-        this.colors = data.colors.map(color => ({
+    console.log('Iniciando carregamento sequencial de dados...');
+    
+    // Carrega cores primeiro
+    this.service.getAllColors().subscribe({
+      next: (colors) => {
+        console.log('✅ Cores carregadas:', colors.length);
+        this.colors = colors.map(color => ({
           id: color.id,
           label: color.name
         }));
+        this.cdr.detectChanges();
+        
+        // Após cores carregadas, carrega marcas
+        this.loadBrandsAfterColors();
+      },
+      error: (error) => {
+        console.error('❌ Erro ao carregar cores:', error);
+        this.notificationService.showMessage('Erro ao carregar cores. Tente novamente.', 'error');
+        // Mesmo com erro, tenta carregar marcas
+        this.loadBrandsAfterColors();
+      }
+    });
+  }
 
-        // Processa marcas
-        this.brands = data.brands.map(brand => ({
+  private loadBrandsAfterColors(): void {
+    console.log('Carregando marcas...');
+    this.service.getAllBrands().subscribe({
+      next: (brands) => {
+        console.log('✅ Marcas carregadas:', brands.length);
+        this.brands = brands.map(brand => ({
           id: brand.id,
           label: brand.name
         }));
+        this.cdr.detectChanges();
 
         // Inicializa lista vazia de modelos
         this.vehicleModels = [];
 
-        console.log('Dados iniciais carregados com sucesso:', { 
-          colors: this.colors, 
-          brands: this.brands
+        console.log('✅ Dados iniciais carregados com sucesso:', {
+          cores: this.colors.length,
+          marcas: this.brands.length,
+          modelos: this.vehicleModels.length
         });
-        console.log('Modelos serão carregados quando uma marca for selecionada');
       },
       error: (error) => {
-        console.error('Erro ao carregar dados iniciais:', error);
-        this.notificationService.showMessage('Erro ao carregar dados iniciais.', 'error');
+        console.error('❌ Erro ao carregar marcas:', error);
+        this.notificationService.showMessage('Erro ao carregar marcas. Tente novamente.', 'error');
       }
     });
   }
@@ -364,12 +387,15 @@ export class VehicleFormComponent implements OnInit {
               // Navega de volta para a listagem após sucesso
               this.router.navigate(['apps/vehicles']);
             } else {
-              this.notificationService.showMessage('Erro ao atualizar veículo.', 'error');
+              // Trata erro retornado pela API com statusCode diferente de 200
+              console.log('Erro ao atualizar veículo:', ret.message);
             }
           },
           error: (error) => {
             console.error('Erro ao atualizar veículo:', error);
-            this.notificationService.showMessage('Erro ao atualizar veículo.', 'error');
+            
+            // Trata erro HTTP (ex: 400, 500, etc)
+            console.log('Erro ao atualizar veículo:', error.message);
           }
         });
       } else {
@@ -377,25 +403,26 @@ export class VehicleFormComponent implements OnInit {
         this.service.saveVehicle(vehicleApiData).subscribe({
           next: (ret: Result<Vehicle>) => {
             if (ret.statusCode === 200) {
-              this.notificationService.showMessage('Veículo cadastrado com sucesso.', 'success');
+              this.notificationService.showToast('Veículo cadastrado com sucesso.', 'success');
+              
+              // Limpa o formulário
               this.form.reset();
+              
+              // Limpa o campo de busca de placa
+              this.searchedPlate = '';
+              
               // Limpa as listas de modelos e marca selecionada
               this.vehicleModels = [];
               this.selectedBrandName = '';
-            } else {
-              this.notificationService.showMessage('Erro ao cadastrar veículo.', 'error');
+              
+            } else if (ret.statusCode === 400) {
+              // Trata erro retornado pela API com statusCode diferente de 200
+              console.log('Erro ao cadastrar veículo:', ret.message);
             }
           },
-          error: (error) => {
-            console.error('Erro ao cadastrar veículo:', error);
-            this.notificationService.showMessage('Erro ao cadastrar veículo.', 'error');
-          }
         });
       }
-    } else {
-      this.form.markAllAsTouched();
-      this.notificationService.showMessage('Preencha todos os campos obrigatórios.', 'error');
-    }
+    } 
   }
   //#endregion
 
@@ -614,6 +641,519 @@ export class VehicleFormComponent implements OnInit {
         this.router.navigate(['apps/vehicles/new']);
         break;
     }
+  }
+
+  /**
+   * Extrai e formata mensagens de erro da API
+   * @param error Objeto de erro retornado pela API
+   * @returns Mensagem de erro formatada
+   */
+  private extractErrorMessage(error: any): string {
+    console.log('🔍 Extraindo mensagem de erro:', error);
+    console.log('🔍 Tipo do erro:', typeof error);
+    console.log('🔍 É array?:', Array.isArray(error));
+    
+    // Se não houver erro, retorna mensagem genérica
+    if (!error && error !== 0 && error !== false) {
+      console.log('❌ Erro é null/undefined');
+      return 'Erro ao processar operação.';
+    }
+    
+    // Função para processar array de validações
+    const processValidationArray = (validationArray: any[]): string => {
+      console.log('📝 Processando array de validações:', validationArray);
+      const messages: string[] = [];
+      
+      validationArray.forEach((item: any) => {
+        console.log('📄 Processando item:', item);
+        // Extrai todas as chaves e valores do objeto
+        Object.keys(item).forEach(key => {
+          const value = item[key];
+          console.log(`   📌 ${key}: ${value}`);
+          
+          // Traduz algumas mensagens comuns
+          let translatedMessage = value;
+          if (value === 'Plate already exists.') {
+            translatedMessage = 'Placa já cadastrada no sistema.';
+          } else if (value === 'Chassi already exists.') {
+            translatedMessage = 'Chassi já cadastrado no sistema.';
+          } else if (value === 'Invalid year format.') {
+            translatedMessage = 'Formato de ano inválido.';
+          }
+          
+          messages.push(translatedMessage);
+        });
+      });
+      
+      console.log('✅ Mensagens processadas:', messages);
+      return messages.length > 0 ? messages.join(' ') : 'Erro ao processar operação.';
+    };
+    
+    // Caso 1: O erro já é um array (erro HTTP direto)
+    if (Array.isArray(error)) {
+      console.log('✅ CASO 1: Erro é um array direto');
+      return processValidationArray(error);
+    }
+    
+    // Caso 2: O erro tem uma propriedade 'message' que é string JSON
+    if (error.message && typeof error.message === 'string') {
+      console.log('🔍 CASO 2: Erro.message é string, tentando parse...');
+      try {
+        const parsedMessage = JSON.parse(error.message);
+        console.log('✅ Parse bem-sucedido:', parsedMessage);
+        
+        if (Array.isArray(parsedMessage)) {
+          console.log('✅ CASO 2: Erro.message é um array JSON');
+          return processValidationArray(parsedMessage);
+        }
+        
+        return error.message;
+      } catch (e) {
+        console.log('❌ Parse falhou, retornando mensagem original');
+        // Se não for JSON válido, retorna a mensagem original
+        return error.message;
+      }
+    }
+    
+    // Caso 3: O erro tem uma propriedade 'message' que já é um objeto/array
+    if (error.message && typeof error.message === 'object') {
+      console.log('🔍 CASO 3: Erro.message é objeto');
+      if (Array.isArray(error.message)) {
+        console.log('✅ CASO 3: Erro.message é um array de objetos');
+        return processValidationArray(error.message);
+      }
+    }
+    
+    // Caso 4: Verifica se há outras propriedades que possam conter as validações
+    if (error.error && Array.isArray(error.error)) {
+      console.log('✅ CASO 4: error.error é um array');
+      return processValidationArray(error.error);
+    }
+    
+    if (error.errors && Array.isArray(error.errors)) {
+      console.log('✅ CASO 5: error.errors é um array');
+      return processValidationArray(error.errors);
+    }
+    
+    // Caso final: Retorna mensagem genérica ou string simples
+    console.log('⚠️ Nenhum caso específico encontrado, usando fallback');
+    if (typeof error === 'string') {
+      return error;
+    }
+    return error.message || error.statusText || 'Erro ao processar operação.';
+  }
+
+  //#region Métodos de busca de placa
+  onPlateSearchChange(event: any): void {
+    const value = event.target.value;
+    this.searchedPlate = value.toUpperCase();
+    
+    // Atualiza o campo plate do formulário
+    this.form.patchValue({ plate: this.searchedPlate });
+    
+    // Se a placa foi limpa, limpa também o formulário
+    if (!this.searchedPlate || this.searchedPlate.trim() === '') {
+      this.clearFormData();
+    }
+  }
+
+  searchPlate(): void {
+    if (!this.searchedPlate || this.searchedPlate.trim() === '') {
+      this.notificationService.showMessage('Por favor, digite uma placa para buscar.', 'warning');
+      return;
+    }
+
+    this.isSearchingPlate = true;
+    
+    // Busca na API externa de consulta de placas
+    this.service.consultPlateExternal(this.searchedPlate).subscribe({
+      next: (result: PlateConsultationResponse) => {
+        this.isSearchingPlate = false;
+        
+        if (result && result.placa) {
+          this.loadVehicleDataFromPlateConsultation(result);
+          this.notificationService.showMessage('Dados do veículo carregados com sucesso!', 'success');
+        } else {
+          this.notificationService.showMessage('Placa não encontrada na base de dados.', 'warning');
+        }
+      },
+      error: (error) => {
+        this.isSearchingPlate = false;
+        console.error('Erro ao buscar placa:', error);
+        this.notificationService.showMessage('Erro ao buscar dados da placa. Tente novamente.', 'error');
+      }
+    });
+  }
+
+  private loadVehicleDataFromPlateConsultation(plateData: PlateConsultationResponse): void {
+    console.log('Dados da consulta de placa via API interna:', plateData);
+    
+    // Preenche os campos básicos do formulário
+    this.form.patchValue({
+      version: plateData.versao || plateData.VERSAO || plateData.SUBMODELO || '',
+      year: plateData.ano || plateData.extra?.ano_fabricacao || '',
+      chassi: plateData.chassi || plateData.extra?.chassi || '',
+      engine: plateData.extra?.motor || plateData.extra?.cilindradas || ''
+    });
+
+    // Processa marca
+    if (plateData.marca || plateData.MARCA) {
+      const brandName = plateData.marca || plateData.MARCA;
+      this.processVehicleBrand(brandName);
+    }
+
+    // Processa modelo
+    if (plateData.modelo || plateData.MODELO) {
+      const modelName = plateData.modelo || plateData.MODELO;
+      // O modelo será processado após a marca ser selecionada
+      setTimeout(() => {
+        this.processVehicleModel(modelName);
+      }, 300);
+    }
+
+    // Processa cor
+    if (plateData.cor) {
+      this.processVehicleColorFromPlate(plateData.cor);
+    }
+
+    console.log('✅ Formulário preenchido com dados da consulta interna:', {
+      marca: plateData.marca || plateData.MARCA,
+      modelo: plateData.modelo || plateData.MODELO,
+      cor: plateData.cor,
+      ano: plateData.ano,
+      versao: plateData.versao
+    });
+  }
+
+  private processVehicleBrand(brandName: string): void {
+    console.log('🔍 Processando marca:', brandName);
+    console.log('📋 Lista de marcas disponíveis:', this.brands);
+    
+    // Busca marca na lista carregada
+    const existingBrand = this.brands.find(b => 
+      b.label.toUpperCase().includes(brandName.toUpperCase()) ||
+      brandName.toUpperCase().includes(b.label.toUpperCase())
+    );
+    
+    if (existingBrand) {
+      console.log('✅ Marca encontrada, selecionando:', existingBrand);
+      console.log('📝 Valor atual do brandControl ANTES:', this.brandControl.value);
+      
+      // Setta o ID da marca no controle
+      this.brandControl.setValue(existingBrand.id);
+      console.log('📝 Valor do brandControl APÓS setValue(id):', this.brandControl.value);
+      
+      this.selectedBrandName = existingBrand.label;
+      
+      // Força detecção de mudanças
+      this.cdr.detectChanges();
+      
+      // Chama o evento de mudança passando o ID (como o select faz)
+      this.onSelectBrandChange(existingBrand.id);
+      
+      console.log('✅ Marca setada com sucesso:', {
+        id: existingBrand.id,
+        label: existingBrand.label,
+        controlValue: this.brandControl.value
+      });
+    } else {
+      console.log('❌ Marca não encontrada:', brandName);
+      console.log('❌ Nomes de marcas disponíveis:', this.brands.map(b => b.label));
+      // Aqui poderia implementar cadastro automático de marca se necessário
+    }
+  }
+
+  private processVehicleModel(modelName: string): void {
+    // Busca modelo na lista carregada
+    const existingModel = this.vehicleModels.find(m => 
+      m.label.toUpperCase().includes(modelName.toUpperCase()) ||
+      modelName.toUpperCase().includes(m.label.toUpperCase())
+    );
+    
+    if (existingModel) {      
+      // Setta o ID do modelo no controle
+      this.vehicleModelControl.setValue(existingModel.id);
+      
+      // Força detecção de mudanças
+      this.cdr.detectChanges();
+      
+      console.log('✅ Modelo setado com sucesso:', {
+        id: existingModel.id,
+        label: existingModel.label,
+        controlValue: this.vehicleModelControl.value
+      });
+    } else {
+      console.log('🆕 Modelo não encontrado, cadastrando automaticamente:', modelName);
+      
+      // Verifica se há uma marca selecionada
+      const selectedBrandId = this.brandControl.value;
+      if (!selectedBrandId) {
+        console.error('❌ Não é possível cadastrar modelo sem marca selecionada');
+        this.notificationService.showMessage(
+          'Erro: Marca não selecionada para cadastrar modelo automaticamente.', 
+          'error'
+        );
+        return;
+      }
+      
+      const modelData = {
+        brandId: selectedBrandId,
+        name: modelName.trim(),
+        description: modelName.trim()
+      };
+      
+      console.log('📤 Enviando modelo para cadastro:', modelData);
+      
+      this.service.saveVehicleModel(modelData).subscribe({
+        next: (result: Result<VehicleModel>) => {
+          if (result.statusCode === 200 && result.content) {
+            
+            // Adiciona o novo modelo diretamente à lista
+            const newModelOption = {
+              id: result.content.id,
+              label: result.content.name
+            };
+            
+            const alreadyExists = this.vehicleModels.find(m => m.id === newModelOption.id);
+            // if (!alreadyExists) {
+            //   this.vehicleModels.push(newModelOption);
+            //   this.cdr.detectChanges();
+            // }
+            
+            // Seleciona o modelo recém-cadastrado usando o ID
+            // this.vehicleModelControl.setValue(newModelOption.id);
+            // console.log('✅ Modelo adicionado e selecionado:', newModelOption);
+            
+            // this.notificationService.showMessage(
+            //   `Modelo "${modelName}" cadastrado automaticamente!`, 
+            //   'success'
+            // );
+          } else {
+            this.notificationService.showMessage(
+              'Erro ao cadastrar modelo automaticamente.', 
+              'warning'
+            );
+          }
+        },
+        error: (error) => {
+          console.error('❌ Erro ao cadastrar modelo:', error);
+          this.notificationService.showMessage(
+            'Erro ao cadastrar modelo automaticamente.', 
+            'error'
+          );
+        }
+      });
+    }
+  }
+
+  private processVehicleColorFromPlate(colorName: string): void {
+    console.log('🔍 Processando cor da consulta de placa:', colorName);
+    
+    // Busca cor na lista carregada
+    const existingColor = this.colors.find(c => 
+      c.label.toUpperCase() === colorName.toUpperCase()
+    );
+    
+    if (existingColor) {
+      console.log('✅ Cor já existe, selecionando:', existingColor);
+      
+      // Setta o ID da cor no controle (não o objeto)
+      this.colorControl.setValue(existingColor.id);
+      
+      // Força detecção de mudanças
+      this.cdr.detectChanges();
+      
+      console.log('✅ Cor setada com sucesso:', {
+        id: existingColor.id,
+        label: existingColor.label,
+        controlValue: this.colorControl.value
+      });
+    } else {
+      console.log('🆕 Cor não existe, cadastrando automaticamente:', colorName);
+      
+      const colorData = {
+        name: colorName,
+        description: colorName
+      };
+      
+      this.service.saveColor(colorData).subscribe({
+        next: (result: Result<Color>) => {
+          if (result.statusCode === 200 && result.content) {
+            console.log('✅ Cor cadastrada com sucesso:', result.content);
+            
+            // Adiciona a nova cor diretamente à lista
+            const newColorOption = {
+              id: result.content.id,
+              label: result.content.name
+            };
+            
+            const alreadyExists = this.colors.find(c => c.id === newColorOption.id);
+            if (!alreadyExists) {
+              this.colors.push(newColorOption);
+              this.cdr.detectChanges();
+            }
+            
+            // Seleciona a cor recém-cadastrada usando o ID
+            this.colorControl.setValue(newColorOption.id);
+            console.log('✅ Cor adicionada e selecionada:', newColorOption);
+            
+            this.notificationService.showMessage(
+              `Cor "${colorName}" cadastrada automaticamente!`, 
+              'success'
+            );
+          } else {
+            console.error('❌ Erro ao cadastrar cor:', result);
+            this.notificationService.showMessage(
+              'Erro ao cadastrar cor automaticamente.', 
+              'warning'
+            );
+          }
+        },
+        error: (error) => {
+          console.error('Erro ao cadastrar cor:', error);
+          this.notificationService.showMessage(
+            'Erro ao cadastrar cor automaticamente. Tente novamente.', 
+            'error'
+          );
+        }
+      });
+    }
+  }
+
+  private loadVehicleDataFromApi(vehicleData: Vehicle): void {
+    console.log('Dados do veículo recebidos da API:', vehicleData);
+    
+    // Preenche os campos básicos do formulário
+    this.form.patchValue({
+      version: vehicleData.version,
+      year: vehicleData.year,
+      chassi: vehicleData.chassi,
+      engine: vehicleData.engine || vehicleData.engineDisplacement || ''
+    });
+
+    // Busca e seleciona a marca
+    if (vehicleData.brand && vehicleData.brand.id) {
+      const brandMatch = this.brands.find(b => b.id === vehicleData.brand.id);
+      if (brandMatch) {
+        this.brandControl.setValue(brandMatch);
+        this.selectedBrandName = brandMatch.label;
+        this.onSelectBrandChange(brandMatch);
+        
+        // Após selecionar a marca, busca e seleciona o modelo
+        setTimeout(() => {
+          if (vehicleData.vehicleModel && vehicleData.vehicleModel.id) {
+            const modelMatch = this.vehicleModels.find(m => m.id === vehicleData.vehicleModel.id);
+            if (modelMatch) {
+              this.vehicleModelControl.setValue(modelMatch);
+            }
+          }
+        }, 200);
+      }
+    }
+
+    // Processa a cor - verifica se existe ou cadastra automaticamente
+    if (vehicleData.color && vehicleData.color.name) {
+      this.processVehicleColor(vehicleData.color);
+    }
+
+    // Se houver transmissão nos dados da API, tenta selecionar
+    if (vehicleData.transmission) {
+      const transmissionMatch = this.transmissions.find(t => 
+        t.label.toUpperCase().includes(vehicleData.transmission.toUpperCase())
+      );
+      if (transmissionMatch) {
+        this.transmissionControl.setValue(transmissionMatch);
+      }
+    }
+
+    console.log('Formulário preenchido com dados da API');
+  }
+
+  private processVehicleColor(colorFromApi: any): void {
+    console.log('Processando cor da API:', colorFromApi);
+    console.log('Lista atual de cores:', this.colors);
+    
+    // Verifica se a cor já existe na lista carregada
+    const existingColor = this.colors.find(c => 
+      c.label.toUpperCase() === colorFromApi.name.toUpperCase()
+    );
+    
+    if (existingColor) {
+      // Se a cor já existe, apenas seleciona
+      console.log('✅ Cor já existe, selecionando:', existingColor);
+      this.colorControl.setValue(existingColor);
+    } else {
+      // Se a cor não existe, cadastra automaticamente
+      console.log('🆕 Cor não existe, cadastrando automaticamente:', colorFromApi.name);
+      
+      const colorData = {
+        name: colorFromApi.name,
+        description: colorFromApi.description || colorFromApi.name
+      };
+      
+      this.service.saveColor(colorData).subscribe({
+        next: (result: Result<Color>) => {
+          if (result.statusCode === 200 && result.content) {
+            console.log('Cor cadastrada com sucesso:', result.content);
+            
+            // Adiciona a nova cor diretamente à lista sem recarregar tudo
+            const newColorOption = {
+              id: result.content.id,
+              label: result.content.name
+            };
+            
+            // Verifica se a cor já não foi adicionada (evita duplicatas)
+            const alreadyExists = this.colors.find(c => c.id === newColorOption.id);
+            if (!alreadyExists) {
+              this.colors.push(newColorOption);
+              this.cdr.detectChanges();
+            }
+            
+            // Seleciona a cor recém-cadastrada
+            this.colorControl.setValue(newColorOption);
+            console.log('Cor adicionada e selecionada:', newColorOption);
+            
+            this.notificationService.showMessage(
+              `Cor "${colorFromApi.name}" cadastrada automaticamente!`, 
+              'success'
+            );
+          } else {
+            console.error('Erro ao cadastrar cor:', result);
+            this.notificationService.showMessage(
+              'Erro ao cadastrar cor automaticamente.', 
+              'warning'
+            );
+          }
+        },
+        error: (error) => {
+          console.error('Erro ao cadastrar cor:', error);
+          this.notificationService.showMessage(
+            'Erro ao cadastrar cor automaticamente. Tente novamente.', 
+            'error'
+          );
+        }
+      });
+    }
+  }
+
+  private clearFormData(): void {
+    // Limpa apenas os campos que são preenchidos pela busca da placa
+    this.form.patchValue({
+      version: '',
+      year: '',
+      chassi: '',
+      engine: ''
+    });
+
+    // Limpa as seleções dos selects
+    this.brandControl.setValue(null);
+    this.vehicleModelControl.setValue(null);
+    this.colorControl.setValue(null);
+    this.transmissionControl.setValue(null);
+    this.selectedBrandName = '';
+    
+    // Limpa a lista de modelos
+    this.vehicleModels = [];
   }
   //#endregion
 }

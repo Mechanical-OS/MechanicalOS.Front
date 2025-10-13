@@ -4,20 +4,27 @@
         <div class="card">
             <div class="card-body">
                 <h5 class="card-title">Buscar Veículo</h5>
-                <div class="input-group">
+                <div class="input-group mb-2">
                     <input 
                         type="text" 
                         class="form-control" 
-                        placeholder="Buscar Placa"
+                        placeholder="Digite a placa"
                         [(ngModel)]="plateSearchValue"
-                        (keyup.enter)="onSearchPlate()">
+                        (keyup.enter)="onSearchPlate()"
+                        [disabled]="isSearching"
+                        maxlength="8">
                     <button 
                         class="btn btn-success" 
                         type="button" 
-                        (click)="onSearchPlate()">
-                        <i class="fas fa-search"></i>
+                        (click)="onSearchPlate()"
+                        [disabled]="isSearching || !plateSearchValue">
+                        <i class="fas fa-search" *ngIf="!isSearching"></i>
+                        <i class="fas fa-spinner fa-spin" *ngIf="isSearching"></i>
                     </button>
                 </div>
+                <small class="text-muted">
+                    Digite a placa para buscar os dados do veículo automaticamente
+                </small>
             </div>
         </div>
     </div>

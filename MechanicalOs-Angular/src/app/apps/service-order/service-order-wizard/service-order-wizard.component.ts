@@ -47,16 +47,16 @@ export class ServiceOrderWizardComponent implements OnInit {
     console.log('URL atual:', currentUrl);
     
     // Usa uma abordagem mais específica para detectar a etapa
-    if (currentUrl.endsWith('/owner')) {
+    if (currentUrl.endsWith('/owner') || currentUrl.endsWith('/new')) {
       this.currentStep = 'owner';
     } else if (currentUrl.endsWith('/address')) {
       this.currentStep = 'address';
+    } else if (currentUrl.endsWith('/vehicle')) {
+      this.currentStep = 'vehicle';
     } else if (currentUrl.endsWith('/services')) {
       this.currentStep = 'services';
-    } else if (currentUrl.endsWith('/vehicle') || currentUrl.endsWith('/new')) {
-      this.currentStep = 'vehicle';
     } else {
-      this.currentStep = 'vehicle';
+      this.currentStep = 'owner';
     }
     
     console.log('Etapa atual detectada:', this.currentStep);
@@ -73,15 +73,15 @@ export class ServiceOrderWizardComponent implements OnInit {
     setTimeout(() => {
       // Navega para a próxima etapa
       switch (this.currentStep) {
-        case 'vehicle':
-          console.log('Navegando para owner');
-          this.router.navigate(['/apps/service-orders/new/owner']);
-          break;
         case 'owner':
           console.log('Navegando para address');
           this.router.navigate(['/apps/service-orders/new/address']);
           break;
         case 'address':
+          console.log('Navegando para vehicle');
+          this.router.navigate(['/apps/service-orders/new/vehicle']);
+          break;
+        case 'vehicle':
           console.log('Navegando para services');
           this.router.navigate(['/apps/service-orders/new/services']);
           break;
@@ -106,17 +106,17 @@ export class ServiceOrderWizardComponent implements OnInit {
     setTimeout(() => {
       // Navega para a etapa anterior
       switch (this.currentStep) {
-        case 'owner':
-          console.log('Navegando para vehicle');
-          this.router.navigate(['/apps/service-orders/new/vehicle']);
-          break;
         case 'address':
           console.log('Navegando para owner');
           this.router.navigate(['/apps/service-orders/new/owner']);
           break;
-        case 'services':
+        case 'vehicle':
           console.log('Navegando para address');
           this.router.navigate(['/apps/service-orders/new/address']);
+          break;
+        case 'services':
+          console.log('Navegando para vehicle');
+          this.router.navigate(['/apps/service-orders/new/vehicle']);
           break;
         default:
           console.log('Voltando para listagem');

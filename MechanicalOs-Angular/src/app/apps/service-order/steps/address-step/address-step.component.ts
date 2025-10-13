@@ -1,6 +1,9 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ServiceOrderDraftService, AddressData } from '../../shared/service-order-draft.service';
+import { ViaCepService } from 'src/app/Http/via-cep/via-cep.service';
+import { NotificationService } from 'src/app/shared/services/notification.service';
+import { ZipCodeResponse } from 'src/app/Http/via-cep/zipcode-response';
 
 @Component({
   selector: 'app-address-step',
@@ -10,10 +13,13 @@ import { ServiceOrderDraftService, AddressData } from '../../shared/service-orde
 export class AddressStepComponent implements OnInit, OnDestroy {
   addressForm: FormGroup;
   zipCodeSearchValue: string = '';
+  isSearching: boolean = false;
 
   constructor(
     private fb: FormBuilder,
-    private draftService: ServiceOrderDraftService
+    private draftService: ServiceOrderDraftService,
+    private viaCepService: ViaCepService,
+    private notificationService: NotificationService
   ) {
     this.addressForm = this.createForm();
   }
@@ -44,25 +50,83 @@ export class AddressStepComponent implements OnInit, OnDestroy {
 
   onSearchZipCode(): void {
     if (this.zipCodeSearchValue && this.zipCodeSearchValue.trim()) {
-      // Simula busca por CEP (mock)
       this.searchAddressByZipCode(this.zipCodeSearchValue.trim());
     }
   }
 
   private searchAddressByZipCode(zipCode: string): void {
-    // Mock data baseado no CEP
-    const mockAddressData = {
-      city: 'Indaiatuba',
-      state: 'SP',
-      neighborhood: 'Jardim Bela Vista',
-      street: 'Av Ary Barnabé',
-      number: '251',
-      complement: 'Sem complemento',
-      zipCode: zipCode
-    };
+    // Remove a máscara do CEP (hífen)
+    const cleanZipCode = zipCode.replace(/\D/g, '');
+    
+    if (cleanZipCode.length !== 8) {
+      this.notificationService.showMessage('CEP deve conter 8 dígitos', 'warning');
+      return;
+    }
 
-    this.addressForm.patchValue(mockAddressData);
-    console.log(`Busca realizada para o CEP: ${zipCode}`);
+    this.isSearching = true;
+    this.notificationService.showLoading();
+
+    this.viaCepService.getCep(cleanZipCode).subscribe({
+      next: (response: ZipCodeResponse) => {
+        if (response.erro) {
+          // ViaCep retorna {erro: true} quando não encontra o CEP
+          this.handleZipCodeNotFound(zipCode);
+        } else {
+          // CEP encontrado - popula o formulário
+          this.populateFormWithZipCode(response);
+        }
+      },
+      error: (error) => {
+        console.error('Erro ao buscar CEP:', error);
+        this.notificationService.showError(error);
+        this.handleZipCodeNotFound(zipCode);
+      },
+      complete: () => {
+        this.isSearching = false;
+        this.notificationService.hideLoading();
+      }
+    });
+  }
+
+  private populateFormWithZipCode(zipCodeData: ZipCodeResponse): void {
+    // Formata o CEP com hífen
+    const formattedZipCode = this.formatZipCodeValue(zipCodeData.cep);
+
+    // Popula o formulário com os dados do ViaCep
+    this.addressForm.patchValue({
+      city: zipCodeData.localidade || '',
+      state: zipCodeData.uf || '',
+      neighborhood: zipCodeData.bairro || '',
+      street: zipCodeData.logradouro || '',
+      zipCode: formattedZipCode,
+      complement: zipCodeData.complemento || ''
+    });
+
+    console.log('Formulário populado com os dados do CEP:', zipCodeData);
+  }
+
+  private handleZipCodeNotFound(zipCode: string): void {
+    const formattedZipCode = this.formatZipCodeValue(zipCode);
+    
+    // Limpa o formulário e preenche apenas o CEP
+    this.addressForm.reset({
+      zipCode: formattedZipCode
+    });
+
+    this.notificationService.showMessage('CEP não encontrado. Por favor, preencha os dados manualmente.', 'info');
+    console.log('CEP não encontrado:', zipCode);
+  }
+
+  private formatZipCodeValue(zipCode: string): string {
+    // Remove tudo que não é dígito
+    let value = zipCode.replace(/\D/g, '');
+    
+    // Aplica a máscara
+    if (value.length <= 8) {
+      value = value.replace(/(\d{5})(\d)/, '$1-$2');
+    }
+    
+    return value;
   }
 
   onSaveAddress(): void {

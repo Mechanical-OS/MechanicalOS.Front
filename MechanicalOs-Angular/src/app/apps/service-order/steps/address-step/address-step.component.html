@@ -4,20 +4,27 @@
         <div class="card">
             <div class="card-body">
                 <h5 class="card-title">Buscar Endereço</h5>
-                <div class="input-group">
+                <div class="input-group mb-2">
                     <input 
                         type="text" 
                         class="form-control" 
-                        placeholder="Buscar CEP"
+                        placeholder="Digite o CEP"
                         [(ngModel)]="zipCodeSearchValue"
-                        (keyup.enter)="onSearchZipCode()">
+                        (keyup.enter)="onSearchZipCode()"
+                        [disabled]="isSearching"
+                        maxlength="9">
                     <button 
                         class="btn btn-success" 
                         type="button" 
-                        (click)="onSearchZipCode()">
-                        <i class="fas fa-search"></i>
+                        (click)="onSearchZipCode()"
+                        [disabled]="isSearching || !zipCodeSearchValue">
+                        <i class="fas fa-search" *ngIf="!isSearching"></i>
+                        <i class="fas fa-spinner fa-spin" *ngIf="isSearching"></i>
                     </button>
                 </div>
+                <small class="text-muted">
+                    Digite o CEP para buscar o endereço automaticamente
+                </small>
             </div>
         </div>
     </div>

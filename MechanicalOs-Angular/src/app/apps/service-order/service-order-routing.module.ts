@@ -14,10 +14,10 @@ const routes: Routes = [
         path: 'new',
         component: ServiceOrderWizardComponent,
         children: [
-            { path: '', redirectTo: 'vehicle', pathMatch: 'full' },
-            { path: 'vehicle', component: VehicleStepComponent },
+            { path: '', redirectTo: 'owner', pathMatch: 'full' },
             { path: 'owner', component: OwnerStepComponent },
             { path: 'address', component: AddressStepComponent },
+            { path: 'vehicle', component: VehicleStepComponent },
             { path: 'services', component: ServicesStepComponent }
         ]
     },

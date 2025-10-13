@@ -4,20 +4,26 @@
         <div class="card">
             <div class="card-body">
                 <h5 class="card-title">Buscar Proprietário</h5>
-                <div class="input-group">
+                <div class="input-group mb-2">
                     <input 
                         type="text" 
                         class="form-control" 
-                        placeholder="Buscar CPF"
+                        placeholder="Digite o CPF"
                         [(ngModel)]="cpfSearchValue"
-                        (keyup.enter)="onSearchCpf()">
+                        (keyup.enter)="onSearchCpf()"
+                        [disabled]="isSearching">
                     <button 
                         class="btn btn-success" 
                         type="button" 
-                        (click)="onSearchCpf()">
-                        <i class="fas fa-search"></i>
+                        (click)="onSearchCpf()"
+                        [disabled]="isSearching || !cpfSearchValue">
+                        <i class="fas fa-search" *ngIf="!isSearching"></i>
+                        <i class="fas fa-spinner fa-spin" *ngIf="isSearching"></i>
                     </button>
                 </div>
+                <small class="text-muted">
+                    Digite o CPF para buscar um cliente existente
+                </small>
             </div>
         </div>
     </div>

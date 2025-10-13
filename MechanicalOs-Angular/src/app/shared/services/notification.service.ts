@@ -89,4 +89,25 @@ export class NotificationService {
       confirmButtonText: 'OK'
     });
   }
+
+  // Exibe uma mensagem no formato toast no canto superior direito
+  showToast(message: string, icon: 'success' | 'error' | 'warning' | 'info' | 'question' = 'success', duration: number = 3000) {
+    const Toast = Swal.mixin({
+      toast: true,
+      position: 'top-end',
+      showConfirmButton: false,
+      timer: duration,
+      timerProgressBar: true,
+      backdrop: false,
+      didOpen: (toast) => {
+        toast.addEventListener('mouseenter', Swal.stopTimer);
+        toast.addEventListener('mouseleave', Swal.resumeTimer);
+      }
+    });
+
+    Toast.fire({
+      icon: icon,
+      title: message
+    });
+  }
 }

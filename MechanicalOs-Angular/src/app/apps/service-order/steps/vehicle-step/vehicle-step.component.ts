@@ -1,6 +1,9 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ServiceOrderDraftService, VehicleData } from '../../shared/service-order-draft.service';
+import { VehicleService } from 'src/app/apps/vehicle/vehicle.service';
+import { NotificationService } from 'src/app/shared/services/notification.service';
+import { PlateConsultationResponse } from 'src/app/apps/Shared/models/plate-consultation.model';
 
 @Component({
   selector: 'app-vehicle-step',
@@ -10,10 +13,14 @@ import { ServiceOrderDraftService, VehicleData } from '../../shared/service-orde
 export class VehicleStepComponent implements OnInit, OnDestroy {
   vehicleForm: FormGroup;
   plateSearchValue: string = '';
+  isSearching: boolean = false;
+  vehicleFound: PlateConsultationResponse | null = null;
 
   constructor(
     private fb: FormBuilder,
-    private draftService: ServiceOrderDraftService
+    private draftService: ServiceOrderDraftService,
+    private vehicleService: VehicleService,
+    private notificationService: NotificationService
   ) {
     this.vehicleForm = this.createForm();
   }
@@ -46,27 +53,83 @@ export class VehicleStepComponent implements OnInit, OnDestroy {
 
   onSearchPlate(): void {
     if (this.plateSearchValue && this.plateSearchValue.trim()) {
-      // Simula busca por placa (mock)
       this.searchVehicleByPlate(this.plateSearchValue.trim());
     }
   }
 
   private searchVehicleByPlate(plate: string): void {
-    // Mock data baseado na placa
-    const mockVehicleData = {
-      brand: 'Hyundai',
-      model: 'HB20',
-      version: '1.6 Sedan',
-      year: '2020',
-      chassi: '9BWZZZZZZZZZZZZZZ',
-      color: 'Branco',
-      transmission: 'Manual',
-      engine: '1.6 16V',
-      plate: plate.toUpperCase()
-    };
+    // Remove caracteres especiais da placa
+    const cleanPlate = plate.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+    
+    if (cleanPlate.length < 7) {
+      this.notificationService.showMessage('Placa deve conter pelo menos 7 caracteres', 'warning');
+      return;
+    }
 
-    this.vehicleForm.patchValue(mockVehicleData);
-    console.log(`Busca realizada para a placa: ${plate}`);
+    this.isSearching = true;
+    this.notificationService.showLoading();
+
+    this.vehicleService.consultPlateExternal(cleanPlate).subscribe({
+      next: (response: PlateConsultationResponse) => {
+        if (response && response.placa) {
+          // Veículo encontrado - popula o formulário
+          this.vehicleFound = response;
+          this.populateFormWithVehicle(response);
+        } else {
+          // Veículo não encontrado
+          this.handleVehicleNotFound(cleanPlate);
+        }
+      },
+      error: (error) => {
+        console.error('Erro ao buscar veículo:', error);
+        this.notificationService.showError(error);
+        this.handleVehicleNotFound(cleanPlate);
+      },
+      complete: () => {
+        this.isSearching = false;
+        this.notificationService.hideLoading();
+      }
+    });
+  }
+
+  private populateFormWithVehicle(vehicleData: PlateConsultationResponse): void {
+    // Extrai os dados da resposta
+    const brand = vehicleData.MARCA || vehicleData.marca || '';
+    const model = vehicleData.MODELO || vehicleData.modelo || '';
+    const version = vehicleData.VERSAO || vehicleData.versao || vehicleData.SUBMODELO || vehicleData.submodelo || '';
+    const year = vehicleData.ano || vehicleData.anoModelo || '';
+    const chassi = vehicleData.chassi || vehicleData.extra?.chassi || '';
+    const color = vehicleData.cor || '';
+    const transmission = vehicleData.extra?.caixa_cambio || '';
+    const engine = vehicleData.extra?.motor || '';
+    const plate = vehicleData.placa || vehicleData.extra?.placa || '';
+
+    // Popula o formulário com os dados do veículo
+    this.vehicleForm.patchValue({
+      brand: brand,
+      model: model,
+      version: version,
+      year: year,
+      chassi: chassi,
+      color: color,
+      transmission: transmission,
+      engine: engine,
+      plate: plate.toUpperCase()
+    });
+
+    console.log('Formulário populado com os dados do veículo:', vehicleData);
+  }
+
+  private handleVehicleNotFound(plate: string): void {
+    this.vehicleFound = null;
+    
+    // Limpa o formulário e preenche apenas a placa
+    this.vehicleForm.reset({
+      plate: plate.toUpperCase()
+    });
+
+    this.notificationService.showMessage('Veículo não encontrado. Por favor, preencha os dados manualmente.', 'info');
+    console.log('Veículo não encontrado para a placa:', plate);
   }
 
   onSaveVehicle(): void {

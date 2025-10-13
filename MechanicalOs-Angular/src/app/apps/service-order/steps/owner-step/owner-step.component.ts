@@ -1,6 +1,9 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ServiceOrderDraftService, OwnerData } from '../../shared/service-order-draft.service';
+import { CustomerService } from 'src/app/apps/customers/customer.service';
+import { NotificationService } from 'src/app/shared/services/notification.service';
+import { Customer } from 'src/app/apps/Shared/models/customer.model';
 
 @Component({
   selector: 'app-owner-step',
@@ -10,10 +13,14 @@ import { ServiceOrderDraftService, OwnerData } from '../../shared/service-order-
 export class OwnerStepComponent implements OnInit, OnDestroy {
   ownerForm: FormGroup;
   cpfSearchValue: string = '';
+  isSearching: boolean = false;
+  customerFound: Customer | null = null;
 
   constructor(
     private fb: FormBuilder,
-    private draftService: ServiceOrderDraftService
+    private draftService: ServiceOrderDraftService,
+    private customerService: CustomerService,
+    private notificationService: NotificationService
   ) {
     this.ownerForm = this.createForm();
   }
@@ -46,26 +53,91 @@ export class OwnerStepComponent implements OnInit, OnDestroy {
 
   onSearchCpf(): void {
     if (this.cpfSearchValue && this.cpfSearchValue.trim()) {
-      // Simula busca por CPF (mock)
       this.searchOwnerByCpf(this.cpfSearchValue.trim());
     }
   }
 
   private searchOwnerByCpf(cpf: string): void {
-    // Mock data baseado no CPF
-    const mockOwnerData = {
-      firstName: 'Kleiton',
-      lastName: 'Freitas',
-      cpf: cpf,
-      rg: '12.345.678-9',
-      email: 'kleitonsfreitas@gmail.com',
-      phone: '11-3456-7890',
-      cellPhone: '11-98765-4321',
-      contact: 'Kleiton'
-    };
+    this.isSearching = true;
+    this.notificationService.showLoading();
 
-    this.ownerForm.patchValue(mockOwnerData);
-    console.log(`Busca realizada para o CPF: ${cpf}`);
+    this.customerService.getBySocialNumber(cpf).subscribe({
+      next: (response) => {
+        if (response.statusCode === 200 && response.content) {
+          // Customer encontrado - popula o formulário
+          this.customerFound = response.content;
+          this.populateFormWithCustomer(response.content);
+         // this.notificationService.showSuccess(response);
+        } else {
+          // Customer não encontrado - apenas preenche o CPF
+          this.handleCustomerNotFound(cpf);
+        }
+      },
+      error: (error) => {
+        console.error('Erro ao buscar customer:', error);
+        // Se for 404, significa que não encontrou
+        if (error.status === 404) {
+          this.handleCustomerNotFound(cpf);
+        } else {
+          this.notificationService.showError(error);
+        }
+      },
+      complete: () => {
+        this.isSearching = false;
+        this.notificationService.hideLoading();
+      }
+    });
+  }
+
+  private populateFormWithCustomer(customer: Customer): void {
+    // Divide o nome em firstName e lastName
+    const nameParts = customer.name.split(' ');
+    const firstName = nameParts[0];
+    const lastName = nameParts.slice(1).join(' ');
+
+    // Formata o CPF
+    const formattedCpf = this.formatCpfValue(customer.socialNumber);
+
+    // Popula o formulário com os dados do customer
+    this.ownerForm.patchValue({
+      firstName: firstName,
+      lastName: lastName,
+      cpf: formattedCpf,
+      rg: customer.nationalId || '',
+      email: customer.email || '',
+      phone: customer.phone || '',
+      cellPhone: customer.whatsApp || '',
+      contact: firstName
+    });
+
+    console.log('Formulário populado com os dados do customer:', customer);
+  }
+
+  private handleCustomerNotFound(cpf: string): void {
+    this.customerFound = null;
+    const formattedCpf = this.formatCpfValue(cpf);
+    
+    // Limpa o formulário e preenche apenas o CPF
+    this.ownerForm.reset({
+      cpf: formattedCpf
+    });
+
+    this.notificationService.showMessage('Cliente não encontrado. Por favor, preencha os dados manualmente.', 'info');
+    console.log('Customer não encontrado para o CPF:', cpf);
+  }
+
+  private formatCpfValue(cpf: string): string {
+    // Remove tudo que não é dígito
+    let value = cpf.replace(/\D/g, '');
+    
+    // Aplica a máscara
+    if (value.length <= 11) {
+      value = value.replace(/(\d{3})(\d)/, '$1.$2');
+      value = value.replace(/(\d{3})(\d)/, '$1.$2');
+      value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+    }
+    
+    return value;
   }
 
   onSaveOwner(): void {

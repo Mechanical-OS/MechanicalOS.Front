@@ -14,16 +14,34 @@
         <div class="row">
           <!-- Coluna da imagem e histórico -->
           <div class="col-md-4 text-center" style="margin-top: 15%">
-            <div class="upload-box mb-3">
-              <div class="upload-content">
+            <div class="upload-box mb-3" 
+                (drop)="onFileDrop($event)" 
+                (dragover)="onDragOver($event)" 
+                (dragleave)="onDragLeave($event)"
+                [class.dragover]="isDragOver"
+                (click)="fileInput.click()"
+                style="cursor: pointer;">
+
+              <div class="upload-content" *ngIf="!previewUrl">
                 <i class="fas fa-cloud-upload-alt fa-2x mb-2"></i>
                 <p class="mb-0">Arraste a imagem aqui, ou clique.</p>
-                <small class="text-muted">foto do cliente</small>
+                <small class="text-muted">Foto do cliente</small>
               </div>
+
+              <div class="upload-preview" *ngIf="previewUrl">
+                <img [src]="previewUrl" alt="Foto do cliente" class="img-fluid rounded shadow-sm mb-2" style="max-height: 180px;">
+                <button class="btn btn-sm btn-outline-danger" type="button" (click)="removeImage($event)">
+                  Remover imagem
+                </button>
+              </div>
+
+              <input 
+                type="file" 
+                accept="image/*" 
+                #fileInput 
+                style="display: none;" 
+                (change)="onFileSelected($event)">
             </div>
-            <a class="text-success fw-bold" href="#">
-              VER HISTÓRICO DE MANUTENÇÃO <i class="fas fa-wrench"></i>
-            </a>
           </div>
 
           <!-- Formulário -->
@@ -205,7 +223,7 @@
                   <input
                     id="phone"
                     formControlName="phone"
-                    maxlength="11"
+                    maxlength="15"
                     (keypress)="onlyNumber($event)"
                     class="form-control"
                     [value]="form.get('phone')?.value | phone"
@@ -232,7 +250,7 @@
                   <input
                     id="whatsapp"
                     formControlName="whatsapp"
-                    maxlength="11"
+                    maxlength="15"
                     (keypress)="onlyNumber($event)"
                     class="form-control"
                     [value]="form.get('whatsapp')?.value | phone"

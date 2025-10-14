@@ -29,8 +29,8 @@ export class OwnerStepComponent implements OnInit, OnDestroy {
     console.log('OwnerStepComponent inicializado');
     // Carrega dados existentes se houver
     const currentDraft = this.draftService.getCurrentDraft();
-    if (currentDraft.owner) {
-      this.loadOwnerData(currentDraft.owner);
+    if (currentDraft.customer?.data) {
+      this.loadOwnerData(currentDraft.customer.data);
     }
   }
 
@@ -109,6 +109,10 @@ export class OwnerStepComponent implements OnInit, OnDestroy {
       cellPhone: customer.whatsApp || '',
       contact: firstName
     });
+
+    // Salva no draft com o ID do customer encontrado
+    const ownerData: OwnerData = this.ownerForm.value;
+    this.draftService.updateCustomerData(ownerData, customer.id);
 
     console.log('Formulário populado com os dados do customer:', customer);
   }
@@ -198,8 +202,12 @@ export class OwnerStepComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     console.log('OwnerStepComponent sendo destruído');
     // Salva automaticamente quando o componente é destruído
-    const ownerData: OwnerData = this.ownerForm.value;
-    this.draftService.updateOwnerData(ownerData);
-    console.log('Dados do owner salvos automaticamente:', ownerData);
+    if (this.ownerForm.valid) {
+      const ownerData: OwnerData = this.ownerForm.value;
+      const currentDraft = this.draftService.getCurrentDraft();
+      const customerId = currentDraft.customer?.id;
+      this.draftService.updateCustomerData(ownerData, customerId);
+      console.log('Dados do owner salvos automaticamente:', ownerData);
+    }
   }
 }

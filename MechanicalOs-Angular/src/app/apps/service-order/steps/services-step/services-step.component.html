@@ -1,4 +1,47 @@
 <div class="row">
+    <!-- Card de Resumo dos Dados Cadastrados -->
+    <div class="col-12 mb-3">
+        <div class="card border-primary">
+            <div class="card-body">
+                <h5 class="card-title text-primary">
+                    <i class="fas fa-info-circle me-2"></i>Resumo dos Dados Cadastrados
+                </h5>
+                
+                <div class="row" *ngIf="draftSummary">
+                    <div class="col-md-4">
+                        <div class="mb-2">
+                            <strong>Cliente:</strong><br>
+                            <span class="me-2">{{ getCustomerStatusIcon() }}</span>
+                            <small class="text-muted">{{ getCustomerStatusText() }}</small><br>
+                            {{ draftSummary.customer }}
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-2">
+                            <strong>Veículo:</strong><br>
+                            <span class="me-2">{{ getVehicleStatusIcon() }}</span>
+                            <small class="text-muted">{{ getVehicleStatusText() }}</small><br>
+                            {{ draftSummary.vehicle }}
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-2">
+                            <strong>Endereço:</strong><br>
+                            <span class="me-2">{{ getAddressStatusIcon() }}</span>
+                            <small class="text-muted">{{ getAddressStatusText() }}</small><br>
+                            {{ draftSummary.address }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-info mb-0 mt-2" role="alert">
+                    <i class="fas fa-lightbulb me-2"></i>
+                    <strong>Legenda:</strong> 🔵 Registro existente no banco | 🟢 Novo registro (será criado)
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Seção de serviços -->
     <div class="col-md-8">
         <div class="card">
@@ -11,26 +54,48 @@
                         <input 
                             type="text" 
                             class="form-control" 
-                            placeholder="Pesquise por código ou descrição"
+                            placeholder="Digite pelo menos 3 caracteres para buscar..."
                             [(ngModel)]="searchValue"
-                            (keyup.enter)="onSearchServices()">
-                        <button 
-                            class="btn btn-outline-secondary" 
-                            type="button" 
-                            (click)="onSearchServices()">
-                            <i class="fas fa-search"></i>
-                        </button>
+                            (input)="onSearchServices()">
+                        <span class="input-group-text bg-white">
+                            <i class="fas fa-search text-muted" *ngIf="!isLoadingServices"></i>
+                            <i class="mdi mdi-loading mdi-spin text-primary" *ngIf="isLoadingServices"></i>
+                        </span>
                     </div>
+                    <small class="text-muted d-block mt-1" *ngIf="searchValue && searchValue.length > 0 && searchValue.length < 3">
+                        <i class="mdi mdi-information-outline"></i> Digite mais {{ 3 - searchValue.length }} caractere(s) para buscar
+                    </small>
                 </div>
 
                 <!-- Lista de serviços disponíveis -->
-                <div class="mb-4" *ngIf="searchValue">
-                    <h6>Serviços disponíveis:</h6>
-                    <div class="list-group">
+                <div class="mb-4" *ngIf="searchValue && searchValue.length >= 3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="mb-0">Serviços disponíveis:</h6>
+                        <span *ngIf="isLoadingServices" class="text-muted">
+                            <i class="mdi mdi-loading mdi-spin"></i> Buscando...
+                        </span>
+                    </div>
+                    
+                    <!-- Mensagem quando está carregando -->
+                    <div *ngIf="isLoadingServices" class="text-center py-3">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Carregando...</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Mensagem quando não há resultados -->
+                    <div *ngIf="!isLoadingServices && availableServices.length === 0" class="alert alert-info">
+                        <i class="mdi mdi-information"></i> Nenhum serviço encontrado.
+                    </div>
+                    
+                    <!-- Lista de serviços -->
+                    <div class="list-group" *ngIf="!isLoadingServices && availableServices.length > 0">
                         <div class="list-group-item d-flex justify-content-between align-items-center available-service-item" 
-                             *ngFor="let service of getFilteredServices()">
+                             *ngFor="let service of availableServices">
                             <div>
-                                <strong>{{ service.name }}</strong><br>
+                                <strong>{{ service.name }}</strong>
+                                <span class="badge bg-secondary ms-2" *ngIf="service.code">{{ service.code }}</span>
+                                <br>
                                 <small class="text-muted">R$ {{ service.price.toFixed(2).replace('.', ',') }}</small>
                             </div>
                             <div class="action-buttons">
@@ -86,15 +151,15 @@
                     </table>
                 </div>
 
-                <!-- Seção de observações -->
+                <!-- Seção de descrição/observações -->
                 <div class="mt-4">
-                    <h6>Adicionar observação</h6>
+                    <h6>Descrição / Observações</h6>
                     <textarea 
                         class="form-control" 
                         rows="4" 
-                        placeholder="Digite suas observações aqui..."
-                        [(ngModel)]="observations"
-                        (blur)="updateObservations()">
+                        placeholder="Digite a descrição e observações da ordem de serviço..."
+                        [(ngModel)]="description"
+                        (blur)="updateDescription()">
                     </textarea>
                 </div>
             </div>
@@ -167,9 +232,29 @@
 
                 <!-- Botão Finalizar fixo -->
                 <div class="mt-3">
-                    <button type="button" class="btn btn-success w-100 btn-finalizar-fixed" (click)="finalizeOrder()">
-                        <i class="fas fa-check me-2"></i>Finalizar Ordem de Serviço
+                    <button 
+                        type="button" 
+                        class="btn btn-success w-100 btn-finalizar-fixed" 
+                        (click)="finalizeOrder()"
+                        [disabled]="!isReadyToFinalize || isFinalizingshowing || services.length === 0">
+                        <i class="fas fa-check me-2" *ngIf="!isFinalizingshowing"></i>
+                        <i class="fas fa-spinner fa-spin me-2" *ngIf="isFinalizingshowing"></i>
+                        {{ isFinalizingshowing ? 'Finalizando...' : 'Finalizar Ordem de Serviço' }}
                     </button>
+                    
+                    <div class="mt-2" *ngIf="!isReadyToFinalize">
+                        <small class="text-danger">
+                            <i class="fas fa-exclamation-triangle me-1"></i>
+                            Preencha todos os dados obrigatórios
+                        </small>
+                    </div>
+                    
+                    <div class="mt-2" *ngIf="services.length === 0">
+                        <small class="text-warning">
+                            <i class="fas fa-exclamation-triangle me-1"></i>
+                            Adicione pelo menos um serviço
+                        </small>
+                    </div>
                 </div>
             </div>
         </div>

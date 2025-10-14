@@ -28,8 +28,8 @@ export class VehicleStepComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     // Carrega dados existentes se houver
     const currentDraft = this.draftService.getCurrentDraft();
-    if (currentDraft.vehicle) {
-      this.loadVehicleData(currentDraft.vehicle);
+    if (currentDraft.vehicle?.data) {
+      this.loadVehicleData(currentDraft.vehicle.data);
     }
   }
 
@@ -117,6 +117,27 @@ export class VehicleStepComponent implements OnInit, OnDestroy {
       plate: plate.toUpperCase()
     });
 
+    // Tenta buscar se o veículo já existe no banco pela placa
+    this.vehicleService.getByPlate(plate).subscribe({
+      next: (response) => {
+        if (response.statusCode === 200 && response.content) {
+          // Veículo existe, salva com o ID
+          const vehicleFormData: VehicleData = this.vehicleForm.value;
+          this.draftService.updateVehicleData(vehicleFormData, response.content.id);
+          console.log('Veículo já cadastrado, ID:', response.content.id);
+        } else {
+          // Veículo novo, salva sem ID
+          const vehicleFormData: VehicleData = this.vehicleForm.value;
+          this.draftService.updateVehicleData(vehicleFormData);
+        }
+      },
+      error: () => {
+        // Veículo não existe, salva sem ID
+        const vehicleFormData: VehicleData = this.vehicleForm.value;
+        this.draftService.updateVehicleData(vehicleFormData);
+      }
+    });
+
     console.log('Formulário populado com os dados do veículo:', vehicleData);
   }
 
@@ -128,7 +149,7 @@ export class VehicleStepComponent implements OnInit, OnDestroy {
       plate: plate.toUpperCase()
     });
 
-    this.notificationService.showMessage('Veículo não encontrado. Por favor, preencha os dados manualmente.', 'info');
+    this.notificationService.showToast('Veículo não encontrado. Por favor, preencha os dados manualmente.', 'info');
     console.log('Veículo não encontrado para a placa:', plate);
   }
 
@@ -145,9 +166,13 @@ export class VehicleStepComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     console.log('VehicleStepComponent sendo destruído');
     // Salva automaticamente quando o componente é destruído
-    const vehicleData: VehicleData = this.vehicleForm.value;
-    this.draftService.updateVehicleData(vehicleData);
-    console.log('Dados do veículo salvos automaticamente:', vehicleData);
+    if (this.vehicleForm.valid) {
+      const vehicleData: VehicleData = this.vehicleForm.value;
+      const currentDraft = this.draftService.getCurrentDraft();
+      const vehicleId = currentDraft.vehicle?.id;
+      this.draftService.updateVehicleData(vehicleData, vehicleId);
+      console.log('Dados do veículo salvos automaticamente:', vehicleData);
+    }
   }
 
   private markFormGroupTouched(): void {

@@ -27,8 +27,8 @@ export class AddressStepComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     // Carrega dados existentes se houver
     const currentDraft = this.draftService.getCurrentDraft();
-    if (currentDraft.address) {
-      this.loadAddressData(currentDraft.address);
+    if (currentDraft.address?.data) {
+      this.loadAddressData(currentDraft.address.data);
     }
   }
 
@@ -162,8 +162,12 @@ export class AddressStepComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     console.log('AddressStepComponent sendo destruído');
     // Salva automaticamente quando o componente é destruído
-    const addressData: AddressData = this.addressForm.value;
-    this.draftService.updateAddressData(addressData);
-    console.log('Dados do endereço salvos automaticamente:', addressData);
+    if (this.addressForm.valid) {
+      const addressData: AddressData = this.addressForm.value;
+      const currentDraft = this.draftService.getCurrentDraft();
+      const addressId = currentDraft.address?.id;
+      this.draftService.updateAddressData(addressData, addressId);
+      console.log('Dados do endereço salvos automaticamente:', addressData);
+    }
   }
 }

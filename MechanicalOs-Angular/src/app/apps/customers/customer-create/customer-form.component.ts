@@ -13,6 +13,7 @@ import { MetroMenuService } from 'src/app/shared/metro-menu/metro-menu.service'
 import { NgbDateStruct } from '@ng-bootstrap/ng-bootstrap'
 import { ViaCepService } from 'src/app/Http/via-cep/via-cep.service'
 import { ZipCodeResponse } from 'src/app/Http/via-cep/zipcode-response'
+import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
   selector: 'app-customer-form',
@@ -96,11 +97,18 @@ export class CustomerFormComponent implements OnInit {
 
 
   loadCustomer(id: string): void {
-    this.service.findById(id).subscribe((customer: Result<Customer>) => {
-      console.log('Cliente para atualziar', customer)
-      const formValue = this.mapCustomerToForm(customer.content)
-      this.form.patchValue(formValue)
-    })
+    this.service.findById(id).subscribe(
+      (customer: Result<Customer>) => {
+        console.log('Cliente para atualziar', customer)
+        const formValue = this.mapCustomerToForm(customer.content)
+        this.form.patchValue(formValue)
+      },
+      (error: HttpErrorResponse) => {
+        console.error('Erro ao carregar cliente:', error);
+        this.notificationService.showError(error);
+        this.router.navigate(['apps/customers']);
+      }
+    );
   }
 
   private convertStringToNgbDateStruct(dateString: string): NgbDateStruct | null {
@@ -121,8 +129,8 @@ export class CustomerFormComponent implements OnInit {
       id: customer.id,
       firstName,
       lastName: rest.join(' '),
-      birthDate: customer.dateOfBirth 
-      ? this.convertStringToNgbDateStruct(customer.dateOfBirth) 
+      birthDate: customer.dateOfBirth
+      ? this.convertStringToNgbDateStruct(customer.dateOfBirth)
       : null,
       cpf: customer.socialNumber,
       rg: customer.nationalId,
@@ -139,60 +147,167 @@ export class CustomerFormComponent implements OnInit {
     }
   }
 
+  // limpa erros de API anteriores (mantendo outros erros do controle)
+  private clearApiErrors(): void {
+    Object.keys(this.form.controls).forEach(key => {
+      const control = this.form.get(key);
+      if (!control) return;
+      const errs = control.errors ? { ...control.errors } : null;
+      if (errs && errs['apiError']) {
+        delete errs['apiError'];
+        if (Object.keys(errs).length === 0) {
+          control.setErrors(null);
+        } else {
+          control.setErrors(errs);
+        }
+      }
+    });
+  }
+
+  private setFieldApiError(controlName: string, message: string): void {
+    const control = this.form.get(controlName);
+    if (!control) return;
+    const errs = control.errors ? { ...control.errors } : {};
+    errs['apiError'] = message;
+    control.setErrors(errs);
+    control.markAsTouched();
+  }
+
   onSubmit(): void {
+    this.clearApiErrors(); // Limpa erros de API de tentativas anteriores
     if (this.form.valid) {
       const customer = CustomerFactory.fromForm(this.form.value)
 
       if (this.isEditMode && this.customerId) {
         console.log('Update: ', customer)
-        this.service.update(customer).subscribe((ret: Result<Customer>) => {
-          if (ret.statusCode === 200) {
-            console.log(ret)
-            this.notificationService.showMessage(
-              'Cliente atualizado com sucesso.',
-              'success'
-            )
-          } else {
-            this.notificationService.showMessage(
-              'Erro ao atualizar cliente.',
-              'error'
-            )
+        this.service.update(customer).subscribe(
+          (ret: Result<Customer>) => {
+            if (ret.statusCode === 200) {
+              console.log(ret)
+              this.notificationService.showMessage(
+                'Cliente atualizado com sucesso.',
+                'Sucesso'
+              )
+            } else {
+              this.notificationService.showError(ret);
+            }
+          },
+          (error: HttpErrorResponse) => {
+            console.error('Erro ao atualizar cliente:', error);
+            this.notificationService.showError(error);
+            if (error.error && error.error.errors) {
+              for (const field in error.error.errors) {
+                if (this.form.get(field)) {
+                  this.setFieldApiError(field, error.error.errors[field][0]);
+                }
+              }
+            }
           }
-        })
+        )
       } else {
         console.log('Insert: ', customer)
-        this.service.save(customer).subscribe((ret: Result<Customer>) => {
-          if (ret.statusCode === 200) {
-            this.notificationService.showMessage(
-              'Cliente cadastrado com sucesso.',
-              'success'
-            )
-            this.form.reset()
-          } else {
-            this.notificationService.showMessage(
-              'Erro ao cadastrar cliente.',
-              'error'
-            )
+        this.service.save(customer).subscribe(
+          (ret: Result<Customer>) => {
+            if (ret.statusCode === 200) {
+              this.notificationService.showMessage(
+                'Cliente cadastrado com sucesso.',
+                'Sucesso'
+              )
+              this.form.reset()
+              this.metroMenuService.disableButton('save');
+            } else {
+              this.notificationService.showError(ret);
+            }
+          },
+          (error: HttpErrorResponse) => {
+            console.error('Erro ao cadastrar cliente:', error);
+            this.notificationService.showError(error);
+            if (error.error && error.error.errors) {
+              for (const field in error.error.errors) {
+                if (this.form.get(field)) {
+                  this.setFieldApiError(field, error.error.errors[field][0]);
+                }
+              }
+            }
           }
-        })
+        )
       }
     } else {
       this.form.markAllAsTouched()
     }
   }
 
+  // --- Variáveis ---
+  previewUrl: string | ArrayBuffer | null = null;
+  selectedFile: File | null = null;
+  isDragOver = false;
+
+  // --- Quando o usuário seleciona a imagem manualmente ---
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      this.selectedFile = input.files[0];
+      this.previewFile(this.selectedFile);
+    }
+  }
+
+  // --- Quando o usuário arrasta o arquivo ---
+  onFileDrop(event: DragEvent): void {
+    event.preventDefault();
+    this.isDragOver = false;
+
+    if (event.dataTransfer && event.dataTransfer.files.length > 0) {
+      this.selectedFile = event.dataTransfer.files[0];
+      this.previewFile(this.selectedFile);
+    }
+  }
+
+  // --- Efeitos visuais do drag ---
+  onDragOver(event: DragEvent): void {
+    event.preventDefault();
+    this.isDragOver = true;
+  }
+
+  onDragLeave(event: DragEvent): void {
+    event.preventDefault();
+    this.isDragOver = false;
+  }
+
+  // --- Remover imagem ---
+  removeImage(event: Event): void {
+    event.stopPropagation();
+    this.selectedFile = null;
+    this.previewUrl = null;
+  }
+
+  private previewFile(file: File): void {
+  const reader = new FileReader();
+  reader.onload = () => (this.previewUrl = reader.result);
+  reader.readAsDataURL(file);
+}
+
   getZipCode(): void {
     const value = this.form.controls['zipcode'].value
     if (value.length === 8) {
-      this.viaCepService.getCep(value).subscribe((ret: ZipCodeResponse) => {
-        this.form.patchValue({
-          street: ret.logradouro,
-          uf: ret.uf,
-          city: ret.localidade,
-          neighborhood: ret.bairro,
-          complement: ret.complemento
-        })
-      })
+      this.viaCepService.getCep(value).subscribe(
+        (ret: ZipCodeResponse) => {
+          this.form.patchValue({
+            street: ret.logradouro,
+            uf: ret.uf,
+            city: ret.localidade,
+            neighborhood: ret.bairro,
+            complement: ret.complemento
+          })
+        },
+        (error: HttpErrorResponse) => { // Tratamento de erro para ViaCEP
+          console.error('Erro ao buscar CEP:', error);
+          this.notificationService.showError(error);
+          this.form.patchValue({
+            street: '', uf: '', city: '', neighborhood: '', complement: ''
+          });
+          this.setFieldApiError('zipcode', 'CEP inválido ou não encontrado.');
+        }
+      );
     }
   }
 
@@ -269,26 +384,4 @@ export class CustomerFormComponent implements OnInit {
   clearDate(control: string) {
     this.form.controls[control].setValue(null)
   }
-
-  private convertDateToNgbDateStruct(
-    dateString: string | null
-  ): NgbDateStruct | null {
-    if (!dateString) return null
-    const date = new Date(dateString)
-    return {
-      year: date.getFullYear(),
-      month: date.getMonth() + 1,
-      day: date.getDate()
-    }
-  }
-
-  private convertNgbDateStructToString(
-    date: NgbDateStruct | null
-  ): string | null {
-    if (!date) return null
-    return `${date.year}-${date.month.toString().padStart(2, '0')}-${date.day
-      .toString()
-      .padStart(2, '0')}T00:00:00`
-  }
-  //#endregion
 }

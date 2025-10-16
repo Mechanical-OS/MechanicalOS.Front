@@ -61,6 +61,8 @@ export class AuthenticationService {
     logout(): void {
         // remove user from session storage to log user out
         sessionStorage.removeItem('currentUser');
+        // Limpar cache dos módulos de ferramentas
+        sessionStorage.removeItem('toolsModulesCache');
         this.user = null;
     }
 }

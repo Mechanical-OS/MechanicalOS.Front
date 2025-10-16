@@ -13,7 +13,7 @@ import { MetroMenuService } from 'src/app/shared/metro-menu/metro-menu.service'
 import { NgbDateStruct } from '@ng-bootstrap/ng-bootstrap'
 import { ViaCepService } from 'src/app/Http/via-cep/via-cep.service'
 import { ZipCodeResponse } from 'src/app/Http/via-cep/zipcode-response'
-import { HttpErrorResponse } from '@angular/common/http';
+import { HttpErrorResponse } from '@angular/common/http'
 
 @Component({
   selector: 'app-customer-form',
@@ -26,7 +26,6 @@ export class CustomerFormComponent implements OnInit {
 
   isEditMode = false
   customerId: string | null = null
-
   isDisabled: boolean = false
 
   constructor(
@@ -75,10 +74,7 @@ export class CustomerFormComponent implements OnInit {
       whatsapp: ['', [Validators.pattern(/^\d{10,11}$/)]],
       zipcode: ['', [Validators.required, Validators.pattern(/^\d{8}$/)]],
       street: ['', [Validators.required]],
-      uf: [
-        '',
-        [Validators.required, Validators.minLength(2), Validators.maxLength(2)]
-      ],
+      uf: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(2)]],
       city: ['', [Validators.required]],
       neighborhood: ['', [Validators.required]],
       number: ['', [Validators.required]],
@@ -89,12 +85,10 @@ export class CustomerFormComponent implements OnInit {
   onlyNumber(event: KeyboardEvent) {
     const pattern = /[0-9]/;
     const inputChar = String.fromCharCode(event.keyCode);
-
     if (!pattern.test(inputChar)) {
       event.preventDefault();
     }
   }
-
 
   loadCustomer(id: string): void {
     this.service.findById(id).subscribe(
@@ -106,22 +100,20 @@ export class CustomerFormComponent implements OnInit {
       (error: HttpErrorResponse) => {
         console.error('Erro ao carregar cliente:', error);
         this.notificationService.showError(error);
-        this.router.navigate(['apps/customers']);
       }
     );
   }
 
   private convertStringToNgbDateStruct(dateString: string): NgbDateStruct | null {
-  if (!dateString) return null;
-  const parts = dateString.split('-'); // esperado "YYYY-MM-DD"
-  if (parts.length !== 3) return null;
-
-  return {
-    year: +parts[0],
-    month: +parts[1],
-    day: +parts[2]
-  };
-}
+    if (!dateString) return null;
+    const parts = dateString.split('-');
+    if (parts.length !== 3) return null;
+    return {
+      year: +parts[0],
+      month: +parts[1],
+      day: +parts[2]
+    };
+  }
 
   mapCustomerToForm(customer: Customer): any {
     const [firstName, ...rest] = customer.name.split(' ')
@@ -130,8 +122,8 @@ export class CustomerFormComponent implements OnInit {
       firstName,
       lastName: rest.join(' '),
       birthDate: customer.dateOfBirth
-      ? this.convertStringToNgbDateStruct(customer.dateOfBirth)
-      : null,
+        ? this.convertStringToNgbDateStruct(customer.dateOfBirth)
+        : null,
       cpf: customer.socialNumber,
       rg: customer.nationalId,
       email: customer.email,
@@ -147,7 +139,6 @@ export class CustomerFormComponent implements OnInit {
     }
   }
 
-  // limpa erros de API anteriores (mantendo outros erros do controle)
   private clearApiErrors(): void {
     Object.keys(this.form.controls).forEach(key => {
       const control = this.form.get(key);
@@ -174,26 +165,20 @@ export class CustomerFormComponent implements OnInit {
   }
 
   onSubmit(): void {
-    this.clearApiErrors(); // Limpa erros de API de tentativas anteriores
+    this.clearApiErrors();
     if (this.form.valid) {
-      const customer = CustomerFactory.fromForm(this.form.value)
+      const customer = CustomerFactory.fromForm(this.form.value);
 
       if (this.isEditMode && this.customerId) {
-        console.log('Update: ', customer)
         this.service.update(customer).subscribe(
           (ret: Result<Customer>) => {
             if (ret.statusCode === 200) {
-              console.log(ret)
-              this.notificationService.showMessage(
-                'Cliente atualizado com sucesso.',
-                'Sucesso'
-              )
+              this.notificationService.showMessage('Cliente atualizado com sucesso.', 'Sucesso');
             } else {
               this.notificationService.showError(ret);
             }
           },
           (error: HttpErrorResponse) => {
-            console.error('Erro ao atualizar cliente:', error);
             this.notificationService.showError(error);
             if (error.error && error.error.errors) {
               for (const field in error.error.errors) {
@@ -205,22 +190,17 @@ export class CustomerFormComponent implements OnInit {
           }
         )
       } else {
-        console.log('Insert: ', customer)
         this.service.save(customer).subscribe(
           (ret: Result<Customer>) => {
             if (ret.statusCode === 200) {
-              this.notificationService.showMessage(
-                'Cliente cadastrado com sucesso.',
-                'Sucesso'
-              )
-              this.form.reset()
+              this.notificationService.showMessage('Cliente cadastrado com sucesso.', 'Sucesso');
+              this.form.reset();
               this.metroMenuService.disableButton('save');
             } else {
               this.notificationService.showError(ret);
             }
           },
           (error: HttpErrorResponse) => {
-            console.error('Erro ao cadastrar cliente:', error);
             this.notificationService.showError(error);
             if (error.error && error.error.errors) {
               for (const field in error.error.errors) {
@@ -237,55 +217,6 @@ export class CustomerFormComponent implements OnInit {
     }
   }
 
-  // --- Variáveis ---
-  previewUrl: string | ArrayBuffer | null = null;
-  selectedFile: File | null = null;
-  isDragOver = false;
-
-  // --- Quando o usuário seleciona a imagem manualmente ---
-  onFileSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    if (input.files && input.files.length > 0) {
-      this.selectedFile = input.files[0];
-      this.previewFile(this.selectedFile);
-    }
-  }
-
-  // --- Quando o usuário arrasta o arquivo ---
-  onFileDrop(event: DragEvent): void {
-    event.preventDefault();
-    this.isDragOver = false;
-
-    if (event.dataTransfer && event.dataTransfer.files.length > 0) {
-      this.selectedFile = event.dataTransfer.files[0];
-      this.previewFile(this.selectedFile);
-    }
-  }
-
-  // --- Efeitos visuais do drag ---
-  onDragOver(event: DragEvent): void {
-    event.preventDefault();
-    this.isDragOver = true;
-  }
-
-  onDragLeave(event: DragEvent): void {
-    event.preventDefault();
-    this.isDragOver = false;
-  }
-
-  // --- Remover imagem ---
-  removeImage(event: Event): void {
-    event.stopPropagation();
-    this.selectedFile = null;
-    this.previewUrl = null;
-  }
-
-  private previewFile(file: File): void {
-  const reader = new FileReader();
-  reader.onload = () => (this.previewUrl = reader.result);
-  reader.readAsDataURL(file);
-}
-
   getZipCode(): void {
     const value = this.form.controls['zipcode'].value
     if (value.length === 8) {
@@ -299,12 +230,9 @@ export class CustomerFormComponent implements OnInit {
             complement: ret.complemento
           })
         },
-        (error: HttpErrorResponse) => { // Tratamento de erro para ViaCEP
-          console.error('Erro ao buscar CEP:', error);
+        (error: HttpErrorResponse) => {
           this.notificationService.showError(error);
-          this.form.patchValue({
-            street: '', uf: '', city: '', neighborhood: '', complement: ''
-          });
+          this.form.patchValue({ street: '', uf: '', city: '', neighborhood: '', complement: '' });
           this.setFieldApiError('zipcode', 'CEP inválido ou não encontrado.');
         }
       );
@@ -312,7 +240,7 @@ export class CustomerFormComponent implements OnInit {
   }
 
   onCpfInput(event: any) {
-    const value = event.target.value.replace(/\D/g, ''); // remove tudo que não é número
+    const value = event.target.value.replace(/\D/g, '');
     this.form.get('cpf')?.setValue(value, { emitEvent: false });
   }
 
@@ -336,46 +264,18 @@ export class CustomerFormComponent implements OnInit {
     this.form.get('zipcode')?.setValue(value, { emitEvent: false });
   }
 
-
   //#region MENU
   menuButtons: MetroButton[] = [
-    {
-      id: 'new',
-      label: 'Novo',
-      iconClass: 'fas fa-plus',
-      colorClass: 'start',
-      visible: true,
-      enabled: true
-    },
-    {
-      id: 'save',
-      label: 'Salvar',
-      iconClass: 'fas fa-save',
-      colorClass: 'save',
-      visible: true,
-      enabled: false
-    },
-    {
-      id: 'exit',
-      label: 'Voltar',
-      iconClass: 'fas fa-sign-out-alt',
-      colorClass: 'exit',
-      visible: true,
-      enabled: true
-    }
+    { id: 'new', label: 'Novo', iconClass: 'fas fa-plus', colorClass: 'start', visible: true, enabled: true },
+    { id: 'save', label: 'Salvar', iconClass: 'fas fa-save', colorClass: 'save', visible: true, enabled: false },
+    { id: 'exit', label: 'Voltar', iconClass: 'fas fa-sign-out-alt', colorClass: 'exit', visible: true, enabled: true }
   ]
 
   handleMenuAction(action: string) {
     switch (action) {
-      case 'save':
-        this.onSubmit()
-        break
-      case 'exit':
-        this.router.navigate(['apps/customers'])
-        break
-      case 'new':
-        this.router.navigate(['apps/customers/new'])
-        break
+      case 'save': this.onSubmit(); break;
+      case 'exit': this.router.navigate(['apps/customers']); break;
+      case 'new': this.router.navigate(['apps/customers/new']); break;
     }
   }
   //#endregion
@@ -384,4 +284,5 @@ export class CustomerFormComponent implements OnInit {
   clearDate(control: string) {
     this.form.controls[control].setValue(null)
   }
+  //#endregion
 }

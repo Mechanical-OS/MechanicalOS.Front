@@ -96,8 +96,7 @@ export class ServiceOrderComponent implements OnInit {
    * Carrega os dados da tabela
    */
   async _fetchData(): Promise<void> {
-    // Mock data para demonstração
-    this.loadMockData();
+    this.loadOrdersFromAPI();
     
     // Comentado para usar mock - descomente quando a API estiver pronta
     /*
@@ -134,6 +133,98 @@ export class ServiceOrderComponent implements OnInit {
       }
     });
     */
+  }
+
+  /**
+   * Carrega ordens de serviço da API real
+   */
+  private loadOrdersFromAPI(): void {
+    const request = {
+      pageSize: this.tableService.pageSize || 100,
+      pageIndex: this.tableService.page || 1,
+      sort: '',
+      direction: 'desc'
+    };
+
+    console.log('📡 Buscando ordens de serviço na API:', request);
+
+    this.service.getAllOrders(request).subscribe({
+      next: (ret: any) => {
+        console.log('✅ Dados recebidos da API:', ret);
+        
+        if (ret && ret.statusCode === 200 && ret.content && ret.content.resultList) {
+          // Mapeia os dados para o formato esperado
+          this.list = ret.content.resultList.map((order: any) => ({
+            id: order.id,
+            orderNumber: `#${String(order.id).padStart(5, '0')}`,
+            entryDate: order.dateCreated,
+            status: this.mapStatusFromAPI(order.status),
+            customer: order.customer?.name || 'N/A',
+            vehicle: this.getVehicleDescription(order),
+            plate: this.getVehiclePlate(order),
+            totalValue: order.totalOrder / 100, // Converte centavos para reais
+            description: order.description || '',
+            observations: '',
+            rawData: order // Mantém dados brutos para referência
+          }));
+
+          this.tableService.totalRecords = ret.content.totalRecords;
+          this.tableService.startIndex = ((ret.content.pageIndex - 1) * ret.content.pageSize) + 1;
+          this.tableService.endIndex = this.tableService.startIndex + ret.content.resultList.length - 1;
+          
+          console.log('📋 Lista de ordens de serviço:', this.list);
+          console.log('📊 Total de registros:', this.tableService.totalRecords);
+        } else {
+          console.error('❌ Estrutura de dados inválida:', ret);
+          this.list = [];
+          this.tableService.totalRecords = 0;
+        }
+      },
+      error: (error) => {
+        console.error('❌ Erro ao carregar ordens de serviço:', error);
+        this.notificationService.showMessage('Erro ao carregar lista de ordens de serviço.', 'error');
+        this.list = [];
+        this.tableService.totalRecords = 0;
+      }
+    });
+  }
+
+  /**
+   * Mapeia o status da API para o enum interno
+   */
+  private mapStatusFromAPI(statusString: string): ServiceOrderStatus {
+    const statusMap: { [key: string]: ServiceOrderStatus } = {
+      'Desconhecido': ServiceOrderStatus.ORCAMENTO,
+      'Aguardando': ServiceOrderStatus.ORCAMENTO,
+      'Orçamento': ServiceOrderStatus.ORCAMENTO,
+      'ORCAMENTO': ServiceOrderStatus.ORCAMENTO,
+      'Em Andamento': ServiceOrderStatus.EM_ANDAMENTO,
+      'EM_ANDAMENTO': ServiceOrderStatus.EM_ANDAMENTO,
+      'Concluído': ServiceOrderStatus.CONCLUIDO,
+      'CONCLUIDO': ServiceOrderStatus.CONCLUIDO,
+      'Cancelado': ServiceOrderStatus.CANCELADO,
+      'CANCELADO': ServiceOrderStatus.CANCELADO
+    };
+
+    return statusMap[statusString] || ServiceOrderStatus.ORCAMENTO;
+  }
+
+  /**
+   * Extrai descrição do veículo dos dados da ordem
+   */
+  private getVehicleDescription(order: any): string {
+    // Tenta extrair informações do veículo
+    if (order.vehicle) {
+      return `${order.vehicle.brand || ''} ${order.vehicle.model || ''}`.trim();
+    }
+    return 'N/A';
+  }
+
+  /**
+   * Extrai placa do veículo dos dados da ordem
+   */
+  private getVehiclePlate(order: any): string {
+    return order.vehicle?.plate || 'N/A';
   }
 
   /**

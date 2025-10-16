@@ -26,6 +26,18 @@ export class ServiceOrderService extends BaseService<ServiceOrder> {
     }
 
     /**
+     * Busca todas as ordens de serviço com paginação
+     */
+    getAllOrders(request: { pageSize: number; pageIndex: number; sort?: string; direction?: string }): Observable<any> {
+        return this.http.post<any>(`${SERVICE_ORDER_URL}/GetAll`, {
+            pageSize: request.pageSize,
+            pageIndex: request.pageIndex,
+            sort: request.sort || '',
+            direction: request.direction || ''
+        });
+    }
+
+    /**
      * Método principal que orquestra a criação completa da ordem de serviço
      * Resolve Customer → Address → Vehicle → Cria Ordem
      */

@@ -11,21 +11,50 @@
                 </div>
 
                 <div class="row">
-                    <!-- Coluna da imagem e histórico -->
-                    <div class="col-md-4 text-center" style="margin-top: 15%;">
-                        <div class="upload-box mb-3">
-                            <div class="upload-content">
-                                <i class="fas fa-cloud-upload-alt fa-2x mb-2"></i>
-                                <p class="mb-0">Arraste a imagem aqui, ou clique.</p>
-                                <small class="text-muted">foto do veículo</small>
+                    <!-- Coluna da busca de placa -->
+                    <div class="col-md-4">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <!-- Upload de imagem -->
+                                <div class="upload-box mb-4">
+                                    <div class="upload-content">
+                                        <i class="fas fa-cloud-upload-alt fa-2x mb-2"></i>
+                                        <p class="mb-0">Arraste a imagem aqui, ou clique.</p>
+                                        <small class="text-muted">foto do veículo</small>
+                                    </div>
+                                </div>
+                                
+                                <!-- Campo de busca de placa -->
+                                <div class="mb-3">
+                                    <label for="plateSearch" class="form-label">Buscar Placa</label>
+                                    <div class="input-group">
+                                        <input 
+                                            id="plateSearch" 
+                                            type="text" 
+                                            class="form-control" 
+                                            placeholder="Digite a placa"
+                                            [(ngModel)]="searchedPlate"
+                                            (input)="onPlateSearchChange($event)"
+                                            maxlength="8">
+                                        <button 
+                                            class="btn btn-outline-success" 
+                                            type="button" 
+                                            (click)="searchPlate()"
+                                            [disabled]="isSearchingPlate"
+                                            title="Buscar placa">
+                                            <i class="fas fa-search" *ngIf="!isSearchingPlate"></i>
+                                            <i class="fas fa-spinner fa-spin" *ngIf="isSearchingPlate"></i>
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <a class="text-success fw-bold" href="#">
-                            BUSCAR PLACA <i class="fas fa-wrench"></i>
-                        </a>
                     </div>
 
-                    <div class="col-md-8" style="border: 1px dashed #ccc;">
+                    <!-- Coluna do formulário -->
+                    <div class="col-md-8">
+                        <div class="card h-100">
+                            <div class="card-body">
                         <form [formGroup]="form">
                             <div class="row mb-3">
                                 <div class="col-md-6">
@@ -149,18 +178,17 @@
                             <!--ROW-->
                             <div class="row mb-3">
                                 <div class="col-md-4">
-                                    <label for="plate" class="form-label">Placa</label>
-                                    <input id="plate" formControlName="plate" class="form-control"
-                                        [ngClass]="{'is-invalid': (form.get('plate')?.invalid && form.get('plate')?.touched)}" />
-
-                                    <div class="invalid-feedback">
-                                        <span
-                                            style="font-weight: bold; color: #b91c1c;">{{messageValidationService.getErrorMessage(form.get('plate'),
-                                            'Placa')}}</span>
+                                    <label for="plate" class="form-label">PLACA</label>
+                                    <div class="plate-display">
+                                        <span class="plate-number" [class.has-plate]="searchedPlate">
+                                            {{ searchedPlate ? searchedPlate : 'N. #000001' }}
+                                        </span>
                                     </div>
                                 </div>
                             </div>
                         </form>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

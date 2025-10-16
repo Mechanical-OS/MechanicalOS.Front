@@ -12,5 +12,6 @@ export interface ZipCodeResponse {
     gia: string;
     ddd: string;
     siafi: string;
+    erro?: boolean; // Campo retornado pela API quando o CEP não é encontrado
   }
   

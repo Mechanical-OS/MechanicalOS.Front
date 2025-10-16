@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
-import { OperationResult, Result } from 'src/app/Http/models/operation-result.model';
+import { Result } from 'src/app/Http/models/operation-result.model';
 import Swal from 'sweetalert2';
+import { HttpErrorResponse } from '@angular/common/http';
 
 @Injectable({
   providedIn: 'root'
@@ -35,25 +36,68 @@ export class NotificationService {
   }
 
   // Exibe um alerta de erro formatado com base no ServiceResult<T>
-  showError(errorResponse: any) {
+  showError(errorInput: any) {
     this.hideLoading();
 
-    let errorMessage = '';
-    console.log(errorMessage);
-    if (errorResponse?.error) {
-      const serviceResult = errorResponse.error as Result<any>;
+    let errorMessage = 'Ocorreu um erro inesperado.'; // Mensagem padrão para fallback
 
-      if (serviceResult.message && serviceResult.message.length > 0) {
-        errorMessage = serviceResult.message; 
-      } else if (serviceResult.message) {
-        errorMessage = serviceResult.message; 
-      }
+    let rawErrorMessage: any;
+
+    // 1. Tentar extrair a mensagem de erro do HttpErrorResponse
+    if (errorInput instanceof HttpErrorResponse) {
+        if (errorInput.error && typeof errorInput.error === 'object') {
+            const apiError = errorInput.error as Result<any>; // Tenta mapear para Result
+            if (apiError.message) {
+                rawErrorMessage = apiError.message;
+            } else {
+                rawErrorMessage = errorInput.error; // Se não tem 'message', talvez 'errorInput.error' seja o próprio array
+            }
+        } else if (typeof errorInput.error === 'string') {
+            rawErrorMessage = errorInput.error;
+        } else {
+            rawErrorMessage = errorInput.message || errorMessage;
+        }
+    }
+    // 2. Se já for um objeto Result (retorno 200 com erro interno)
+    else if (errorInput && typeof errorInput === 'object' && 'message' in errorInput) {
+        const serviceResult = errorInput as Result<any>;
+        rawErrorMessage = serviceResult.message;
+    }
+    // 3. Se for o array de objetos diretamente
+    else if (Array.isArray(errorInput)) {
+        rawErrorMessage = errorInput;
+    }
+    // 4. Se for uma string que pode ser um JSON de array
+    else if (typeof errorInput === 'string') {
+        rawErrorMessage = errorInput;
+    }
+    // Agora, rawErrorMessage pode ser uma string JSON, um array de objetos, ou uma string simples.
+    if (rawErrorMessage) {
+        try {
+            // Tenta fazer JSON.parse, se rawErrorMessage for uma string
+            let parsedMessages: any = typeof rawErrorMessage === 'string' ? JSON.parse(rawErrorMessage) : rawErrorMessage;
+
+            if (Array.isArray(parsedMessages) && parsedMessages.length > 0) {
+                errorMessage = parsedMessages.map(errObj => {
+                    const key = Object.keys(errObj)[0];
+                    return `• ${errObj[key]}`;
+                }).join('<br>');
+            } else if (typeof parsedMessages === 'string') {
+                 errorMessage = parsedMessages;
+            }
+        } catch (e) {
+            errorMessage = typeof rawErrorMessage === 'string' ? rawErrorMessage : JSON.stringify(rawErrorMessage);
+            if (errorMessage.includes('[object Object]')) {
+                errorMessage = 'Ocorreu um erro na API. Verifique o console para mais detalhes.';
+            }
+        }
     }
 
-    setTimeout(() => { 
+
+    setTimeout(() => {
       Swal.fire({
         title: 'Erro',
-        text: errorMessage,
+        html: errorMessage,
         icon: 'error',
         confirmButtonText: 'Fechar'
       });
@@ -81,12 +125,31 @@ export class NotificationService {
   }
 
   showMessage(message: string, title: string = 'Sucesso') {
-    this.hideLoading(); // Garante que o loading seja fechado antes
+    this.hideLoading();
     Swal.fire({
       title,
       text: message,
       icon: title == 'Sucesso' ? 'success' : 'info',
       confirmButtonText: 'OK'
+    });
+  }
+
+  showToast(message: string, title: string = 'Sucesso') {
+    this.hideLoading();
+    Swal.fire({
+      title,
+      text: message,
+      icon: title == 'Sucesso' ? 'success' : 'info',
+      confirmButtonText: 'OK',
+      toast: true,
+      position: 'top-right',
+      showConfirmButton: false,
+      timer: 3000,
+      timerProgressBar: true,
+      didOpen: (toast) => {
+        toast.addEventListener('mouseenter', Swal.stopTimer)
+        toast.addEventListener('mouseleave', Swal.resumeTimer)
+      }
     });
   }
 }

@@ -1,0 +1,230 @@
+// Estilos para o componente de edição de ordem de serviço
+
+.resumo-orcamento-fixed {
+  position: sticky;
+  top: calc(60px + 20px);
+  z-index: 1000;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  margin-bottom: 20px;
+  border: 1px solid #e9ecef;
+  transition: all 0.3s ease;
+  
+  @media (max-width: 768px) {
+    top: calc(70px + 20px);
+  }
+  
+  @media (max-width: 576px) {
+    top: calc(50px + 15px);
+  }
+}
+
+.services-table-container {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.services-search-section {
+  margin-bottom: 20px;
+  
+  .input-group {
+    .form-control {
+      border-radius: 8px 0 0 8px;
+    }
+    
+    .btn {
+      border-radius: 0 8px 8px 0;
+    }
+  }
+}
+
+.action-buttons {
+  display: flex;
+  gap: 5px;
+  
+  .btn {
+    padding: 4px 8px;
+    font-size: 12px;
+  }
+}
+
+.btn-add-service {
+  background-color: #28a745;
+  border-color: #28a745;
+  color: white;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    background-color: #218838;
+    border-color: #1e7e34;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+.available-service-item {
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  padding: 15px;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    background-color: #f8f9fa;
+    border-color: #28a745;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+}
+
+.btn-finalizar-fixed {
+  background-color: #28a745;
+  border-color: #28a745;
+  color: white;
+  border-radius: 8px;
+  padding: 12px 20px;
+  font-size: 16px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  
+  &:hover {
+    background-color: #218838;
+    border-color: #1e7e34;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  }
+  
+  &:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+}
+
+// Estilos para os cards de dados
+.card {
+  .card-header {
+    border-radius: 8px 8px 0 0;
+    
+    h6 {
+      font-weight: 600;
+    }
+  }
+  
+  .card-body {
+    p {
+      margin-bottom: 8px;
+      font-size: 14px;
+      
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+  }
+}
+
+// Responsividade
+@media (max-width: 768px) {
+  .resumo-orcamento-fixed {
+    position: relative;
+    top: auto;
+    margin-top: 20px;
+  }
+  
+  .services-table-container {
+    max-height: 300px;
+  }
+}
+
+// Estilos para badges
+.badge {
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 6px;
+}
+
+// Estilos para a tabela
+.table {
+  th {
+    font-weight: 600;
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+  }
+  
+  td {
+    vertical-align: middle;
+  }
+}
+
+// Estilos para o textarea de observações
+textarea {
+  border-radius: 8px;
+  border: 1px solid #ced4da;
+  transition: border-color 0.3s ease;
+  
+  &:focus {
+    border-color: #28a745;
+    box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+  }
+}
+
+// Estilos para o campo de cupom
+.input-group {
+  .form-control {
+    &:focus {
+      border-color: #28a745;
+      box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+    }
+  }
+  
+  .btn-outline-success {
+    &:hover {
+      background-color: #28a745;
+      border-color: #28a745;
+    }
+  }
+}
+
+// Animações
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.card {
+  animation: fadeIn 0.5s ease-out;
+}
+
+// Estilos para scrollbar customizada
+.services-table-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.services-table-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.services-table-container::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+  
+  &:hover {
+    background: #a8a8a8;
+  }
+}

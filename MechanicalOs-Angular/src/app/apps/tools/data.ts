@@ -7,7 +7,7 @@ export const TOOLS: ToolsModel[] = [
     description:
       "Crie novas ordem de serviços, orçamentos ou realize consultas.",
     version: 1,
-    link: "",
+    link: "apps/service-orders",
   },
   {
     id: 2,

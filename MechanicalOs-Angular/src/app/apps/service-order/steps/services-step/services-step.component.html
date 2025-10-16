@@ -1,0 +1,262 @@
+<div class="row">
+    <!-- Card de Resumo dos Dados Cadastrados -->
+    <div class="col-12 mb-3">
+        <div class="card border-primary">
+            <div class="card-body">
+                <h5 class="card-title text-primary">
+                    <i class="fas fa-info-circle me-2"></i>Resumo dos Dados Cadastrados
+                </h5>
+                
+                <div class="row" *ngIf="draftSummary">
+                    <div class="col-md-4">
+                        <div class="mb-2">
+                            <strong>Cliente:</strong><br>
+                            <span class="me-2">{{ getCustomerStatusIcon() }}</span>
+                            <small class="text-muted">{{ getCustomerStatusText() }}</small><br>
+                            {{ draftSummary.customer }}
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-2">
+                            <strong>Veículo:</strong><br>
+                            <span class="me-2">{{ getVehicleStatusIcon() }}</span>
+                            <small class="text-muted">{{ getVehicleStatusText() }}</small><br>
+                            {{ draftSummary.vehicle }}
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-2">
+                            <strong>Endereço:</strong><br>
+                            <span class="me-2">{{ getAddressStatusIcon() }}</span>
+                            <small class="text-muted">{{ getAddressStatusText() }}</small><br>
+                            {{ draftSummary.address }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-info mb-0 mt-2" role="alert">
+                    <i class="fas fa-lightbulb me-2"></i>
+                    <strong>Legenda:</strong> 🔵 Registro existente no banco | 🟢 Novo registro (será criado)
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Seção de serviços -->
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Serviços a serem realizados...</h5>
+                
+                <!-- Campo de busca -->
+                <div class="services-search-section">
+                    <div class="input-group">
+                        <input 
+                            type="text" 
+                            class="form-control" 
+                            placeholder="Digite pelo menos 3 caracteres para buscar..."
+                            [(ngModel)]="searchValue"
+                            (input)="onSearchServices()">
+                        <span class="input-group-text bg-white">
+                            <i class="fas fa-search text-muted" *ngIf="!isLoadingServices"></i>
+                            <i class="mdi mdi-loading mdi-spin text-primary" *ngIf="isLoadingServices"></i>
+                        </span>
+                    </div>
+                    <small class="text-muted d-block mt-1" *ngIf="searchValue && searchValue.length > 0 && searchValue.length < 3">
+                        <i class="mdi mdi-information-outline"></i> Digite mais {{ 3 - searchValue.length }} caractere(s) para buscar
+                    </small>
+                </div>
+
+                <!-- Lista de serviços disponíveis -->
+                <div class="mb-4" *ngIf="searchValue && searchValue.length >= 3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="mb-0">Serviços disponíveis:</h6>
+                        <span *ngIf="isLoadingServices" class="text-muted">
+                            <i class="mdi mdi-loading mdi-spin"></i> Buscando...
+                        </span>
+                    </div>
+                    
+                    <!-- Mensagem quando está carregando -->
+                    <div *ngIf="isLoadingServices" class="text-center py-3">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Carregando...</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Mensagem quando não há resultados -->
+                    <div *ngIf="!isLoadingServices && availableServices.length === 0" class="alert alert-info">
+                        <i class="mdi mdi-information"></i> Nenhum serviço encontrado.
+                    </div>
+                    
+                    <!-- Lista de serviços -->
+                    <div class="list-group" *ngIf="!isLoadingServices && availableServices.length > 0">
+                        <div class="list-group-item d-flex justify-content-between align-items-center available-service-item" 
+                             *ngFor="let service of availableServices">
+                            <div>
+                                <strong>{{ service.name }}</strong>
+                                <span class="badge bg-secondary ms-2" *ngIf="service.code">{{ service.code }}</span>
+                                <br>
+                                <small class="text-muted">R$ {{ service.price.toFixed(2).replace('.', ',') }}</small>
+                            </div>
+                            <div class="action-buttons">
+                                <button 
+                                    class="btn btn-sm btn-add-service" 
+                                    (click)="addService(service)">
+                                    <i class="fas fa-plus"></i> Adicionar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabela de serviços selecionados -->
+                <div class="services-table-container" *ngIf="services.length > 0">
+                    <table class="table table-striped mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>SERVIÇO</th>
+                                <th>Preço</th>
+                                <th>Quantidade</th>
+                                <th>Total</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let service of services; let i = index">
+                                <td>{{ service.name }}</td>
+                                <td>R$ {{ service.price.toFixed(2).replace('.', ',') }}</td>
+                                <td>
+                                    <input 
+                                        type="number" 
+                                        class="form-control form-control-sm" 
+                                        style="width: 80px;"
+                                        [value]="service.quantity"
+                                        min="1"
+                                        (change)="updateServiceQuantity(i, $any($event.target).value)"
+                                        (input)="updateServiceQuantity(i, $any($event.target).value)">
+                                </td>
+                                <td>R$ {{ service.total.toFixed(2).replace('.', ',') }}</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button 
+                                            class="btn btn-sm btn-outline-danger" 
+                                            (click)="removeService(i)"
+                                            title="Remover serviço">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Seção de descrição/observações -->
+                <div class="mt-4">
+                    <h6>Descrição / Observações</h6>
+                    <textarea 
+                        class="form-control" 
+                        rows="4" 
+                        placeholder="Digite a descrição e observações da ordem de serviço..."
+                        [(ngModel)]="description"
+                        (blur)="updateDescription()">
+                    </textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Seção de resumo do orçamento -->
+    <div class="col-md-4">
+        <div class="card resumo-orcamento-fixed">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-calculator me-2"></i>Resumo do orçamento
+                </h5>
+                
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between">
+                        <span>Sub total:</span>
+                        <span><strong>R$ {{ subtotal.toFixed(2).replace('.', ',') }}</strong></span>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between">
+                        <span>Desconto:</span>
+                        <span class="text-danger">- R$ {{ discount.toFixed(2).replace('.', ',') }}</span>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between">
+                        <span>Taxas:</span>
+                        <span>R$ 0,00</span>
+                    </div>
+                </div>
+
+                <hr>
+
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between">
+                        <span><strong>Total:</strong></span>
+                        <span><strong class="text-success fs-5">R$ {{ total.toFixed(2).replace('.', ',') }}</strong></span>
+                    </div>
+                </div>
+
+                <!-- Campo de cupom de desconto -->
+                <div class="mb-3">
+                    <label class="form-label">Cupom de desconto</label>
+                    <div class="input-group">
+                        <input 
+                            type="text" 
+                            class="form-control" 
+                            placeholder="Digite o cupom"
+                            [(ngModel)]="discountCoupon">
+                        <button 
+                            class="btn btn-outline-success" 
+                            type="button" 
+                            (click)="applyDiscountCoupon()">
+                            APLICAR
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Informações adicionais -->
+                <div class="mt-3 p-2 bg-light rounded">
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        {{ services.length }} serviço(s) selecionado(s)
+                    </small>
+                </div>
+
+                <!-- Botão Finalizar fixo -->
+                <div class="mt-3">
+                    <button 
+                        type="button" 
+                        class="btn btn-success w-100 btn-finalizar-fixed" 
+                        (click)="finalizeOrder()"
+                        [disabled]="!isReadyToFinalize || isFinalizingshowing || services.length === 0">
+                        <i class="fas fa-check me-2" *ngIf="!isFinalizingshowing"></i>
+                        <i class="fas fa-spinner fa-spin me-2" *ngIf="isFinalizingshowing"></i>
+                        {{ isFinalizingshowing ? 'Finalizando...' : 'Finalizar Ordem de Serviço' }}
+                    </button>
+                    
+                    <div class="mt-2" *ngIf="!isReadyToFinalize">
+                        <small class="text-danger">
+                            <i class="fas fa-exclamation-triangle me-1"></i>
+                            Preencha todos os dados obrigatórios
+                        </small>
+                    </div>
+                    
+                    <div class="mt-2" *ngIf="services.length === 0">
+                        <small class="text-warning">
+                            <i class="fas fa-exclamation-triangle me-1"></i>
+                            Adicione pelo menos um serviço
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

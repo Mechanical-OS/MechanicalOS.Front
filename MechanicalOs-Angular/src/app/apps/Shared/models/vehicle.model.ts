@@ -46,6 +46,9 @@ export class Vehicle {
     year: string;
     transmission: string;
     engine: string;
+    engineDisplacement?: string;
+    fuel?: string;
+    kind?: string;
     status: number;
     brand: Brand;
     vehicleModel: VehicleModel;
@@ -59,6 +62,9 @@ export class Vehicle {
         this.year = data.year ?? '';
         this.transmission = data.transmission ?? '';
         this.engine = data.engine ?? '';
+        this.engineDisplacement = data.engineDisplacement ?? '';
+        this.fuel = data.fuel ?? '';
+        this.kind = data.kind ?? '';
         this.status = data.status ?? 0;
         this.brand = data.brand ? new Brand(data.brand) : new Brand({});
         this.vehicleModel = data.vehicleModel ? new VehicleModel(data.vehicleModel) : new VehicleModel({});

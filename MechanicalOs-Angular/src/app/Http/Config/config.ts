@@ -1,10 +1,11 @@
 // src/app/constants/app-urls.ts
 
-export const CUSTOMER_URL = 'https://api.mechanical-os.com.br/api/customer';
+export const CUSTOMER_URL = 'https://api.mechanical-os.com.br/api/Customer';
 export const VEHICLE_URL = 'https://api.mechanical-os.com.br/api/Vehicle';
 export const SERVICES_URL = 'https://api.mechanical-os.com.br/api/Service';
 export const TOOLS_URL = 'https://api.mechanical-os.com.br/api/Bootstrap';
 export const ORDERS_URL = 'https://api.mechanical-os.com.br/api/orders';
+export const SERVICE_ORDER_URL = 'https://api.mechanical-os.com.br/api/order';
 export const AUTH_URL = 'https://api.mechanical-os.com.br/api/auth';
 export const VIA_CEP_URL = 'https://viacep.com.br/ws';
 export const COLOR_URL = 'https://api.mechanical-os.com.br/api/Color';
@@ -17,6 +18,7 @@ export const MODULE_URLS = {
   services: SERVICES_URL,
   tools: TOOLS_URL,
   orders: ORDERS_URL,
+  serviceOrders: SERVICE_ORDER_URL,
   auth: AUTH_URL,
   cep: VIA_CEP_URL,
   colors: COLOR_URL,

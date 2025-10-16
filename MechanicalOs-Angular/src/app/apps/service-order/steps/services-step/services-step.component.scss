@@ -1,0 +1,106 @@
+// Services Step Component Styles
+
+.resumo-orcamento-fixed {
+  position: sticky;
+  top: calc(60px + 20px); // Altura da topbar + margem de segurança
+  z-index: 10;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  border: 1px solid #e9ecef;
+  transition: all 0.3s ease; // Transição suave quando fica fixo
+}
+
+// Ajustes para diferentes tamanhos de topbar
+@media (min-width: 1200px) {
+  .resumo-orcamento-fixed {
+    top: calc(70px + 20px); // Topbar maior em telas grandes
+  }
+}
+
+@media (max-width: 991px) {
+  .resumo-orcamento-fixed {
+    top: calc(50px + 15px); // Topbar menor em tablets
+  }
+}
+
+// Responsividade para telas menores
+@media (max-width: 768px) {
+  .resumo-orcamento-fixed {
+    position: relative;
+    top: auto;
+    margin-top: 2rem;
+    box-shadow: none; // Remove sombra em mobile
+  }
+}
+
+// Melhoria na tabela de serviços
+.services-table-container {
+  max-height: 70vh;
+  overflow-y: auto;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+}
+
+// Estilo para a seção de busca de serviços
+.services-search-section {
+  background: #f8f9fa;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+// Melhoria nos botões de ação
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.btn-add-service {
+  background: #28a745;
+  border-color: #28a745;
+  color: white;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.875rem;
+}
+
+.btn-add-service:hover {
+  background: #218838;
+  border-color: #1e7e34;
+}
+
+// Estilo para os itens da lista de serviços disponíveis
+.available-service-item {
+  transition: all 0.2s ease;
+}
+
+.available-service-item:hover {
+  background-color: #f8f9fa;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+// Botão finalizar fixo
+.btn-finalizar-fixed {
+  padding: 12px 20px;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(40, 167, 69, 0.2);
+}
+
+.btn-finalizar-fixed:hover {
+  background-color: #218838;
+  border-color: #1e7e34;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+}
+
+.btn-finalizar-fixed:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(40, 167, 69, 0.2);
+}

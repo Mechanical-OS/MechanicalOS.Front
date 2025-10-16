@@ -1,10 +1,46 @@
 label.required::after {
-    content: "*";
-    color: red;
-    font: bold;
+  content: "*";
+  color: red;
+  font: bold;
 }
 
 .form-control:disabled {
-  background-color: #e9ecef !important; /* Cinza claro */
-  opacity: 1; /* Evita que o Bootstrap reduza a opacidade */
+  background-color: #e9ecef !important;
+  /* Cinza claro */
+  opacity: 1;
+  /* Evita que o Bootstrap reduza a opacidade */
+}
+
+.upload-box {
+  border: 2px dashed #ccc;
+  border-radius: 10px;
+  padding: 20px;
+  transition: all 0.2s ease;
+}
+
+.upload-box.dragover {
+  background-color: #f0f8ff;
+  border-color: #007bff;
+}
+
+.upload-content {
+  color: #666;
+}
+
+.upload-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.upload-preview img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+.upload-preview .btn {
+  margin-top: 5px;
 }

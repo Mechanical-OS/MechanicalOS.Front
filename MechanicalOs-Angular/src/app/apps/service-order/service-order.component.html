@@ -1,45 +1,132 @@
 <app-page-title [breadcrumbItems]="pageTitle" title=""></app-page-title>
 
 <div class="row">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-body">
-                <div class="mb-4 d-flex justify-content-between align-items-center">
-                    <h4>Ordens de Serviços</h4>
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="search-box">
-                            <input type="text" class="form-control" placeholder="Buscar..." style="width: 250px;">
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="mb-3">
-                    <button type="button" class="btn btn-danger" (click)="handleMenuAction('new')">
-                        <i class="fas fa-plus me-2"></i>NOVA ORDEM DE SERVIÇO
-                    </button>
-                </div>
-                
-                <div class="row mb-2">
-                    <app-advanced-table #advancedTable 
-                                        (handleTableLoad)="handleTableLoad($event)"
-                                        [tableData]="list" 
-                                        [columns]="columns" 
-                                        [pagination]="true" 
-                                        [hasRowSelection]="false"
-                                        [isSearchable]="false" 
-                                        [isSortable]="false"
-                                        tableClasses="table-centered" 
-                                        theadClasses="table-light"
-                                        (rowSelected)="onRowSelected($event)"
-                                        [singleRowSelection]="true">
-                    </app-advanced-table>
-                </div>
+  <div class="col-12">
+    <div class="card">
+      <div class="card-body">
+        <div class="mb-4 d-flex justify-content-between align-items-center">
+          <h4>Ordens de Serviços</h4>
+          <div class="d-flex align-items-center gap-3">
+            <div class="search-box">
+              <input
+                type="text"
+                class="form-control"
+                placeholder="Buscar..."
+                style="width: 250px"
+              />
             </div>
+          </div>
         </div>
+
+        <div class="mb-3">
+          <button
+            type="button"
+            class="btn btn-danger"
+            (click)="handleMenuAction('new')"
+          >
+            <i class="fas fa-plus me-2"></i>NOVA ORDEM DE SERVIÇO
+          </button>
+        </div>
+
+        <div class="row mb-2">
+          <app-advanced-table
+            #advancedTable
+            (handleTableLoad)="handleTableLoad($event)"
+            [tableData]="list"
+            [columns]="columns"
+            [pagination]="false"
+            [hasRowSelection]="false"
+            [isSearchable]="false"
+            [isSortable]="false"
+            tableClasses="table-centered"
+            theadClasses="table-light"
+            (rowSelected)="onRowSelected($event)"
+            [singleRowSelection]="true"
+          >
+          </app-advanced-table>
+        </div>
+
+         <!-- Paginação customizada -->
+         <div
+           class="d-flex flex-wrap justify-content-between align-items-center mt-3"
+         >
+           <!-- Esquerda: Seletor de quantidade e contador -->
+           <div class="d-flex align-items-center gap-3">
+             <!-- Seletor de tamanho de página -->
+             <div>
+               <select
+                 class="form-select form-select-sm"
+                 [(ngModel)]="pageSize"
+                 (change)="changePageSize(pageSize)"
+               >
+                 <option [value]="10">10 por página</option>
+                 <option [value]="25">25 por página</option>
+                 <option [value]="50">50 por página</option>
+                 <option [value]="100">100 por página</option>
+               </select>
+             </div>
+
+             <!-- Contador de registros -->
+             <div>
+               <span class="text-muted">
+                 Mostrando {{ (currentPage - 1) * pageSize + 1 }} a
+                 {{ Math.min(currentPage * pageSize, totalItems) }} de
+                 {{ totalItems }} registros
+               </span>
+             </div>
+           </div>
+ 
+           <!-- Direita: Controles de paginação -->
+           <div>
+             <nav aria-label="Navegação de página">
+               <ul class="pagination pagination-rounded mb-0">
+                 <!-- Botão Anterior -->
+                 <li class="page-item" [class.disabled]="!hasPreviousPage">
+                   <a
+                     class="page-link"
+                     (click)="previousPage()"
+                     style="cursor: pointer"
+                   >
+                     <i class="mdi mdi-chevron-left"></i>
+                   </a>
+                 </li>
+ 
+                 <!-- Números das páginas -->
+                 <li
+                   *ngFor="let page of getPageNumbers()"
+                   class="page-item"
+                   [class.active]="page === currentPage"
+                 >
+                   <a
+                     class="page-link"
+                     (click)="goToPage(page)"
+                     style="cursor: pointer"
+                   >
+                     {{ page }}
+                   </a>
+                 </li>
+ 
+                 <!-- Botão Próximo -->
+                 <li class="page-item" [class.disabled]="!hasNextPage">
+                   <a
+                     class="page-link"
+                     (click)="nextPage()"
+                     style="cursor: pointer"
+                   >
+                     <i class="mdi mdi-chevron-right"></i>
+                   </a>
+                 </li>
+               </ul>
+             </nav>
+           </div>
+         </div>
+      </div>
     </div>
+  </div>
 </div>
 
-<app-metro-menu [orientation]="'horizontal'" 
-                [buttons]="menuButtons"
-                (buttonClick)="handleMenuAction($event)"></app-metro-menu>
-
+<app-metro-menu
+  [orientation]="'horizontal'"
+  [buttons]="menuButtons"
+  (buttonClick)="handleMenuAction($event)"
+></app-metro-menu>

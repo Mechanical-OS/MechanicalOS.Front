@@ -114,7 +114,59 @@ export class OwnerStepComponent implements OnInit, OnDestroy {
     const ownerData: OwnerData = this.ownerForm.value;
     this.draftService.updateCustomerData(ownerData, customer.id);
 
+    // Se o cliente tem endereço cadastrado, preenche automaticamente
+    if (customer.address) {
+      this.populateAddressFromCustomer(customer.address, customer.address.id);
+    }
+
     console.log('Formulário populado com os dados do customer:', customer);
+  }
+
+  /**
+   * Preenche automaticamente os dados de endereço no draft
+   */
+  private populateAddressFromCustomer(address: any, addressId: number): void {
+    // Formata o CEP
+    const formattedZipCode = this.formatZipCodeValue(address.zipcode);
+
+    // Extrai o bairro da string street se necessário
+    // A API pode retornar "Av Ary Barnabe 251" em street
+    let street = address.street || '';
+    let neighborhood = address.neighborhood || '';
+
+    // Cria o objeto de endereço no formato esperado pelo AddressData
+    const addressData = {
+      city: address.city || '',
+      state: address.state || '',
+      neighborhood: neighborhood,
+      street: street,
+      number: address.number || '',
+      complement: address.complement || '',
+      zipCode: formattedZipCode
+    };
+
+    // Salva o endereço no draft com o ID
+    this.draftService.updateAddressData(addressData, addressId);
+
+    console.log('Endereço do cliente salvo automaticamente no draft:', addressData);
+    this.notificationService.showMessage('Endereço do cliente carregado com sucesso!', 'success');
+  }
+
+  /**
+   * Formata o CEP no padrão 00000-000
+   */
+  private formatZipCodeValue(zipCode: string): string {
+    if (!zipCode) return '';
+    
+    // Remove tudo que não é dígito
+    let value = zipCode.replace(/\D/g, '');
+    
+    // Aplica a máscara
+    if (value.length <= 8) {
+      value = value.replace(/(\d{5})(\d)/, '$1-$2');
+    }
+    
+    return value;
   }
 
   private handleCustomerNotFound(cpf: string): void {

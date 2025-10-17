@@ -70,16 +70,15 @@
                 }
             </thead>
             <tbody>
-                @for (record of tableData;
-                track $index) {
-                    <tr [ngClass]="{ 'highlighted': isSelected[$index + ((service.page - 1) * service.pageSize)] }"
-                    (click)="selectRow(record, $index + ((service.page - 1) * service.pageSize))">            
+                @for (record of tableData; track $index) {
+                    <tr [ngClass]="{ 'highlighted': isSelected[$index] }"
+                    (click)="selectRow(record, $index)">            
                     @if(hasRowSelection){
                     <td>
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox"
-                                [checked]="isSelected[$index+((service.page-1) * service.pageSize)]"
-                                (change)="selectRow(record, $index + ((service.page - 1) * service.pageSize))">
+                                [checked]="isSelected[$index]"
+                                (change)="selectRow(record, $index)">
                         </div>
                     </td>
                     }

@@ -1,10 +1,9 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
 import { Column } from 'src/app/shared/advanced-table/advanced-table.component';
 import { BreadcrumbItem } from 'src/app/shared/page-title/page-title.model';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AdvancedTableServices } from 'src/app/shared/advanced-table/advanced-table-service.service';
 import { MetroMenuService } from 'src/app/shared/metro-menu/metro-menu.service';
-import { DomSanitizer } from '@angular/platform-browser';
 import { MetroButton } from 'src/app/shared/metro-menu/metro-menu.component';
 import { GetAllRequest } from 'src/app/Http/models/Input/get-all-request.model';
 import { ServiceOrderService } from './service-order.service';
@@ -16,7 +15,7 @@ import { ServiceOrder, ServiceOrderStatus, ServiceOrderStatusInfo } from '../Sha
   templateUrl: './service-order.component.html',
   styleUrl: './service-order.component.scss'
 })
-export class ServiceOrderComponent implements OnInit {
+export class ServiceOrderComponent implements OnInit, AfterViewInit {
   pageTitle: BreadcrumbItem[] = [];
   columns: Column[] = [];
 
@@ -26,12 +25,19 @@ export class ServiceOrderComponent implements OnInit {
   isDisabled: boolean = false;
   selectedRowId: number = 0;
 
+  // Propriedades para paginação
+  currentPage: number = 1;
+  pageSize: number = 10;
+  totalItems: number = 0;
+  totalPages: number = 0;
+  hasNextPage: boolean = false;
+  hasPreviousPage: boolean = false;
+
   constructor(
     private router: Router,
     private route: ActivatedRoute,
-    private sanitizer: DomSanitizer,
     private service: ServiceOrderService,
-    private tableService: AdvancedTableServices,
+    public tableService: AdvancedTableServices,
     private metroMenuService: MetroMenuService,
     private notificationService: NotificationService
   ) { }
@@ -46,7 +52,14 @@ export class ServiceOrderComponent implements OnInit {
     this.metroMenuService.setButtons(initialButtons);
 
     this.initAdvancedTableData();
-    this._fetchData();
+    this.loadPixData();
+  }
+
+  ngAfterViewInit(): void {
+    // Sincroniza o pageSize após a view ser inicializada
+    setTimeout(() => {
+      this.syncAdvancedTablePageSize();
+    }, 100);
   }
 
   //#region ADVANCED TABLE
@@ -64,11 +77,6 @@ export class ServiceOrderComponent implements OnInit {
         formatter: this.dateFormatter.bind(this),
       },
       {
-        name: "status",
-        label: "Status",
-        formatter: this.statusFormatter.bind(this),
-      },
-      {
         name: "customer",
         label: "Cliente",
         formatter: this.customerFormatter.bind(this),
@@ -84,6 +92,11 @@ export class ServiceOrderComponent implements OnInit {
         formatter: this.plateFormatter.bind(this),
       },
       {
+        name: "status",
+        label: "Status",
+        formatter: this.statusFormatter.bind(this),
+      },
+      {
         name: "action",
         label: "Ações",
         sort: false,
@@ -93,59 +106,17 @@ export class ServiceOrderComponent implements OnInit {
   }
 
   /**
-   * Carrega os dados da tabela
+   * Carrega os dados PIX com paginação
    */
-  async _fetchData(): Promise<void> {
-    this.loadOrdersFromAPI();
-    
-    // Comentado para usar mock - descomente quando a API estiver pronta
-    /*
-    const request: GetAllRequest = {
-      pageSize: this.tableService.pageSize,
-      pageIndex: this.tableService.page,
-      sort: '',
-      direction: ''
-    };
-
-    this.service.getAll(request).subscribe({
-      next: (ret: any) => {
-        console.log('Dados recebidos da API:', ret);
-        
-        if (ret && ret.content && ret.content.resultList) {
-          this.list = ret.content.resultList;
-          this.tableService.totalRecords = ret.content.totalRecords;
-          this.tableService.startIndex = (ret.content.pageIndex * ret.content.pageSize) + 1;
-          this.tableService.endIndex = this.tableService.startIndex + ret.content.resultList.length - 1;
-          
-          console.log('Lista de ordens de serviço carregada:', this.list);
-          console.log('Total de registros:', this.tableService.totalRecords);
-        } else {
-          console.error('Estrutura de dados inválida:', ret);
-          this.list = [];
-          this.tableService.totalRecords = 0;
-        }
-      },
-      error: (error) => {
-        console.error('Erro ao carregar ordens de serviço:', error);
-        this.notificationService.showMessage('Erro ao carregar lista de ordens de serviço.', 'error');
-        this.list = [];
-        this.tableService.totalRecords = 0;
-      }
-    });
-    */
-  }
-
-  /**
-   * Carrega ordens de serviço da API real
-   */
-  private loadOrdersFromAPI(): void {
+  loadPixData(page: number = 1): void {
     const request = {
-      pageSize: this.tableService.pageSize || 100,
-      pageIndex: this.tableService.page || 1,
+      pageSize: this.pageSize,
+      pageIndex: page,
       sort: '',
       direction: 'desc'
     };
 
+    console.log(`🔍 loadPixData - Página: ${page}, PageSize: ${this.pageSize}`);
     console.log('📡 Buscando ordens de serviço na API:', request);
 
     this.service.getAllOrders(request).subscribe({
@@ -164,30 +135,126 @@ export class ServiceOrderComponent implements OnInit {
             plate: this.getVehiclePlate(order),
             totalValue: order.totalOrder / 100, // Converte centavos para reais
             description: order.description || '',
-            observations: '',
-            rawData: order // Mantém dados brutos para referência
+            observations: ''
           }));
 
-          this.tableService.totalRecords = ret.content.totalRecords;
-          this.tableService.startIndex = ((ret.content.pageIndex - 1) * ret.content.pageSize) + 1;
-          this.tableService.endIndex = this.tableService.startIndex + ret.content.resultList.length - 1;
+          // Atualiza informações de paginação
+          this.currentPage = ret.content.pageIndex;
+          this.totalItems = ret.content.totalRecords;
+          this.totalPages = Math.ceil(this.totalItems / this.pageSize);
+          this.hasNextPage = this.currentPage < this.totalPages;
+          this.hasPreviousPage = this.currentPage > 1;
+
+          // Sincronizar o pageSize do advanced-table
+          this.syncAdvancedTablePageSize();
           
-          console.log('📋 Lista de ordens de serviço:', this.list);
-          console.log('📊 Total de registros:', this.tableService.totalRecords);
+          console.log(`📋 Dados carregados: ${this.list.length} registros de ${this.totalItems} total, página ${this.currentPage} de ${this.totalPages}`);
+          console.log(`📊 Cálculo de páginas:`, {
+            totalItems: this.totalItems,
+            pageSize: this.pageSize,
+            totalPages: this.totalPages,
+            calculation: `Math.ceil(${this.totalItems} / ${this.pageSize}) = ${Math.ceil(this.totalItems / this.pageSize)}`,
+            hasNextPage: this.hasNextPage,
+            hasPreviousPage: this.hasPreviousPage,
+            pageNumbers: this.getPageNumbers()
+          });
         } else {
           console.error('❌ Estrutura de dados inválida:', ret);
           this.list = [];
-          this.tableService.totalRecords = 0;
+          this.totalItems = 0;
         }
       },
       error: (error) => {
         console.error('❌ Erro ao carregar ordens de serviço:', error);
         this.notificationService.showMessage('Erro ao carregar lista de ordens de serviço.', 'error');
         this.list = [];
-        this.tableService.totalRecords = 0;
+        this.totalItems = 0;
       }
     });
   }
+
+  /**
+   * Sincroniza o pageSize do advanced-table com o número de registros recebidos
+   */
+  private syncAdvancedTablePageSize(): void {
+    if (this.advancedTable && this.advancedTable.service && this.list.length > 0) {
+      const newPageSize = Math.max(this.list.length, 1);
+      this.advancedTable.service.pageSize = newPageSize;
+      this.advancedTable.service.page = 1;
+      this.advancedTable.paginate();
+      console.log(`Advanced-table pageSize sincronizado para: ${newPageSize}`);
+    }
+  }
+
+  /**
+   * Navega para a próxima página
+   */
+  nextPage(): void {
+    if (this.hasNextPage) {
+      console.log(`Navegando para próxima página: ${this.currentPage + 1}`);
+      this.loadPixData(this.currentPage + 1);
+    }
+  }
+
+  /**
+   * Navega para a página anterior
+   */
+  previousPage(): void {
+    if (this.hasPreviousPage) {
+      console.log(`Navegando para página anterior: ${this.currentPage - 1}`);
+      this.loadPixData(this.currentPage - 1);
+    }
+  }
+
+  /**
+   * Navega para uma página específica
+   */
+  goToPage(page: number): void {
+    if (page >= 1 && page <= this.totalPages) {
+      console.log(`Navegando para página: ${page}`);
+      this.loadPixData(page);
+    }
+  }
+
+  /**
+   * Altera o tamanho da página
+   */
+  changePageSize(newPageSize: number): void {
+    console.log(`Alterando o tamanho da página de ${this.pageSize} para: ${newPageSize}`);
+    this.pageSize = newPageSize;
+    this.currentPage = 1;
+    this.loadPixData(1);
+  }
+
+  /**
+   * Gera um array com os números das páginas para exibição
+   */
+  getPageNumbers(): number[] {
+    const pages: number[] = [];
+    const maxVisiblePages = 5;
+    
+    if (this.totalPages <= maxVisiblePages) {
+      for (let i = 1; i <= this.totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      let start = Math.max(1, this.currentPage - Math.floor(maxVisiblePages / 2));
+      let end = Math.min(this.totalPages, start + maxVisiblePages - 1);
+      
+      if (end - start + 1 < maxVisiblePages) {
+        start = Math.max(1, end - maxVisiblePages + 1);
+      }
+      
+      for (let i = start; i <= end; i++) {
+        pages.push(i);
+      }
+    }
+    
+    return pages;
+  }
+
+  // Propriedade para acessar Math no template
+  Math = Math;
 
   /**
    * Mapeia o status da API para o enum interno
@@ -348,7 +415,7 @@ export class ServiceOrderComponent implements OnInit {
     if (value && value.trim()) {
       // TODO: Implementar busca na API quando disponível
     } else {
-      this._fetchData();
+      this.loadPixData(1);
     }
   }
 
@@ -435,7 +502,7 @@ export class ServiceOrderComponent implements OnInit {
         next: (result) => {
           if (result.statusCode === 200) {
             this.notificationService.showMessage('Ordem de serviço excluída com sucesso.', 'success');
-            this._fetchData();
+            this.loadPixData(this.currentPage);
             this.selectedRowId = 0;
             this.metroMenuService.disableButton('edit');
             this.metroMenuService.disableButton('delete');
@@ -456,79 +523,69 @@ export class ServiceOrderComponent implements OnInit {
   /**
    * Formatter para o ID da OS
    */
-  IDFormatter(order: ServiceOrder): any {
+  IDFormatter(order: ServiceOrder): string {
     const paddedId = order.id.toString().padStart(5, '0');
-    return this.sanitizer.bypassSecurityTrustHtml(
-      `<a href="javascript:void(0)" class="order text-body fw-bold" id="${order.id}">#${paddedId}</a>`
-    );
+    return `<a href="#" class="order text-body fw-bold" id="${order.id}">#${paddedId}</a>`;
   }
 
   /**
    * Formatter para data de entrada
    */
-  dateFormatter(order: ServiceOrder): any {
+  dateFormatter(order: ServiceOrder): string {
     const date = new Date(order.entryDate);
     const formattedDate = date.toLocaleDateString('pt-BR');
     const formattedTime = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-    return this.sanitizer.bypassSecurityTrustHtml(
-      `<span>${formattedDate} : ${formattedTime}</span>`
-    );
+    return `<span>${formattedDate} : ${formattedTime}</span>`;
   }
 
   /**
    * Formatter para o status
    */
-  statusFormatter(order: ServiceOrder): any {
+  statusFormatter(order: ServiceOrder): string {
     const statusInfo = this.getStatusInfo(order.status);
-    return this.sanitizer.bypassSecurityTrustHtml(
-      `<span class="badge ${statusInfo.badgeClass}">${statusInfo.label}</span>`
-    );
+    return `<span class="badge ${statusInfo.badgeClass}">${statusInfo.label}</span>`;
   }
 
   /**
    * Formatter para cliente
    */
-  customerFormatter(order: ServiceOrder): any {
-    return this.sanitizer.bypassSecurityTrustHtml(
-      `<span>${order.customer?.name || 'N/A'}</span>`
-    );
+  customerFormatter(order: ServiceOrder): string {
+    return `<span>${order.customer || 'N/A'}</span>`;
   }
 
   /**
    * Formatter para veículo
    */
-  vehicleFormatter(order: ServiceOrder): any {
+  vehicleFormatter(order: ServiceOrder): string {
     const vehicleInfo = order.vehicle;
-    if (!vehicleInfo) return this.sanitizer.bypassSecurityTrustHtml('<span>N/A</span>');
+    if (!vehicleInfo) return '<span>N/A</span>';
     
     const vehicleText = `${vehicleInfo.brand} ${vehicleInfo.model} ${vehicleInfo.version || ''}`.trim();
-    return this.sanitizer.bypassSecurityTrustHtml(`<span>${vehicleText}</span>`);
+    return `<span>${vehicleText}</span>`;
   }
 
   /**
    * Formatter para placa
    */
-  plateFormatter(order: ServiceOrder): any {
-    return this.sanitizer.bypassSecurityTrustHtml(
-      `<span>${order.plate || 'N/A'}</span>`
-    );
+  plateFormatter(order: ServiceOrder): string {
+    return `<span>${order.plate || 'N/A'}</span>`;
   }
 
   /**
    * Formatter para ações
    */
-  actionFormatter(order: ServiceOrder): any {
-    return this.sanitizer.bypassSecurityTrustHtml(`
-      <a href="javascript:void(0);" class="action-icon edit-btn" data-id="${order.id}" title="Editar">
+  actionFormatter(order: ServiceOrder): string {
+    return `
+      <a href="#" class="action-icon edit-btn" data-id="${order.id}" title="Editar">
         <i class="mdi mdi-pencil" style="color: #28a745;"></i>
       </a>
-      <a href="javascript:void(0);" class="action-icon delete-btn ${this.isDisabled ? 'disabled' : ''}" 
+      <a href="#" class="action-icon delete-btn ${this.isDisabled ? 'disabled' : ''}" 
        data-id="${order.id}"
        title="Excluir"
        style="${this.isDisabled ? 'pointer-events: none; opacity: 0.5;' : ''}">
         <i class="mdi mdi-delete" style="color: #dc3545;"></i>
       </a>
-    `);
+    `;
   }
 
   /**

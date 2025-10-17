@@ -148,8 +148,6 @@ export class OwnerStepComponent implements OnInit, OnDestroy {
     // Salva o endereço no draft com o ID
     this.draftService.updateAddressData(addressData, addressId);
 
-    console.log('Endereço do cliente salvo automaticamente no draft:', addressData);
-    this.notificationService.showMessage('Endereço do cliente carregado com sucesso!', 'success');
   }
 
   /**

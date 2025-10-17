@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef, TemplateRef, ViewChild } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, TemplateRef, ViewChild, ElementRef} from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { BreadcrumbItem } from 'src/app/shared/page-title/page-title.model';
@@ -10,7 +10,6 @@ import { MetroButton } from 'src/app/shared/metro-menu/metro-menu.component';
 import { Vehicle, Color, Brand, VehicleModel } from '../../Shared/models/vehicle.model';
 import { Result } from 'src/app/Http/models/operation-result.model';
 import { SelectizeModel } from 'src/app/shared/selectize/selectize.component';
-import { forkJoin, concat } from 'rxjs';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { PlateConsultationResponse } from '../../Shared/models/plate-consultation.model';
 
@@ -29,6 +28,7 @@ interface VehicleApiModel {
   engine: string;
   status: number;
 }
+declare var bootstrap: any;
 
 @Component({
   selector: 'app-vehicle-form',
@@ -38,10 +38,14 @@ interface VehicleApiModel {
 export class VehicleFormComponent implements OnInit {
   pageTitle: BreadcrumbItem[] = [];
   form!: FormGroup;
-
+  vehicleForm!: FormGroup;
   isEditMode = false;
   vehicleId: string | null = null;
   isDisabled: boolean = false;
+  images: { base64: string }[] = [];
+  selectedImage: { base64: string } | null = null;
+  mainImageIndex: number = 0;
+  maxImages: number = 10;
   
   // Propriedades para busca de placa
   searchedPlate: string = '';
@@ -55,6 +59,9 @@ export class VehicleFormComponent implements OnInit {
   @ViewChild('brandModal', { static: false }) brandModal!: TemplateRef<any>;
   @ViewChild('modelModal', { static: false }) modelModal!: TemplateRef<any>;
   @ViewChild('colorModal', { static: false }) colorModal!: TemplateRef<any>;
+  @ViewChild('mainImageCarousel') carouselEl!: ElementRef;
+  @ViewChild('vehicleImagesInput') vehicleImagesInput: any;
+  @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
   newBrandName: string = '';
   newBrandDescription: string = '';
   newModelName: string = '';
@@ -87,6 +94,26 @@ export class VehicleFormComponent implements OnInit {
         this.metroMenuService.disableButton('save');
       }
     });
+  }
+
+  ngAfterViewInit() {
+  if (this.carouselEl) {
+    const carouselElement = this.carouselEl.nativeElement;
+    new bootstrap.Carousel(carouselElement, { interval: 3000 });
+
+    // Sincroniza o índice da miniatura
+    carouselElement.addEventListener('slid.bs.carousel', (event: any) => {
+      this.mainImageIndex = event.to; // 'to' é o índice do slide ativo
+    });
+  }
+  }
+
+  openFileDialog() {
+    this.vehicleImagesInput.nativeElement.click();
+  }
+
+  triggerFileInput() {
+    this.fileInput.nativeElement.click();
   }
 
   ngOnInit(): void { 
@@ -146,6 +173,73 @@ export class VehicleFormComponent implements OnInit {
       }
     });
   }
+
+   onImageSelected(event: any): void {
+    const files = event.target.files;
+    if (!files || this.images.length >= this.maxImages) return;
+
+    Array.from(files).forEach((file: any) => {
+      if (!file.type.match(/image\/(jpeg|jpg|png|webp)/)) return;
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        const base64 = reader.result as string;
+        if (this.images.length < this.maxImages) {
+          this.images.push({ base64 });
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+  // Define qual imagem será exibida como principal
+  setMainImage(index: number): void {
+    this.mainImageIndex = index;
+  }
+
+  //Abre o modal de visualização da imagem ampliada
+
+  openImageModal(index: number): void {
+    this.selectedImage = this.images[index];
+    const modalElement = document.getElementById('imageModal');
+    if (modalElement) {
+      const modal = new (window as any).bootstrap.Modal(modalElement);
+      modal.show();
+    }
+  }
+
+  handleImageUpload(event: any) {
+  const files: FileList = event.target.files;
+  if (!files || files.length === 0) return;
+
+  const remainingSlots = this.maxImages - this.images.length;
+  const filesToAdd = Array.from(files).slice(0, remainingSlots);
+
+  filesToAdd.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = (e: any) => {
+      const base64 = e.target.result;
+      if (typeof base64 === 'string') {
+        this.images.push({ base64 });
+
+        console.log('Imagem adicionada:', base64);
+      }
+    };
+    reader.readAsDataURL(file);
+  });
+
+  // Limita a lista de imagens ao máximo permitido
+  if (this.images.length > this.maxImages) {
+    this.images = this.images.slice(0, this.maxImages);
+  }
+
+  // Limpa o input para permitir upload de novos arquivos
+  if (this.fileInput) {
+    this.fileInput.nativeElement.value = '';
+  }
+
+  console.log('Todas as imagens atualmente:', this.images);
+}
+
 
   /**
    * Popula o formulário com os dados do veículo

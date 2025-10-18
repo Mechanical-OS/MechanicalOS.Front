@@ -2,9 +2,10 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { BreadcrumbItem } from 'src/app/shared/page-title/page-title.model';
 import { ServiceOrderService } from '../service-order.service';
-import { ServiceOrderDraftService, ServiceItem } from '../shared/service-order-draft.service';
-import { ServiceOrder } from '../../Shared/models/service-order.model';
+import { ServiceOrderDraftService } from '../shared/service-order-draft.service';
+import { ServiceOrder, mapStatusToNumber } from '../../Shared/models/service-order.model';
 import { NotificationService } from 'src/app/shared/services/notification.service';
+import { ServiceItem } from 'src/app/shared/service-search';
 
 @Component({
   selector: 'app-service-order-edit',
@@ -23,24 +24,11 @@ export class ServiceOrderEditComponent implements OnInit {
   
   // Dados editáveis
   services: ServiceItem[] = [];
-  searchValue: string = '';
   discountCoupon: string = '';
   discount: number = 0;
   subtotal: number = 0;
   total: number = 0;
   observations: string = '';
-
-  // Mock de serviços disponíveis (mesmo do componente de criação)
-  availableServices: ServiceItem[] = [
-    { id: 1, name: 'Troca de filtro de ar condicionado', price: 150.00, quantity: 1, total: 150.00 },
-    { id: 2, name: 'Troca de óleo do motor', price: 230.00, quantity: 1, total: 230.00 },
-    { id: 3, name: 'Limpeza de bicos injetores', price: 95.00, quantity: 1, total: 95.00 },
-    { id: 4, name: 'Alinhamento e balanceamento', price: 120.00, quantity: 1, total: 120.00 },
-    { id: 5, name: 'Revisão completa', price: 350.00, quantity: 1, total: 350.00 },
-    { id: 6, name: 'Troca de pastilhas de freio', price: 180.00, quantity: 1, total: 180.00 },
-    { id: 7, name: 'Troca de filtro de óleo', price: 45.00, quantity: 1, total: 45.00 },
-    { id: 8, name: 'Troca de velas', price: 85.00, quantity: 1, total: 85.00 }
-  ];
 
   constructor(
     private route: ActivatedRoute,
@@ -253,9 +241,9 @@ export class ServiceOrderEditComponent implements OnInit {
 
     // Mock de serviços existentes
     this.services = [
-      { id: 1, name: 'Troca de filtro de ar condicionado', price: 150.00, quantity: 1, total: 150.00 },
-      { id: 2, name: 'Troca de óleo do motor', price: 230.00, quantity: 1, total: 230.00 },
-      { id: 3, name: 'Limpeza de bicos injetores', price: 95.00, quantity: 1, total: 95.00 }
+      { id: 1, code: 'MOCK001', name: 'Troca de filtro de ar condicionado', price: 150.00, quantity: 1, total: 150.00 },
+      { id: 2, code: 'MOCK002', name: 'Troca de óleo do motor', price: 230.00, quantity: 1, total: 230.00 },
+      { id: 3, code: 'MOCK003', name: 'Limpeza de bicos injetores', price: 95.00, quantity: 1, total: 95.00 }
     ];
 
     this.observations = this.serviceOrder.observations || '';
@@ -264,13 +252,28 @@ export class ServiceOrderEditComponent implements OnInit {
     console.log('Ordem de serviço carregada para edição:', this.serviceOrder);
   }
 
-  onSearchServices(): void {
-    if (this.searchValue && this.searchValue.trim()) {
-      console.log(`Buscando serviços: ${this.searchValue}`);
-    }
+  /**
+   * Handler chamado quando um serviço é selecionado no componente de busca
+   */
+  onServiceSelected(service: ServiceItem): void {
+    console.log('✅ Serviço selecionado:', service);
+    this.addService(service);
   }
 
-  addService(service: ServiceItem): void {
+  /**
+   * Handler chamado quando ocorre erro na busca de serviços
+   */
+  onSearchError(error: any): void {
+    console.error('❌ Erro ao buscar serviços:', error);
+    this.notificationService.showError({
+      message: 'Erro ao buscar serviços. Tente novamente.'
+    });
+  }
+
+  /**
+   * Adiciona um serviço à lista
+   */
+  private addService(service: ServiceItem): void {
     const existingServiceIndex = this.services.findIndex(s => s.id === service.id);
     
     if (existingServiceIndex >= 0) {
@@ -281,10 +284,17 @@ export class ServiceOrderEditComponent implements OnInit {
       // Move o serviço para o topo da lista
       const updatedService = this.services.splice(existingServiceIndex, 1)[0];
       this.services.unshift(updatedService);
+      
+      console.log('📈 Quantidade incrementada:', this.services[0]);
     } else {
       // Se é um novo serviço, adiciona no início da lista
-      const newService = { ...service, quantity: 1, total: service.price };
+      const newService = { 
+        ...service, 
+        quantity: 1, 
+        total: service.price 
+      };
       this.services.unshift(newService);
+      console.log('➕ Serviço adicionado:', newService);
     }
     
     this.calculateTotals();
@@ -333,30 +343,83 @@ export class ServiceOrderEditComponent implements OnInit {
     console.log('Observações atualizadas:', this.observations);
   }
 
-  getFilteredServices(): ServiceItem[] {
-    if (!this.searchValue || this.searchValue.trim() === '') {
-      return this.availableServices;
-    }
-    
-    const searchTerm = this.searchValue.toLowerCase();
-    return this.availableServices.filter(service => 
-      service.name.toLowerCase().includes(searchTerm) ||
-      service.id.toString().includes(searchTerm)
-    );
-  }
-
   saveChanges(): void {
-    // Salva as alterações
-    console.log('Salvando alterações da ordem:', this.orderId);
-    console.log('Serviços:', this.services);
-    console.log('Desconto:', this.discount);
-    console.log('Observações:', this.observations);
+    console.log('💾 Salvando alterações da ordem:', this.orderId);
     
-    // Aqui seria feita a chamada para a API para salvar as alterações
-    // this.serviceOrderService.update(this.orderId, updatedData).subscribe(...)
-    
-    // Navega de volta para a listagem
-    this.router.navigate(['/apps/service-orders']);
+    // Valida se há ordem carregada
+    if (!this.serviceOrder) {
+      this.notificationService.showError({
+        message: 'Erro: Ordem de serviço não carregada.'
+      });
+      return;
+    }
+
+    // Valida se há serviços
+    if (!this.services || this.services.length === 0) {
+      this.notificationService.showError({
+        message: 'Adicione pelo menos um serviço à ordem de serviço.'
+      });
+      return;
+    }
+
+    // Prepara o payload para a API
+    const updatePayload = {
+      id: this.serviceOrder.id,
+      customerId: this.serviceOrder.customer?.id || 0,
+      vehicleId: this.serviceOrder.vehicle?.id || 0,
+      totalOrder: Math.round(this.total * 100), // Converte para centavos
+      discount: Math.round(this.discount * 100), // Converte para centavos
+      fees: 0, // Pode ser adicionado se necessário
+      description: this.observations || '',
+      entryDate: this.serviceOrder.entryDate?.toISOString() || new Date().toISOString(),
+      departureDate: null, // Pode ser adicionado se necessário
+      status: mapStatusToNumber(this.serviceOrder.status), // Converte status de string para número
+      orderProducts: [], // Vazio por enquanto, pode ser implementado depois
+      orderServices: this.services.map(service => ({
+        serviceId: service.id,
+        serviceCode: service.code || String(service.id),
+        serviceShortDescription: service.name,
+        servicePrice: Math.round(service.price * 100), // Converte para centavos
+        serviceDiscount: 0,
+        serviceQuantity: service.quantity
+      }))
+    };
+
+    console.log('📤 Payload da atualização:', JSON.stringify(updatePayload, null, 2));
+
+    // Exibe loading
+    this.notificationService.showLoading('Salvando alterações...');
+
+    // Chama a API para atualizar
+    this.serviceOrderService.updateOrder(updatePayload).subscribe({
+      next: (response) => {
+        console.log('✅ Resposta da API:', response);
+        
+        // Esconde loading
+        this.notificationService.hideLoading();
+
+        if (response && response.statusCode === 200) {
+          this.notificationService.showSuccess(response, 'Sucesso');
+          
+          // Aguarda um momento e navega de volta
+          setTimeout(() => {
+            this.router.navigate(['/apps/service-orders']);
+          }, 1500);
+        } else {
+          console.error('❌ Erro na atualização:', response);
+          this.notificationService.showError({
+            message: response.message || 'Erro ao atualizar ordem de serviço.'
+          });
+        }
+      },
+      error: (error) => {
+        console.error('❌ Erro ao atualizar ordem de serviço:', error);
+        
+        // Esconde loading e exibe erro
+        this.notificationService.hideLoading();
+        this.notificationService.showError(error);
+      }
+    });
   }
 
   cancel(): void {

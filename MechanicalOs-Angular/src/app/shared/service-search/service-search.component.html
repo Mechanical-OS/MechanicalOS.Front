@@ -1,0 +1,95 @@
+<div class="service-search-container">
+    <!-- Campo de busca -->
+    <div class="search-input-section mb-3">
+        <div class="input-group">
+            <input 
+                type="text" 
+                class="form-control" 
+                [placeholder]="placeholder"
+                [(ngModel)]="searchValue"
+                (keyup)="onSearch()"
+                (focus)="onSearch()"
+                [autofocus]="autoFocus">
+            <button 
+                class="btn btn-outline-secondary" 
+                type="button" 
+                (click)="onSearch()">
+                <i class="fas fa-search"></i>
+            </button>
+            <button 
+                *ngIf="searchValue"
+                class="btn btn-outline-danger" 
+                type="button" 
+                (click)="clearSearch()"
+                title="Limpar busca">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <small class="text-muted mt-1 d-block">
+            <i class="fas fa-info-circle"></i> 
+            Digite pelo menos {{ minCharacters }} caracteres para buscar
+        </small>
+    </div>
+
+    <!-- Resultados da busca -->
+    <div class="search-results" *ngIf="showResults">
+        <!-- Loading -->
+        <div *ngIf="loadingServices" class="text-center py-3">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Carregando...</span>
+            </div>
+            <p class="text-muted mt-2 mb-0">Buscando serviços...</p>
+        </div>
+        
+        <!-- Lista de serviços encontrados -->
+        <div *ngIf="!loadingServices && availableServices.length > 0" class="results-list">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 class="mb-0">
+                    <i class="fas fa-list me-2"></i>Serviços disponíveis ({{ availableServices.length }})
+                </h6>
+                <button 
+                    class="btn btn-sm btn-link text-muted" 
+                    (click)="closeResults()"
+                    title="Fechar resultados">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="list-group">
+                <div 
+                    class="list-group-item list-group-item-action d-flex justify-content-between align-items-center service-item" 
+                    *ngFor="let service of availableServices"
+                    (click)="selectService(service)">
+                    <div class="service-info">
+                        <div class="service-name">
+                            <strong>{{ service.name }}</strong>
+                            <span 
+                                *ngIf="showCodeBadge && service.code" 
+                                class="badge bg-secondary ms-2">
+                                {{ service.code }}
+                            </span>
+                        </div>
+                        <small 
+                            *ngIf="showPriceInList" 
+                            class="text-muted">
+                            R$ {{ service.price.toFixed(2).replace('.', ',') }}
+                        </small>
+                    </div>
+                    <button 
+                        class="btn btn-sm btn-primary"
+                        type="button">
+                        <i class="fas fa-plus me-1"></i> Adicionar
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Nenhum serviço encontrado -->
+        <div *ngIf="!loadingServices && availableServices.length === 0 && searchValue.length >= minCharacters" 
+             class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>
+            Nenhum serviço encontrado para <strong>"{{ searchValue }}"</strong>
+        </div>
+    </div>
+</div>
+

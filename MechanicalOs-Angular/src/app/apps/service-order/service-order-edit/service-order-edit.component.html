@@ -73,44 +73,16 @@
                             <div class="card-body">
                                 <h5 class="card-title">Serviços a serem realizados...</h5>
                                 
-                                <!-- Campo de busca -->
-                                <div class="services-search-section">
-                                    <div class="input-group">
-                                        <input 
-                                            type="text" 
-                                            class="form-control" 
-                                            placeholder="Pesquise por código ou descrição"
-                                            [(ngModel)]="searchValue"
-                                            (keyup.enter)="onSearchServices()">
-                                        <button 
-                                            class="btn btn-outline-secondary" 
-                                            type="button" 
-                                            (click)="onSearchServices()">
-                                            <i class="fas fa-search"></i>
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <!-- Lista de serviços disponíveis -->
-                                <div class="mb-4" *ngIf="searchValue">
-                                    <h6>Serviços disponíveis:</h6>
-                                    <div class="list-group">
-                                        <div class="list-group-item d-flex justify-content-between align-items-center available-service-item" 
-                                             *ngFor="let service of getFilteredServices()">
-                                            <div>
-                                                <strong>{{ service.name }}</strong><br>
-                                                <small class="text-muted">R$ {{ service.price.toFixed(2).replace('.', ',') }}</small>
-                                            </div>
-                                            <div class="action-buttons">
-                                                <button 
-                                                    class="btn btn-sm btn-add-service" 
-                                                    (click)="addService(service)">
-                                                    <i class="fas fa-plus"></i> Adicionar
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                                <!-- Componente de busca de serviços -->
+                                <app-service-search
+                                    [placeholder]="'Pesquise por código ou descrição do serviço'"
+                                    [minCharacters]="2"
+                                    [debounceTime]="500"
+                                    [showPriceInList]="true"
+                                    [showCodeBadge]="true"
+                                    (serviceSelected)="onServiceSelected($event)"
+                                    (searchError)="onSearchError($event)">
+                                </app-service-search>
 
                                 <!-- Tabela de serviços selecionados -->
                                 <div class="services-table-container" *ngIf="services.length > 0">

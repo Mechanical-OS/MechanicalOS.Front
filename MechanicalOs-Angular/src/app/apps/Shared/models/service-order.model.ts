@@ -34,6 +34,30 @@ export enum ServiceOrderStatus {
   CANCELADO = 'CANCELADO'
 }
 
+/**
+ * Mapeamento de status de string para número (conforme API espera)
+ */
+export const ServiceOrderStatusMap: { [key: string]: number } = {
+  'ORCAMENTO': 4,      // Pending
+  'EM_ANDAMENTO': 6,   // Processing
+  'CONCLUIDO': 5,      // Complete
+  'CANCELADO': 8       // Canceled
+};
+
+/**
+ * Converte status de string para número
+ */
+export function mapStatusToNumber(status: ServiceOrderStatus | string | number): number {
+  // Se já é número, retorna direto
+  if (typeof status === 'number') {
+    return status;
+  }
+  
+  // Converte para string e busca no mapa
+  const statusStr = String(status);
+  return ServiceOrderStatusMap[statusStr] || 4; // Default: Pending
+}
+
 export interface ServiceOrderStatusInfo {
   status: ServiceOrderStatus;
   label: string;

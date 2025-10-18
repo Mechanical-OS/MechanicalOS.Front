@@ -1,6 +1,6 @@
 import { Injectable } from "@angular/core";
 import { BaseService } from "src/app/Http/base-service";
-import { ServiceOrder } from "../Shared/models/service-order.model";
+import { ServiceOrder, mapStatusToNumber } from "../Shared/models/service-order.model";
 import { HttpClient } from "@angular/common/http";
 import { NotificationService } from "src/app/shared/services/notification.service";
 import { SERVICE_ORDER_URL, CUSTOMER_URL } from "src/app/Http/Config/config";
@@ -44,6 +44,16 @@ export class ServiceOrderService extends BaseService<ServiceOrder> {
      */
     getOrderById(id: number): Observable<Result<any>> {
         return this.http.get<Result<any>>(`${SERVICE_ORDER_URL}/${id}`);
+    }
+
+    /**
+     * Atualiza uma ordem de serviço existente
+     * @param orderData Dados da ordem de serviço para atualização
+     * @returns Observable<Result<any>>
+     */
+    updateOrder(orderData: any): Observable<Result<any>> {
+        console.log('📤 Atualizando ordem de serviço:', orderData);
+        return this.http.put<Result<any>>(SERVICE_ORDER_URL, orderData);
     }
 
     /**
@@ -275,7 +285,7 @@ export class ServiceOrderService extends BaseService<ServiceOrder> {
             description: draft.description,
             entryDate: draft.entryDate || new Date().toISOString(),
             departureDate: draft.departureDate,
-            status: draft.status,
+            status: mapStatusToNumber(draft.status), // Converte status de string para número
             orderProducts: draft.products.map(product => ({
                 productId: product.id,
                 productName: product.name,

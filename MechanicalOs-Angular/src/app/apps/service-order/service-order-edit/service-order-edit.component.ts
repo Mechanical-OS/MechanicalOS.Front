@@ -4,6 +4,7 @@ import { BreadcrumbItem } from 'src/app/shared/page-title/page-title.model';
 import { ServiceOrderService } from '../service-order.service';
 import { ServiceOrderDraftService, ServiceItem } from '../shared/service-order-draft.service';
 import { ServiceOrder } from '../../Shared/models/service-order.model';
+import { NotificationService } from 'src/app/shared/services/notification.service';
 
 @Component({
   selector: 'app-service-order-edit',
@@ -45,7 +46,8 @@ export class ServiceOrderEditComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private serviceOrderService: ServiceOrderService,
-    private draftService: ServiceOrderDraftService
+    private draftService: ServiceOrderDraftService,
+    private notificationService: NotificationService
   ) { }
 
   ngOnInit(): void {
@@ -64,8 +66,135 @@ export class ServiceOrderEditComponent implements OnInit {
   }
 
   private loadServiceOrder(): void {
-    // Mock data para demonstração - em produção seria uma chamada real à API
-    this.loadMockServiceOrder();
+    console.log('🔍 Buscando ordem de serviço ID:', this.orderId);
+    
+    // Exibe o loading
+    this.notificationService.showLoading('Carregando ordem de serviço...');
+    
+    this.serviceOrderService.getOrderById(this.orderId).subscribe({
+      next: (response) => {
+        console.log('✅ Resposta da API:', response);
+        
+        // Esconde o loading
+        this.notificationService.hideLoading();
+        
+        if (response && response.statusCode === 200 && response.content) {
+          this.populateForm(response.content);
+        } else {
+          console.error('❌ Erro: Resposta inválida da API', response);
+          this.notificationService.showError({
+            message: 'Erro ao carregar ordem de serviço. Dados não encontrados.'
+          });
+          this.router.navigate(['/apps/service-orders']);
+        }
+      },
+      error: (error) => {
+        console.error('❌ Erro ao buscar ordem de serviço:', error);
+        
+        // Esconde o loading e exibe erro
+        this.notificationService.hideLoading();
+        this.notificationService.showError(error);
+        
+        // Aguarda um momento antes de redirecionar para que o usuário veja o erro
+        setTimeout(() => {
+          this.router.navigate(['/apps/service-orders']);
+        }, 2000);
+      }
+    });
+  }
+
+  /**
+   * Popula o formulário com os dados da ordem de serviço
+   */
+  private populateForm(orderData: any): void {
+    console.log('📝 Populando formulário com dados:', orderData);
+
+    // Dados do serviço
+    this.serviceOrder = {
+      id: orderData.id,
+      entryDate: new Date(orderData.dateCreated || orderData.entryDate),
+      status: orderData.status,
+      customer: orderData.customer,
+      vehicle: orderData.vehicle,
+      plate: orderData.vehicle?.plate || 'N/A',
+      totalValue: orderData.totalOrder ? orderData.totalOrder / 100 : 0,
+      description: orderData.description || '',
+      observations: orderData.observations || ''
+    };
+
+    // Dados do cliente
+    if (orderData.customer) {
+      this.customerData = {
+        name: orderData.customer.name || 'N/A',
+        email: orderData.customer.email || 'N/A',
+        phone: orderData.customer.whatsApp || orderData.customer.phone || 'N/A',
+        document: orderData.customer.socialNumber || 'N/A'
+      };
+    }
+
+    // Dados do veículo
+    if (orderData.vehicle) {
+      this.vehicleData = {
+        brand: orderData.vehicle.brand?.name || 'N/A',
+        model: orderData.vehicle.vehicleModel?.name || orderData.vehicle.model || 'N/A',
+        version: orderData.vehicle.version || 'N/A',
+        year: orderData.vehicle.year || 'N/A',
+        color: orderData.vehicle.color?.name || 'N/A',
+        plate: orderData.vehicle.plate || 'N/A'
+      };
+    }
+
+    // Dados do endereço (se disponível)
+    if (orderData.customer && orderData.customer.address) {
+      this.addressData = {
+        city: orderData.customer.address.city || 'N/A',
+        state: orderData.customer.address.state || 'N/A',
+        neighborhood: orderData.customer.address.neighborhood || 'N/A',
+        street: orderData.customer.address.street || 'N/A',
+        number: orderData.customer.address.number || 'N/A',
+        complement: orderData.customer.address.complement || 'Sem complemento',
+        zipCode: orderData.customer.address.zipcode || 'N/A'
+      };
+    } else {
+      this.addressData = {
+        city: 'N/A',
+        state: 'N/A',
+        neighborhood: 'N/A',
+        street: 'N/A',
+        number: 'N/A',
+        complement: 'N/A',
+        zipCode: 'N/A'
+      };
+    }
+
+    // Carrega os serviços da ordem
+    if (orderData.orderServices && Array.isArray(orderData.orderServices)) {
+      this.services = orderData.orderServices.map((service: any) => ({
+        id: service.serviceId || service.id,
+        code: service.serviceCode,
+        name: service.serviceShortDescription || service.name || 'Serviço sem nome',
+        price: service.servicePrice ? service.servicePrice / 100 : 0,
+        quantity: service.serviceQuantity || 1,
+        total: service.servicePrice ? (service.servicePrice / 100) * (service.serviceQuantity || 1) : 0
+      }));
+    }
+
+    // Observações
+    this.observations = orderData.description || '';
+
+    // Desconto (se disponível)
+    if (orderData.discount) {
+      this.discount = orderData.discount / 100; // Converte centavos para reais
+    }
+
+    // Calcula totais
+    this.calculateTotals();
+
+    console.log('✅ Formulário populado com sucesso');
+    console.log('Cliente:', this.customerData);
+    console.log('Veículo:', this.vehicleData);
+    console.log('Endereço:', this.addressData);
+    console.log('Serviços:', this.services);
   }
 
   private loadMockServiceOrder(): void {

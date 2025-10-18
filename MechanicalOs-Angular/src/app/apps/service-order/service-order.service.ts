@@ -38,6 +38,15 @@ export class ServiceOrderService extends BaseService<ServiceOrder> {
     }
 
     /**
+     * Busca uma ordem de serviço pelo ID
+     * @param id ID da ordem de serviço
+     * @returns Observable<Result<any>>
+     */
+    getOrderById(id: number): Observable<Result<any>> {
+        return this.http.get<Result<any>>(`${SERVICE_ORDER_URL}/${id}`);
+    }
+
+    /**
      * Método principal que orquestra a criação completa da ordem de serviço
      * Resolve Customer → Address → Vehicle → Cria Ordem
      */

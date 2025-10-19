@@ -55,7 +55,9 @@
               "src/assets/scss/config/default/bootstrap.scss",
               "src/assets/scss/icons.scss"
             ],
-            "scripts": [],
+            "scripts": [
+              "node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"
+            ],
             "browser": "src/main.ts",
             "stylePreprocessorOptions": {
               "includePaths": [

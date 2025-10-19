@@ -28,6 +28,7 @@ export class AdvancedTableComponent implements OnInit, AfterViewChecked {
   @Input() isSortable: boolean = false;
   @Input() pageSizeOptions: number[] = [];
   @Input() tableData: any[] = [];
+  @Input() totalRecords?: number;
   @Input() tableClasses: string = '';
   @Input() theadClasses: string = '';
   @Input() hasRowSelection: boolean = false;
@@ -36,6 +37,7 @@ export class AdvancedTableComponent implements OnInit, AfterViewChecked {
   collectionSize: number = this.tableData.length;
   selectAll: boolean = false;
   isSelected: boolean[] = [];
+  private previousPage: number = 1;
 
   @Output() rowSelected = new EventEmitter<any>(); // Emissor de evento
 
@@ -43,6 +45,7 @@ export class AdvancedTableComponent implements OnInit, AfterViewChecked {
   @Output() search = new EventEmitter<string>();
   @Output() sort = new EventEmitter<SortEvent>();
   @Output() handleTableLoad = new EventEmitter<any>();
+  @Output() pageChange = new EventEmitter<number>();
 
 
   @ViewChildren(NgbSortableHeaderDirective) headers!: QueryList<NgbSortableHeaderDirective>;
@@ -70,8 +73,8 @@ export class AdvancedTableComponent implements OnInit, AfterViewChecked {
    * sets pagination configurations
    */
   paginate(): void {
-    // paginate
-    this.service.totalRecords = this.tableData.length;
+    // paginate - usa totalRecords passado como input ou calcula pelo tamanho do array
+    this.service.totalRecords = this.totalRecords !== undefined ? this.totalRecords : this.tableData.length;
     if (this.service.totalRecords === 0) {
       this.service.startIndex = 0;
     }
@@ -81,6 +84,12 @@ export class AdvancedTableComponent implements OnInit, AfterViewChecked {
     this.service.endIndex = Number((this.service.page - 1) * this.service.pageSize + this.service.pageSize);
     if (this.service.endIndex > this.service.totalRecords) {
       this.service.endIndex = this.service.totalRecords;
+    }
+    
+    // Emite o evento de mudança de página apenas se a página realmente mudou
+    if (this.previousPage !== this.service.page) {
+      this.previousPage = this.service.page;
+      this.pageChange.emit(this.service.page);
     }
   }
 

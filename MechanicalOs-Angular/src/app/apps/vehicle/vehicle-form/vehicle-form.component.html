@@ -140,6 +140,7 @@
                                   class="form-control"
                                   placeholder="Digite a placa"
                                   [(ngModel)]="searchedPlate"
+                                  [ngModelOptions]="{standalone: true}"
                                   (input)="onPlateSearchChange($event)"
                                   maxlength="8"
                                 />
@@ -429,6 +430,7 @@
                           type="text"
                           class="form-control"
                           [(ngModel)]="newBrandName"
+                          [ngModelOptions]="{standalone: true}"
                           placeholder="Digite o nome da marca"
                         />
                       </div>
@@ -441,6 +443,7 @@
                           type="text"
                           class="form-control"
                           [(ngModel)]="newBrandDescription"
+                          [ngModelOptions]="{standalone: true}"
                           placeholder="Digite a descrição da marca"
                         />
                       </div>
@@ -484,6 +487,7 @@
                           type="text"
                           class="form-control"
                           [(ngModel)]="newModelName"
+                          [ngModelOptions]="{standalone: true}"
                           placeholder="Digite o nome do modelo"
                         />
                       </div>
@@ -496,6 +500,7 @@
                           type="text"
                           class="form-control"
                           [(ngModel)]="newModelDescription"
+                          [ngModelOptions]="{standalone: true}"
                           placeholder="Digite a descrição do modelo"
                         />
                       </div>
@@ -547,6 +552,7 @@
                           type="text"
                           class="form-control"
                           [(ngModel)]="newColorName"
+                          [ngModelOptions]="{standalone: true}"
                           placeholder="Digite o nome da cor"
                         />
                       </div>
@@ -559,6 +565,7 @@
                           type="text"
                           class="form-control"
                           [(ngModel)]="newColorDescription"
+                          [ngModelOptions]="{standalone: true}"
                           placeholder="Digite a descrição da cor"
                         />
                       </div>

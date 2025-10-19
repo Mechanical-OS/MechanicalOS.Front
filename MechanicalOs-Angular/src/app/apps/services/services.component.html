@@ -12,11 +12,13 @@
                 <app-advanced-table #advancedTable 
                                     (handleTableLoad)="handleTableLoad($event)" 
                                     [tableData]="serviceList"
+                                    [totalRecords]="totalRecords"
                                     [columns]="columns" 
                                     [pagination]="true" 
                                     [hasRowSelection]="false" 
                                     [isSearchable]="true"
                                     (search)="searchData($event)" 
+                                    (pageChange)="onPageChange($event)"
                                     [isSortable]="false" 
                                     tableClasses="table-centered"
                                     theadClasses="table-light"

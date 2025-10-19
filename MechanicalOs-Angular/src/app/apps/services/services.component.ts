@@ -27,6 +27,7 @@ import { MetroMenuService } from 'src/app/shared/metro-menu/metro-menu.service';
 export class ServicesComponent implements OnInit {
   pageTitle: BreadcrumbItem[] = [];
   serviceList: ServiceModel[] = [];
+  totalRecords: number = 0;
   selectAll: boolean = false;
   ServiceStatusGroup: string = "All";
   loading: boolean = false;
@@ -87,10 +88,10 @@ export class ServicesComponent implements OnInit {
    *  fetches services list
    */
 
-  async _fetchData(): Promise<void> {
+  async _fetchData(pageIndex: number = 1, pageSize: number = 10): Promise<void> {
     const request: GetAllRequest = {
-      pageSize: 25,
-      pageIndex: 1,
+      pageSize: pageSize,
+      pageIndex: pageIndex,
       sort: '',
       direction: ''
     };
@@ -100,6 +101,7 @@ export class ServicesComponent implements OnInit {
       const result = await firstValueFrom(this.service.getAll(request));
       if (result.statusCode === 200) {
         this.serviceList = result.content.resultList;
+        this.totalRecords = result.content.totalRecords;
       } else {
         // Exibe o erro com SweetAlert
         Swal.fire({
@@ -294,6 +296,16 @@ export class ServicesComponent implements OnInit {
       this.metroMenuService.disableButton('edit');
       this.metroMenuService.disableButton('delete');
     }
+  }
+
+  /**
+   * Método chamado quando a página é alterada
+   * @param page Número da página (1-indexed)
+   */
+  onPageChange(page: number): void {
+    console.log('Mudança de página detectada:', page);
+    // A API espera pageIndex base 1 ou 0? Verifique e ajuste se necessário
+    this._fetchData(page, 10);
   }
 
   /**

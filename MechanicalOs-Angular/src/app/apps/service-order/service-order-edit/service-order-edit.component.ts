@@ -3,7 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { BreadcrumbItem } from 'src/app/shared/page-title/page-title.model';
 import { ServiceOrderService } from '../service-order.service';
 import { ServiceOrderDraftService } from '../shared/service-order-draft.service';
-import { ServiceOrder, mapStatusToNumber } from '../../Shared/models/service-order.model';
+import { ServiceOrder, ServiceOrderStatus, mapStatusToNumber } from '../../Shared/models/service-order.model';
 import { NotificationService } from 'src/app/shared/services/notification.service';
 import { ServiceItem } from 'src/app/shared/service-search';
 
@@ -29,6 +29,15 @@ export class ServiceOrderEditComponent implements OnInit {
   subtotal: number = 0;
   total: number = 0;
   observations: string = '';
+  currentStatus: string = '';
+  
+  // Lista de status disponíveis
+  statusList = [
+    { value: ServiceOrderStatus.ORCAMENTO, label: 'Orçamento' },
+    { value: ServiceOrderStatus.EM_ANDAMENTO, label: 'Em Andamento' },
+    { value: ServiceOrderStatus.CONCLUIDO, label: 'Concluído' },
+    { value: ServiceOrderStatus.CANCELADO, label: 'Cancelado' }
+  ];
 
   constructor(
     private route: ActivatedRoute,
@@ -109,6 +118,9 @@ export class ServiceOrderEditComponent implements OnInit {
       description: orderData.description || '',
       observations: orderData.observations || ''
     };
+    
+    // Define o status atual baseado no status da ordem
+    this.currentStatus = this.mapNumberToStatus(orderData.status);
 
     // Dados do cliente
     if (orderData.customer) {
@@ -277,8 +289,8 @@ export class ServiceOrderEditComponent implements OnInit {
     const existingServiceIndex = this.services.findIndex(s => s.id === service.id);
     
     if (existingServiceIndex >= 0) {
-      // Se o serviço já existe, incrementa a quantidade
-      this.services[existingServiceIndex].quantity += 1;
+      // Se o serviço já existe, incrementa a quantidade escolhida
+      this.services[existingServiceIndex].quantity += service.quantity;
       this.updateServiceTotal(existingServiceIndex);
       
       // Move o serviço para o topo da lista
@@ -287,11 +299,11 @@ export class ServiceOrderEditComponent implements OnInit {
       
       console.log('📈 Quantidade incrementada:', this.services[0]);
     } else {
-      // Se é um novo serviço, adiciona no início da lista
+      // Se é um novo serviço, adiciona no início da lista com a quantidade escolhida
       const newService = { 
-        ...service, 
-        quantity: 1, 
-        total: service.price 
+        ...service,
+        quantity: service.quantity || 1,
+        total: service.price * (service.quantity || 1)
       };
       this.services.unshift(newService);
       console.log('➕ Serviço adicionado:', newService);
@@ -343,6 +355,49 @@ export class ServiceOrderEditComponent implements OnInit {
     console.log('Observações atualizadas:', this.observations);
   }
 
+  /**
+   * Converte número do status (da API) para string do enum
+   */
+  private mapNumberToStatus(statusNumber: number): string {
+    const statusMap: { [key: number]: string } = {
+      4: ServiceOrderStatus.ORCAMENTO,      // Pending
+      6: ServiceOrderStatus.EM_ANDAMENTO,   // Processing
+      5: ServiceOrderStatus.CONCLUIDO,      // Complete
+      8: ServiceOrderStatus.CANCELADO       // Canceled
+    };
+    return statusMap[statusNumber] || ServiceOrderStatus.ORCAMENTO;
+  }
+
+  /**
+   * Handler chamado quando o status é alterado
+   */
+  onStatusChange(): void {
+    const statusNumber = mapStatusToNumber(this.currentStatus);
+    console.log('📝 Status alterado:', {
+      statusString: this.currentStatus,
+      statusNumber: statusNumber,
+      label: this.statusList.find(s => s.value === this.currentStatus)?.label
+    });
+    
+    // Atualiza o status no objeto serviceOrder
+    if (this.serviceOrder) {
+      this.serviceOrder.status = this.currentStatus as any;
+    }
+  }
+
+  /**
+   * Retorna a classe CSS baseada no status
+   */
+  getStatusClass(status: string): string {
+    const classMap: { [key: string]: string } = {
+      [ServiceOrderStatus.ORCAMENTO]: 'status-orcamento',
+      [ServiceOrderStatus.EM_ANDAMENTO]: 'status-em-andamento',
+      [ServiceOrderStatus.CONCLUIDO]: 'status-concluido',
+      [ServiceOrderStatus.CANCELADO]: 'status-cancelado'
+    };
+    return classMap[status] || '';
+  }
+
   saveChanges(): void {
     console.log('💾 Salvando alterações da ordem:', this.orderId);
     
@@ -362,6 +417,15 @@ export class ServiceOrderEditComponent implements OnInit {
       return;
     }
 
+    // Converte o status atual para número
+    const statusNumber = mapStatusToNumber(this.currentStatus);
+    
+    console.log('🔄 Status a ser enviado:', {
+      statusString: this.currentStatus,
+      statusNumber: statusNumber,
+      statusLabel: this.statusList.find(s => s.value === this.currentStatus)?.label
+    });
+    
     // Prepara o payload para a API
     const updatePayload = {
       id: this.serviceOrder.id,
@@ -373,7 +437,7 @@ export class ServiceOrderEditComponent implements OnInit {
       description: this.observations || '',
       entryDate: this.serviceOrder.entryDate?.toISOString() || new Date().toISOString(),
       departureDate: null, // Pode ser adicionado se necessário
-      status: mapStatusToNumber(this.serviceOrder.status), // Converte status de string para número
+      status: statusNumber, // Status convertido de string para número
       orderProducts: [], // Vazio por enquanto, pode ser implementado depois
       orderServices: this.services.map(service => ({
         serviceId: service.id,

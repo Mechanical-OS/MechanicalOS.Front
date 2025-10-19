@@ -51,14 +51,13 @@
         margin-top: 0.5rem;
         
         .service-item {
-          cursor: pointer;
           transition: all 0.2s ease;
           border-left: 3px solid transparent;
           padding: 0.75rem 1rem;
           
           &:hover {
             background-color: #f8f9fa;
-            border-left-color: #007bff;
+            border-left-color: #28a745;
             transform: translateX(2px);
           }
           
@@ -86,11 +85,38 @@
             }
           }
           
-          .btn {
-            white-space: nowrap;
+          .service-actions {
+            .quantity-input {
+              display: flex;
+              align-items: center;
+              
+              label {
+                font-weight: 600;
+                color: #495057;
+              }
+              
+              input {
+                text-align: center;
+                font-weight: 600;
+                
+                &:focus {
+                  border-color: #28a745;
+                  box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+                }
+              }
+            }
             
-            i {
-              font-size: 0.8rem;
+            .btn {
+              white-space: nowrap;
+              
+              i {
+                font-size: 0.8rem;
+              }
+              
+              &:hover {
+                background-color: #218838;
+                border-color: #1e7e34;
+              }
             }
           }
         }
@@ -153,9 +179,47 @@
           flex-direction: column;
           align-items: flex-start !important;
           
-          .btn {
-            margin-top: 0.5rem;
+          .service-info {
             width: 100%;
+            margin-bottom: 0.75rem;
+          }
+          
+          .service-actions {
+            width: 100%;
+            flex-direction: row;
+            justify-content: space-between;
+            
+            .quantity-input {
+              flex: 0 0 auto;
+              
+              input {
+                width: 60px !important;
+              }
+            }
+            
+            .btn {
+              flex: 1;
+              margin-left: 0.5rem;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+// Tablet
+@media (max-width: 992px) and (min-width: 769px) {
+  .service-search-container {
+    .search-results {
+      .results-list {
+        .service-item {
+          .service-actions {
+            .quantity-input {
+              input {
+                width: 65px;
+              }
+            }
           }
         }
       }

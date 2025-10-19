@@ -57,10 +57,9 @@
             
             <div class="list-group">
                 <div 
-                    class="list-group-item list-group-item-action d-flex justify-content-between align-items-center service-item" 
-                    *ngFor="let service of availableServices"
-                    (click)="selectService(service)">
-                    <div class="service-info">
+                    class="list-group-item d-flex justify-content-between align-items-center service-item" 
+                    *ngFor="let service of availableServices">
+                    <div class="service-info flex-grow-1">
                         <div class="service-name">
                             <strong>{{ service.name }}</strong>
                             <span 
@@ -75,11 +74,25 @@
                             R$ {{ service.price.toFixed(2).replace('.', ',') }}
                         </small>
                     </div>
-                    <button 
-                        class="btn btn-sm btn-primary"
-                        type="button">
-                        <i class="fas fa-plus me-1"></i> Adicionar
-                    </button>
+                    <div class="service-actions d-flex align-items-center gap-2">
+                        <div class="quantity-input">
+                            <label class="form-label mb-0 me-2 small">Qtd:</label>
+                            <input 
+                                type="number" 
+                                class="form-control form-control-sm" 
+                                [(ngModel)]="service.quantity"
+                                min="1"
+                                max="999"
+                                style="width: 70px;"
+                                (click)="$event.stopPropagation()">
+                        </div>
+                        <button 
+                            class="btn btn-sm btn-success"
+                            type="button"
+                            (click)="selectService(service)">
+                            <i class="fas fa-plus me-1"></i> Adicionar
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

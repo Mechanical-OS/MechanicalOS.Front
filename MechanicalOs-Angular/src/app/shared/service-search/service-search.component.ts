@@ -115,6 +115,14 @@ export class ServiceSearchComponent implements OnInit, OnDestroy {
    * Seleciona um serviço da lista
    */
   selectService(service: ServiceItem): void {
+    // Garante que a quantidade é válida
+    if (!service.quantity || service.quantity < 1) {
+      service.quantity = 1;
+    }
+    
+    // Calcula o total baseado na quantidade
+    service.total = service.price * service.quantity;
+    
     console.log('✅ [ServiceSearch] Serviço selecionado:', service);
     this.serviceSelected.emit(service);
     

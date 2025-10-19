@@ -6,10 +6,21 @@
             <div class="card-body">
                 <!-- Header com dados da ordem (somente leitura) -->
                 <div class="mb-4">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h4 class="mb-0">Edição de Ordem de Serviço</h4>
+                    <div class="d-flex justify-content-between align-items-start mb-3">
                         <div>
-                            <span class="badge bg-info me-2">OS #{{ orderId.toString().padStart(6, '0') }}</span>
+                            <h4 class="mb-2">Edição de Ordem de Serviço</h4>
+                            <select 
+                                class="form-select form-select-sm status-select"
+                                [(ngModel)]="currentStatus"
+                                (change)="onStatusChange()"
+                                [ngClass]="getStatusClass(currentStatus)">
+                                <option *ngFor="let status of statusList" [value]="status.value">
+                                    {{ status.label }}
+                                </option>
+                            </select>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-info">OS #{{ orderId.toString().padStart(6, '0') }}</span>
                             <span class="badge bg-warning">{{ serviceOrder?.entryDate | date:'dd/MM/yyyy HH:mm' }}</span>
                         </div>
                     </div>

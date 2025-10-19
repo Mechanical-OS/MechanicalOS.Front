@@ -29,6 +29,7 @@ export class AdvancedTableComponent implements OnInit, AfterViewChecked {
   @Input() pageSizeOptions: number[] = [];
   @Input() tableData: any[] = [];
   @Input() totalRecords?: number;
+  @Input() isLoading: boolean = false;
   @Input() tableClasses: string = '';
   @Input() theadClasses: string = '';
   @Input() hasRowSelection: boolean = false;
@@ -38,6 +39,10 @@ export class AdvancedTableComponent implements OnInit, AfterViewChecked {
   selectAll: boolean = false;
   isSelected: boolean[] = [];
   private previousPage: number = 1;
+  private previousPageSize: number = 10;
+  
+  // Opções de registros por página
+  availablePageSizes: number[] = [10, 25, 50, 100];
 
   @Output() rowSelected = new EventEmitter<any>(); // Emissor de evento
 
@@ -46,6 +51,7 @@ export class AdvancedTableComponent implements OnInit, AfterViewChecked {
   @Output() sort = new EventEmitter<SortEvent>();
   @Output() handleTableLoad = new EventEmitter<any>();
   @Output() pageChange = new EventEmitter<number>();
+  @Output() pageSizeChange = new EventEmitter<number>();
 
 
   @ViewChildren(NgbSortableHeaderDirective) headers!: QueryList<NgbSortableHeaderDirective>;
@@ -91,6 +97,24 @@ export class AdvancedTableComponent implements OnInit, AfterViewChecked {
       this.previousPage = this.service.page;
       this.pageChange.emit(this.service.page);
     }
+  }
+
+  /**
+   * Chamado quando o usuário muda o tamanho da página
+   */
+  onPageSizeChange(): void {
+    // Volta para a primeira página ao mudar o pageSize
+    this.service.page = 1;
+    this.previousPage = 1;
+    
+    // Emite o evento de mudança de pageSize
+    if (this.previousPageSize !== this.service.pageSize) {
+      this.previousPageSize = this.service.pageSize;
+      this.pageSizeChange.emit(this.service.pageSize);
+    }
+    
+    // Recalcula a paginação
+    this.paginate();
   }
 
 

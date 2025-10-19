@@ -70,35 +70,74 @@
                 }
             </thead>
             <tbody>
-                @for (record of tableData; track $index) {
-                    <tr [ngClass]="{ 'highlighted': isSelected[$index] }"
-                    (click)="selectRow(record, $index)">            
-                    @if(hasRowSelection){
-                    <td>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox"
-                                [checked]="isSelected[$index]"
-                                (change)="selectRow(record, $index)">
-                        </div>
-                    </td>
+                <!-- Skeleton Loading -->
+                @if(isLoading){
+                    @for (skeletonRow of [1,2,3,4,5,6,7,8,9,10]; track $index) {
+                    <tr class="skeleton-row">
+                        @if(hasRowSelection){
+                        <td>
+                            <div class="skeleton skeleton-checkbox"></div>
+                        </td>
+                        }
+                        @for (column of columns; track $index) {
+                        <td>
+                            <div class="skeleton skeleton-text"></div>
+                        </td>
+                        }
+                    </tr>
                     }
-                    @for (column of columns; track $index) {
-                    <td>
-                        <div [innerHtml]="callFormatter(column,record)"></div>
-                    </td>
-                    }
-                </tr>}
+                }
+                
+                <!-- Dados Reais -->
+                @if(!isLoading){
+                    @for (record of tableData; track $index) {
+                        <tr [ngClass]="{ 'highlighted': isSelected[$index] }"
+                        (click)="selectRow(record, $index)">            
+                        @if(hasRowSelection){
+                        <td>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox"
+                                    [checked]="isSelected[$index]"
+                                    (change)="selectRow(record, $index)">
+                            </div>
+                        </td>
+                        }
+                        @for (column of columns; track $index) {
+                        <td>
+                            <div [innerHtml]="callFormatter(column,record)"></div>
+                        </td>
+                        }
+                    </tr>}
+                }
             </tbody>
         </table>
     
         @if(pagination){
-        <div class="d-flex flex-wrap justify-content-center align-items-center justify-content-md-between mt-2">
-            <div>
-                Mostrando {{service.startIndex }} de
-                {{service.endIndex}} de {{service.totalRecords}} registros
+        <div class="d-flex flex-wrap justify-content-between align-items-center mt-3">
+            <!-- Seletor de registros por página -->
+            <div class="d-flex align-items-center gap-2">
+                <select class="form-select form-select-sm" style="width: auto;" 
+                        [(ngModel)]="service.pageSize" 
+                        (ngModelChange)="onPageSizeChange()">
+                    @for (size of availablePageSizes; track $index) {
+                        <option [value]="size">{{size}} por página</option>
+                    }
+                </select>
+                <!-- Info de registros -->
+            <div class="text-muted">
+                Mostrando {{service.startIndex}} de {{service.endIndex}} de {{service.totalRecords}} registros
             </div>
-            <ngb-pagination class="pagination-rounded custom-pagination" [collectionSize]="service.totalRecords"
-                [(page)]="service.page" [maxSize]="3" [rotate]="true" [pageSize]="service.pageSize"
+            </div>
+
+            
+
+            <!-- Paginação -->
+            <ngb-pagination class="pagination-rounded custom-pagination mb-0" 
+                [collectionSize]="service.totalRecords"
+                [(page)]="service.page" 
+                [maxSize]="3" 
+                [rotate]="true" 
+                [pageSize]="service.pageSize"
                 (pageChange)="paginate()">
             </ngb-pagination>
         </div>

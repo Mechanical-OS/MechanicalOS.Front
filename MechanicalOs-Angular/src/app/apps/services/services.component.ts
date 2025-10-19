@@ -31,6 +31,7 @@ export class ServicesComponent implements OnInit {
   selectAll: boolean = false;
   ServiceStatusGroup: string = "All";
   loading: boolean = false;
+  isTableLoading: boolean = false;
   columns: Column[] = [];
 
   selectedItemRowId: number = 0;
@@ -89,6 +90,8 @@ export class ServicesComponent implements OnInit {
    */
 
   async _fetchData(pageIndex: number = 1, pageSize: number = 10): Promise<void> {
+    this.isTableLoading = true;
+    
     const request: GetAllRequest = {
       pageSize: pageSize,
       pageIndex: pageIndex,
@@ -119,6 +122,8 @@ export class ServicesComponent implements OnInit {
         text: 'Não foi possível carregar os dados. Tente novamente mais tarde.',
         confirmButtonText: 'Entendi',
       });
+    } finally {
+      this.isTableLoading = false;
     }
   }
 
@@ -304,8 +309,18 @@ export class ServicesComponent implements OnInit {
    */
   onPageChange(page: number): void {
     console.log('Mudança de página detectada:', page);
-    // A API espera pageIndex base 1 ou 0? Verifique e ajuste se necessário
-    this._fetchData(page, 10);
+    const currentPageSize = this.advancedTable?.service?.pageSize || 10;
+    this._fetchData(page, currentPageSize);
+  }
+
+  /**
+   * Método chamado quando o tamanho da página é alterado
+   * @param pageSize Novo tamanho da página
+   */
+  onPageSizeChange(pageSize: number): void {
+    console.log('Mudança de tamanho de página detectada:', pageSize);
+    // Volta para a primeira página ao mudar o tamanho
+    this._fetchData(1, pageSize);
   }
 
   /**

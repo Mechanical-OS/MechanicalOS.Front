@@ -17,6 +17,7 @@ export interface VehicleData {
 export interface OwnerData {
   firstName: string;
   lastName: string;
+  birthDate: any; // NgbDateStruct or string
   cpf: string;
   rg: string;
   email: string;

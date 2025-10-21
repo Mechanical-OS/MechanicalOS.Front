@@ -38,6 +38,7 @@ export class OwnerStepComponent implements OnInit, OnDestroy {
     return this.fb.group({
       firstName: ['', Validators.required],
       lastName: ['', Validators.required],
+      birthDate: ['', Validators.required],
       cpf: ['', [Validators.required, Validators.pattern(/^\d{3}\.\d{3}\.\d{3}-\d{2}$/)]],
       rg: [''],
       email: ['', [Validators.required, Validators.email]],
@@ -70,6 +71,7 @@ export class OwnerStepComponent implements OnInit, OnDestroy {
          // this.notificationService.showSuccess(response);
         } else {
           // Customer não encontrado - apenas preenche o CPF
+          console.log('Customer não encontrado para o CPF:', cpf);
           this.handleCustomerNotFound(cpf);
         }
       },
@@ -98,10 +100,14 @@ export class OwnerStepComponent implements OnInit, OnDestroy {
     // Formata o CPF
     const formattedCpf = this.formatCpfValue(customer.socialNumber);
 
+    // Converte a data de nascimento de string para NgbDateStruct
+    const birthDate = this.convertStringToNgbDateStruct(customer.dateOfBirth);
+
     // Popula o formulário com os dados do customer
     this.ownerForm.patchValue({
       firstName: firstName,
       lastName: lastName,
+      birthDate: birthDate,
       cpf: formattedCpf,
       rg: customer.nationalId || '',
       email: customer.email || '',
@@ -247,6 +253,29 @@ export class OwnerStepComponent implements OnInit, OnDestroy {
       value = value.replace(/(\d{5})(\d)/, '$1-$2');
       this.ownerForm.patchValue({ cellPhone: value });
     }
+  }
+
+  /**
+   * Limpa o valor de um campo de data
+   */
+  clearDate(fieldName: string): void {
+    this.ownerForm.patchValue({ [fieldName]: null });
+  }
+
+  /**
+   * Converte string de data (YYYY-MM-DD) para NgbDateStruct
+   */
+  private convertStringToNgbDateStruct(dateString: string): any {
+    if (!dateString) return null;
+    
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return null;
+
+    return {
+      year: date.getFullYear(),
+      month: date.getMonth() + 1,
+      day: date.getDate()
+    };
   }
 
   ngOnDestroy(): void {

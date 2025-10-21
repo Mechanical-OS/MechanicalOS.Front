@@ -8,7 +8,7 @@ import { Result } from "src/app/Http/models/operation-result.model";
 import { Observable } from "rxjs";
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: "root",
 })
 export class CustomerService extends BaseService<Customer> {
   constructor(
@@ -28,31 +28,39 @@ export class CustomerService extends BaseService<Customer> {
     return this.http.put(`${CUSTOMER_URL}/${id}`, formData);
   }
 
-    // Buscar customer por CPF (socialNumber)
-    getBySocialNumber(socialNumber: string): Observable<Result<Customer>> {
-        // Remove formatação do CPF (pontos e traço)
-        const cleanSocialNumber = socialNumber.replace(/\D/g, '');
-        return this.http.get<Result<Customer>>(`${CUSTOMER_URL}/GetBySocialNumber/${cleanSocialNumber}`);
-    }
+  // Buscar customer por CPF (socialNumber)
+  getBySocialNumber(socialNumber: string): Observable<Result<Customer>> {
+    // Remove formatação do CPF (pontos e traço)
+    const cleanSocialNumber = socialNumber.replace(/\D/g, "");
+    return this.http.get<Result<Customer>>(
+      `${CUSTOMER_URL}/GetBySocialNumber/${cleanSocialNumber}`
+    );
+  }
 
-    /**
-     * Cria um novo customer
-     */
-    createCustomer(customerData: Customer): Observable<Result<Customer>> {
-        return this.save(customerData);
-    }
+  /**
+   * Cria um novo customer
+   */
+  createCustomer(customerData: Customer): Observable<Result<Customer>> {
+    return this.save(customerData);
+  }
 
-    /**
-     * Atualiza um customer existente
-     */
-    updateCustomer(customerData: Customer): Observable<Result<Customer>> {
-        return this.update(customerData);
-    }
+  /**
+   * Atualiza um customer existente
+   */
+  updateCustomer(customerData: Customer): Observable<Result<Customer>> {
+    return this.update(customerData);
+  }
 
-    /**
-     * Atualiza o endereço de um customer
-     */
-    updateCustomerAddress(customerId: number, addressData: any): Observable<Result<Customer>> {
-        return this.http.put<Result<Customer>>(`${CUSTOMER_URL}/${customerId}/address`, addressData);
-    }
+  /**
+   * Atualiza o endereço de um customer
+   */
+  updateCustomerAddress(
+    customerId: number,
+    addressData: any
+  ): Observable<Result<Customer>> {
+    return this.http.put<Result<Customer>>(
+      `${CUSTOMER_URL}/${customerId}/address`,
+      addressData
+    );
+  }
 }

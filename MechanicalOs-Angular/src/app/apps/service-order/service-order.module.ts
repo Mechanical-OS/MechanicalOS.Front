@@ -8,7 +8,7 @@ import { WidgetModule } from "src/app/shared/widget/widget.module";
 import { PageTitleModule } from "src/app/shared/page-title/page-title.module";
 import { ServiceOrderRoutingModule } from "./service-order-routing.module";
 import { SharedModule } from "src/app/shared/shared.module";
-import { NgbModalModule } from '@ng-bootstrap/ng-bootstrap';
+import { NgbModalModule, NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { UiModule } from 'src/app/shared/ui/ui.module';
 
 // Wizard Components
@@ -39,6 +39,7 @@ import { ServiceOrderEditComponent } from "./service-order-edit/service-order-ed
         MetroMenuModule,
         ReactiveFormsModule,
         NgbModalModule,
+        NgbModule,
         SharedModule,
         AdvancedTableModule,
         WidgetModule,

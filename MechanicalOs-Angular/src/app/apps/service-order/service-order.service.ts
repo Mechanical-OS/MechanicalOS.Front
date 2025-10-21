@@ -77,12 +77,18 @@ export class ServiceOrderService extends BaseService<ServiceOrder> {
             }
 
             // 3. Resolve Vehicle
+            console.log('🚗 Iniciando resolução do veículo...');
             const vehicleId = await this.resolveVehicle(customerId, draft.vehicle);
-            console.log('Vehicle resolvido:', vehicleId);
+            console.log('🚗 Vehicle resolvido com ID:', vehicleId);
+            
+            if (!vehicleId || vehicleId === 0) {
+                throw new Error('Erro: ID do veículo não foi obtido corretamente');
+            }
 
             // 4. Create Service Order
+            console.log('📝 Criando ordem de serviço com customerId:', customerId, 'e vehicleId:', vehicleId);
             const order = await this.createOrder(draft, customerId, vehicleId);
-            console.log('Ordem de serviço criada:', order);
+            console.log('📝 Ordem de serviço criada:', order);
 
             this.notificationService.hideLoading();
             this.notificationService.showSuccess(order);
@@ -148,7 +154,7 @@ export class ServiceOrderService extends BaseService<ServiceOrder> {
             phone: ownerData.phone || ownerData.cellPhone,
             socialNumber: ownerData.cpf.replace(/\D/g, ''),
             nationalId: ownerData.rg || '',
-            dateOfBirth: '', // Pode ser adicionado ao form depois
+            dateOfBirth: this.convertBirthDateToString(ownerData.birthDate),
             address: {
                 id: 0,
                 referenceId: 0,
@@ -174,6 +180,28 @@ export class ServiceOrderService extends BaseService<ServiceOrder> {
         }
 
         return result.content;
+    }
+
+    /**
+     * Converte a data de nascimento de NgbDateStruct para string no formato YYYY-MM-DD
+     */
+    private convertBirthDateToString(birthDate: any): string {
+        if (!birthDate) return '';
+        
+        // Se já for string, retorna
+        if (typeof birthDate === 'string') {
+            return birthDate;
+        }
+        
+        // Se for NgbDateStruct (objeto com year, month, day)
+        if (birthDate.year && birthDate.month && birthDate.day) {
+            const year = birthDate.year;
+            const month = String(birthDate.month).padStart(2, '0');
+            const day = String(birthDate.day).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+        
+        return '';
     }
 
     /**
@@ -206,32 +234,44 @@ export class ServiceOrderService extends BaseService<ServiceOrder> {
 
         // Se já tem ID, retorna
         if (vehicle.id) {
-            console.log('Veículo já existe com ID:', vehicle.id);
+            console.log('🚗 Veículo já existe com ID:', vehicle.id);
             return vehicle.id;
         }
 
         // Se tem dados, tenta buscar por placa
-        if (vehicle.data?.plate) {
-            try {
-                const existing = await firstValueFrom(
-                    this.vehicleService.getByPlate(vehicle.data.plate)
-                );
+        // if (vehicle.data?.plate) {
+        //     console.log('🔍 Buscando veículo pela placa:', vehicle.data.plate);
+        //     try {
+        //         const existing = await firstValueFrom(
+        //             this.vehicleService.getByPlate(vehicle.data.plate)
+        //         );
 
-                if (existing?.content?.id) {
-                    console.log('Veículo encontrado por placa:', existing.content.id);
-                    return existing.content.id;
-                }
-            } catch (error: any) {
-                if (error.status !== 404) {
-                    throw error;
-                }
-                // 404 significa que não existe, continua para criar
-            }
-        }
+        //         if (existing?.content?.id) {
+        //             console.log('✅ Veículo encontrado por placa! ID:', existing.content.id);
+        //             return existing.content.id;
+        //         }
+        //     } catch (error: any) {
+        //         if (error.status !== 404) {
+        //             console.error('❌ Erro ao buscar veículo por placa:', error);
+        //             throw error;
+        //         }
+        //         // 404 significa que não existe, continua para criar
+        //         console.log('ℹ️ Veículo não encontrado (404), será criado um novo');
+        //     }
+        // }
 
         // Cria novo veículo
-        console.log('Criando novo veículo...');
+        console.log('🆕 Criando novo veículo...');
         const newVehicle = await this.createVehicle(customerId, vehicle.data);
+        console.log('✅ Veículo criado com sucesso:', newVehicle);
+        console.log('✅ ID do veículo criado:', newVehicle.id);
+        
+        if (!newVehicle.id) {
+            console.error('❌ ERRO CRÍTICO: Veículo criado mas ID não foi retornado pela API');
+            console.error('❌ Objeto retornado:', newVehicle);
+            throw new Error('Erro: Veículo criado mas ID não foi retornado pela API');
+        }
+        
         return newVehicle.id;
     }
 
@@ -239,32 +279,180 @@ export class ServiceOrderService extends BaseService<ServiceOrder> {
      * Cria um novo veículo
      */
     private async createVehicle(customerId: number, vehicleData: VehicleData): Promise<any> {
-        // Nota: Você precisará ajustar esse payload conforme sua API
-        // Pode precisar buscar brandId, colorId, etc.
-        const vehiclePayload = {
-            id: 0,
-            customerId: customerId,
-            plate: vehicleData.plate.toUpperCase(),
-            chassi: vehicleData.chassi || '',
-            brandId: 0, // TODO: buscar ou criar brand
-            vehicleModelId: 0, // TODO: buscar ou criar model
-            version: vehicleData.version || '',
-            year: vehicleData.year,
-            colorId: 0, // TODO: buscar ou criar color
-            transmission: vehicleData.transmission,
-            engine: vehicleData.engine || '',
-            status: 1
-        };
+        try {
+            // 1. Resolve Brand (busca ou cria)
+            const brandId = await this.resolveBrand(vehicleData.brand);
+            console.log('Brand resolvida:', brandId);
 
-        const result = await firstValueFrom(
-            this.vehicleService.saveVehicle(vehiclePayload)
-        );
+            // 2. Resolve VehicleModel (busca ou cria)
+            const vehicleModelId = await this.resolveVehicleModel(brandId, vehicleData.model);
+            console.log('VehicleModel resolvido:', vehicleModelId);
 
-        if (result.statusCode !== 200 || !result.content) {
-            throw new Error('Erro ao criar veículo: ' + result.message);
+            // 3. Resolve Color (busca ou cria)
+            const colorId = await this.resolveColor(vehicleData.color);
+            console.log('Color resolvida:', colorId);
+
+            // 4. Cria o veículo com todos os IDs resolvidos
+            const vehiclePayload = {
+                id: 0,
+                customerId: customerId,
+                plate: vehicleData.plate.toUpperCase(),
+                chassi: vehicleData.chassi || '',
+                brandId: brandId,
+                vehicleModelId: vehicleModelId,
+                version: vehicleData.version || '',
+                year: vehicleData.year,
+                colorId: colorId,
+                transmission: vehicleData.transmission,
+                engine: vehicleData.engine || '',
+                status: 1
+            };
+
+            console.log('📤 Payload do veículo:', JSON.stringify(vehiclePayload, null, 2));
+
+            const result = await firstValueFrom(
+                this.vehicleService.saveVehicle(vehiclePayload)
+            );
+
+            console.log('📥 Resposta da API ao criar veículo:', JSON.stringify(result, null, 2));
+
+            if (result.statusCode !== 200 || !result.content) {
+                throw new Error('Erro ao criar veículo: ' + result.message);
+            }
+
+            console.log('✅ Veículo retornado pela API:', result.content);
+            return result.content;
+        } catch (error: any) {
+            console.error('Erro ao criar veículo:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Resolve Brand: retorna ID se existe, senão cria e retorna o novo ID
+     */
+    private async resolveBrand(brandName: string): Promise<number> {
+        if (!brandName || brandName.trim() === '') {
+            throw new Error('Nome da marca é obrigatório');
         }
 
-        return result.content;
+        try {
+            // Busca todas as marcas
+            const brands = await firstValueFrom(this.vehicleService.getAllBrands());
+            
+            // Procura a marca pelo nome (case insensitive)
+            const existingBrand = brands.find(
+                b => b.name.toLowerCase() === brandName.toLowerCase()
+            );
+
+            if (existingBrand) {
+                console.log('Marca encontrada:', existingBrand.name, 'ID:', existingBrand.id);
+                return existingBrand.id;
+            }
+
+            // Cria nova marca
+            console.log('Criando nova marca:', brandName);
+            const result = await firstValueFrom(
+                this.vehicleService.saveBrand({
+                    name: brandName,
+                    description: brandName
+                })
+            );
+
+            if (result.statusCode !== 200 || !result.content) {
+                throw new Error('Erro ao criar marca: ' + result.message);
+            }
+
+            return result.content.id;
+        } catch (error: any) {
+            console.error('Erro ao resolver marca:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Resolve VehicleModel: retorna ID se existe, senão cria e retorna o novo ID
+     */
+    private async resolveVehicleModel(brandId: number, modelName: string): Promise<number> {
+        if (!modelName || modelName.trim() === '') {
+            throw new Error('Nome do modelo é obrigatório');
+        }
+
+        try {
+            // Busca todos os modelos
+            const models = await firstValueFrom(this.vehicleService.getAllVehicleModels());
+            
+            // Procura o modelo pelo nome e brandId (case insensitive)
+            const existingModel = models.find(
+                m => m.name.toLowerCase() === modelName.toLowerCase() && m.brandId === brandId
+            );
+
+            if (existingModel) {
+                console.log('Modelo encontrado:', existingModel.name, 'ID:', existingModel.id);
+                return existingModel.id;
+            }
+
+            // Cria novo modelo
+            console.log('Criando novo modelo:', modelName, 'para brandId:', brandId);
+            const result = await firstValueFrom(
+                this.vehicleService.saveVehicleModel({
+                    brandId: brandId,
+                    name: modelName,
+                    description: modelName
+                })
+            );
+
+            if (result.statusCode !== 200 || !result.content) {
+                throw new Error('Erro ao criar modelo: ' + result.message);
+            }
+
+            return result.content.id;
+        } catch (error: any) {
+            console.error('Erro ao resolver modelo:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Resolve Color: retorna ID se existe, senão cria e retorna o novo ID
+     */
+    private async resolveColor(colorName: string): Promise<number> {
+        if (!colorName || colorName.trim() === '') {
+            throw new Error('Nome da cor é obrigatório');
+        }
+
+        try {
+            // Busca todas as cores
+            const colors = await firstValueFrom(this.vehicleService.getAllColors());
+            
+            // Procura a cor pelo nome (case insensitive)
+            const existingColor = colors.find(
+                c => c.name.toLowerCase() === colorName.toLowerCase()
+            );
+
+            if (existingColor) {
+                console.log('Cor encontrada:', existingColor.name, 'ID:', existingColor.id);
+                return existingColor.id;
+            }
+
+            // Cria nova cor
+            console.log('Criando nova cor:', colorName);
+            const result = await firstValueFrom(
+                this.vehicleService.saveColor({
+                    name: colorName,
+                    description: colorName
+                })
+            );
+
+            if (result.statusCode !== 200 || !result.content) {
+                throw new Error('Erro ao criar cor: ' + result.message);
+            }
+
+            return result.content.id;
+        } catch (error: any) {
+            console.error('Erro ao resolver cor:', error);
+            throw error;
+        }
     }
 
     /**
@@ -275,6 +463,10 @@ export class ServiceOrderService extends BaseService<ServiceOrder> {
         customerId: number,
         vehicleId: number
     ): Promise<Result<ServiceOrder>> {
+        console.log('📋 Montando payload da ordem de serviço...');
+        console.log('📋 CustomerId recebido:', customerId);
+        console.log('📋 VehicleId recebido:', vehicleId);
+        
         const orderPayload = {
             id: 0,
             customerId: customerId,

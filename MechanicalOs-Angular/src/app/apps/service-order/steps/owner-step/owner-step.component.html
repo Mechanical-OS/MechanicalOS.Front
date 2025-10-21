@@ -37,7 +37,7 @@
                 <form [formGroup]="ownerForm" (ngSubmit)="onSaveOwner()">
                     <!-- Primeira linha - Nome e Sobrenome -->
                     <div class="row mb-3">
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <label for="firstName" class="form-label">Nome</label>
                             <input 
                                 type="text" 
@@ -50,7 +50,7 @@
                                 Nome é obrigatório
                             </div>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <label for="lastName" class="form-label">Sobrenome</label>
                             <input 
                                 type="text" 
@@ -61,6 +61,36 @@
                                 placeholder="Ex: Freitas">
                             <div class="invalid-feedback" *ngIf="isFieldInvalid('lastName')">
                                 Sobrenome é obrigatório
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="birthDate" class="form-label">Data de Nascimento</label>
+                            <div class="input-group">
+                                <input 
+                                    id="birthDate"
+                                    class="form-control"
+                                    placeholder="dd/mm/aaaa"
+                                    ngbDatepicker
+                                    #d1="ngbDatepicker"
+                                    appNgbDatepickerPt
+                                    formControlName="birthDate"
+                                    [class.is-invalid]="isFieldInvalid('birthDate')">
+                                <button 
+                                    class="btn btn-outline-secondary"
+                                    (click)="d1.toggle()"
+                                    type="button">
+                                    <i class="far fa-calendar-alt"></i>
+                                </button>
+                                <button 
+                                    class="btn btn-outline-danger"
+                                    *ngIf="ownerForm.controls['birthDate'].value"
+                                    (click)="clearDate('birthDate')"
+                                    type="button">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <div class="invalid-feedback" *ngIf="isFieldInvalid('birthDate')">
+                                Data de nascimento é obrigatória
                             </div>
                         </div>
                     </div>

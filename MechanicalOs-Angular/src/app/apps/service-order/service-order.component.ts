@@ -124,6 +124,11 @@ export class ServiceOrderComponent implements OnInit, AfterViewInit {
         console.log('✅ Dados recebidos da API:', ret);
         
         if (ret && ret.statusCode === 200 && ret.content && ret.content.resultList) {
+          // Log para debug da estrutura do veículo
+          if (ret.content.resultList.length > 0) {
+            console.log('🚗 Estrutura do primeiro veículo:', ret.content.resultList[0].vehicle);
+          }
+          
           // Mapeia os dados para o formato esperado
           this.list = ret.content.resultList.map((order: any) => ({
             id: order.id,
@@ -131,8 +136,8 @@ export class ServiceOrderComponent implements OnInit, AfterViewInit {
             entryDate: order.dateCreated,
             status: this.mapStatusFromAPI(order.status),
             customer: order.customer?.name || 'N/A',
-            vehicle: this.getVehicleDescription(order),
-            plate: this.getVehiclePlate(order),
+            vehicle: order.vehicle || null, // Mantém o objeto completo do veículo
+            plate: order.vehicle?.plate || 'N/A',
             totalValue: order.totalOrder / 100, // Converte centavos para reais
             description: order.description || '',
             observations: ''
@@ -282,7 +287,7 @@ export class ServiceOrderComponent implements OnInit, AfterViewInit {
   private getVehicleDescription(order: any): string {
     // Tenta extrair informações do veículo
     if (order.vehicle) {
-      return `${order.vehicle.brand || ''} ${order.vehicle.model || ''}`.trim();
+      return order.vehicle?.version || 'N/A' + ' ' + order.vehicle.year || 'N/A';
     }
     return 'N/A';
   }
@@ -557,17 +562,26 @@ export class ServiceOrderComponent implements OnInit, AfterViewInit {
    * Formatter para veículo
    */
   vehicleFormatter(order: ServiceOrder): string {
-    const vehicleInfo = order.vehicle;
-    if (!vehicleInfo) return '<span>N/A</span>';
+    const vehicleInfo: any = order.vehicle;
+    if (!vehicleInfo) return '<span class="text-muted">N/A</span>';
     
-    const vehicleText = `${vehicleInfo.brand} ${vehicleInfo.model} ${vehicleInfo.version || ''}`.trim();
-    return `<span>${vehicleText}</span>`;
+    // Acessa as propriedades do veículo (suporta ambas estruturas: backend e local)
+    // Backend pode retornar: { brand: { name: 'Toyota' }, vehicleModel: { name: 'Corolla' } }
+    // Ou simplesmente: { brand: 'Toyota', model: 'Corolla' }
+    const brand = vehicleInfo.brand?.name || vehicleInfo.brand || '';
+    const model = vehicleInfo.vehicleModel?.name || vehicleInfo.model || '';
+    const version = vehicleInfo.version || '';
+    const year = vehicleInfo.year || '';
+
+    const vehicleText = `${version}`.trim();
+    return `<span>${vehicleText || 'N/A'}</span>`;
   }
 
   /**
    * Formatter para placa
    */
   plateFormatter(order: ServiceOrder): string {
+    // A placa já vem no objeto order (mapeada na linha 135)
     return `<span>${order.plate || 'N/A'}</span>`;
   }
 

@@ -57,46 +57,32 @@ export class ServiceOrderService extends BaseService<ServiceOrder> {
     }
 
     /**
-     * Método principal que orquestra a criação completa da ordem de serviço
-     * Resolve Customer → Address → Vehicle → Cria Ordem
+     * Método principal que cria a ordem de serviço completa em uma única chamada
+     * O backend resolve todas as dependências (Customer, Address, Vehicle, Brand, Model, Color)
      */
     async createCompleteServiceOrder(draft: ServiceOrderDraft): Promise<Result<ServiceOrder>> {
         try {
             this.notificationService.showLoading();
-            console.log('Iniciando criação da ordem de serviço:', draft.orderNumber);
+            console.log('📝 Iniciando criação da ordem de serviço:', draft.orderNumber);
 
-            // 1. Resolve Customer
-            const customerId = await this.resolveCustomer(draft.customer);
-            console.log('Customer resolvido:', customerId);
+            // Monta o payload completo
+            const payload = this.buildCompleteOrderPayload(draft);
+            console.log('📤 Payload da ordem completa:', JSON.stringify(payload, null, 2));
 
-            // 2. Resolve Address (se existir)
-            let addressId: number | undefined = undefined;
-            if (draft.address) {
-                addressId = await this.resolveAddress(customerId, draft.address);
-                console.log('Address resolvido:', addressId);
-            }
+            // Uma única chamada ao backend que resolve tudo
+            const result = await firstValueFrom(
+                this.http.post<Result<ServiceOrder>>(`${SERVICE_ORDER_URL}/ServiceOrder`, payload)
+            );
 
-            // 3. Resolve Vehicle
-            console.log('🚗 Iniciando resolução do veículo...');
-            const vehicleId = await this.resolveVehicle(customerId, draft.vehicle);
-            console.log('🚗 Vehicle resolvido com ID:', vehicleId);
-            
-            if (!vehicleId || vehicleId === 0) {
-                throw new Error('Erro: ID do veículo não foi obtido corretamente');
-            }
-
-            // 4. Create Service Order
-            console.log('📝 Criando ordem de serviço com customerId:', customerId, 'e vehicleId:', vehicleId);
-            const order = await this.createOrder(draft, customerId, vehicleId);
-            console.log('📝 Ordem de serviço criada:', order);
+            console.log('✅ Ordem de serviço criada com sucesso:', result);
 
             this.notificationService.hideLoading();
-            this.notificationService.showSuccess(order);
+            this.notificationService.showSuccess(result);
             
-            return order;
+            return result;
 
         } catch (error: any) {
-            console.error('Erro ao criar ordem de serviço:', error);
+            console.error('❌ Erro ao criar ordem de serviço:', error);
             this.notificationService.hideLoading();
             this.notificationService.showError(error);
             throw error;
@@ -104,8 +90,126 @@ export class ServiceOrderService extends BaseService<ServiceOrder> {
     }
 
     /**
+     * Monta o payload completo para enviar ao backend
+     */
+    private buildCompleteOrderPayload(draft: ServiceOrderDraft): any {
+        const payload: any = {
+            customer: null,
+            address: null,
+            vehicle: null,
+            services: [],
+            products: [],
+            discount: draft.discount || 0,
+            fees: draft.fees || 0,
+            description: draft.description || '',
+            entryDate: draft.entryDate || new Date().toISOString(),
+            departureDate: draft.departureDate,
+            status: draft.status || 1
+        };
+
+        // Monta dados do Customer
+        if (draft.customer) {
+            const customerData = draft.customer.data;
+            payload.customer = {
+                id: draft.customer.id || null,
+                firstName: customerData?.firstName || '',
+                lastName: customerData?.lastName || '',
+                birthDate: this.convertBirthDateToISO(customerData?.birthDate),
+                cpf: customerData?.cpf?.replace(/\D/g, '') || '',
+                rg: customerData?.rg || '',
+                email: customerData?.email || '',
+                phone: customerData?.phone || '',
+                cellPhone: customerData?.cellPhone || ''
+            };
+        }
+
+        // Monta dados do Address
+        if (draft.address?.data) {
+            const addressData = draft.address.data;
+            payload.address = {
+                id: draft.address.id || null,
+                country: 'Brasil',
+                street: addressData.street || '',
+                number: addressData.number || '',
+                complement: addressData.complement || '',
+                neighborhood: addressData.neighborhood || '',
+                city: addressData.city || '',
+                state: addressData.state || '',
+                zipCode: addressData.zipCode?.replace(/\D/g, '') || ''
+            };
+        }
+
+        // Monta dados do Vehicle
+        if (draft.vehicle?.data) {
+            const vehicleData = draft.vehicle.data;
+            payload.vehicle = {
+                id: draft.vehicle.id || null,
+                plate: vehicleData.plate || '',
+                chassi: vehicleData.chassi || '',
+                brand: vehicleData.brand || '',
+                model: vehicleData.model || '',
+                color: vehicleData.color || '',
+                version: vehicleData.version || '',
+                year: vehicleData.year || '',
+                transmission: vehicleData.transmission || '',
+                engine: vehicleData.engine || ''
+            };
+        }
+
+        // Monta lista de Services
+        payload.services = draft.services.map(service => ({
+            id: service.id,
+            quantity: service.quantity
+        }));
+
+        // Monta lista de Products
+        payload.products = draft.products.map(product => ({
+            id: product.id,
+            quantity: product.quantity,
+            discount: product.discount || 0
+        }));
+
+        return payload;
+    }
+
+    /**
+     * Converte a data de nascimento para formato ISO (YYYY-MM-DDTHH:mm:ss)
+     */
+    private convertBirthDateToISO(birthDate: any): string {
+        if (!birthDate) return '';
+        
+        // Se já for string no formato ISO
+        if (typeof birthDate === 'string') {
+            // Se já tiver o T, retorna como está
+            if (birthDate.includes('T')) {
+                return birthDate;
+            }
+            // Se for YYYY-MM-DD, adiciona o horário
+            return `${birthDate}T00:00:00`;
+        }
+        
+        // Se for NgbDateStruct (objeto com year, month, day)
+        if (birthDate.year && birthDate.month && birthDate.day) {
+            const year = birthDate.year;
+            const month = String(birthDate.month).padStart(2, '0');
+            const day = String(birthDate.day).padStart(2, '0');
+            return `${year}-${month}-${day}T00:00:00`;
+        }
+        
+        return '';
+    }
+
+    // ============================================================================
+    // MÉTODOS LEGADOS - Mantidos comentados para referência
+    // Podem ser removidos após validação completa do novo fluxo
+    // O backend agora faz toda essa lógica internamente
+    // ============================================================================
+
+    /**
+     * @deprecated Use createCompleteServiceOrder que chama o novo endpoint
      * Resolve Customer: retorna ID se existe, senão cria e retorna o novo ID
      */
+    /* 
     private async resolveCustomer(customer: any): Promise<number> {
         if (!customer) {
             throw new Error('Dados do cliente são obrigatórios');
@@ -504,6 +608,7 @@ export class ServiceOrderService extends BaseService<ServiceOrder> {
             this.http.post<Result<ServiceOrder>>(SERVICE_ORDER_URL, orderPayload)
         );
     }
+    
 
     /**
      * Atualiza o endereço de um cliente existente

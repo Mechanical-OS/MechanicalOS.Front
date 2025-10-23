@@ -26,7 +26,12 @@
                                         tableClasses="table-centered" 
                                         theadClasses="table-light"
                                         (rowSelected)="onRowSelected($event)"
-                                        [singleRowSelection]="true">
+                                        [singleRowSelection]="true"
+                                        (pageChange)="onTablePageChange($event)"
+                                        (pageSizeChange)="onTablePageSizeChange($event)"
+                                        [totalRecords]="tableService.totalRecords"
+                                        [isLoading]="isLoading"
+                                        >
                     </app-advanced-table>
                 </div>
             </div>

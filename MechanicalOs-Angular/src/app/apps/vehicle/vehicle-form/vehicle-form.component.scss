@@ -271,6 +271,12 @@
     }
   }
 
+  input[formControlName="brand"],
+  input[formControlName="model"],
+  input[formControlName="color"] {
+    text-transform: uppercase;
+  }
+
   @media (max-width: 768px) {
     .vehicle-form-container {
       flex-direction: column;

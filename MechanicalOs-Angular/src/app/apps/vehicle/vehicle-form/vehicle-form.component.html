@@ -409,6 +409,7 @@
                     [buttons]="menuButtons"
                     (buttonClick)="handleMenuAction($event)"
                   ></app-metro-menu>
+                  </form>
                   <!-- Modal: Nova Marca -->
                   <ng-template #brandModal let-modal>
                     <div class="modal-header">
@@ -432,6 +433,7 @@
                           [(ngModel)]="newBrandName"
                           [ngModelOptions]="{standalone: true}"
                           placeholder="Digite o nome da marca"
+                          (input)="toUppercaseField($event)"
                         />
                       </div>
                       <div class="mb-3">
@@ -489,6 +491,7 @@
                           [(ngModel)]="newModelName"
                           [ngModelOptions]="{standalone: true}"
                           placeholder="Digite o nome do modelo"
+                          (input)="toUppercaseField($event)"
                         />
                       </div>
                       <div class="mb-3">
@@ -554,6 +557,7 @@
                           [(ngModel)]="newColorName"
                           [ngModelOptions]="{standalone: true}"
                           placeholder="Digite o nome da cor"
+                          (input)="toUppercaseField($event)"
                         />
                       </div>
                       <div class="mb-3">
@@ -587,7 +591,6 @@
                       </button>
                     </div>
                   </ng-template>
-                </form>
               </div>
             </div>
           </div>

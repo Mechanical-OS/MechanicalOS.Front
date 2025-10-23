@@ -20,6 +20,7 @@ import { FilterConfig, FilterOption } from 'src/app/shared/ui/advanced-filter/ad
 export class VehicleComponent implements OnInit {
   pageTitle: BreadcrumbItem[] = [];
   columns: Column[] = [];
+  isLoading: boolean = false;
 
   @ViewChild("advancedTable") advancedTable: any;
 
@@ -69,7 +70,7 @@ export class VehicleComponent implements OnInit {
     private route: ActivatedRoute,
     private sanitizer: DomSanitizer,
     private service: VehicleService,
-    private tableService: AdvancedTableServices,
+    public tableService: AdvancedTableServices,
     private metroMenuService: MetroMenuService,
     private notificationService: NotificationService
   ) { }
@@ -172,10 +173,12 @@ export class VehicleComponent implements OnInit {
   /**
    * Load data
    */
-  async _fetchData(): Promise<void> {
+  async _fetchData(pageIndex: number = 1, pageSize: number = 10): Promise<void> {
+    this.isLoading = true;
+
     const request: GetAllRequest = {
-      pageSize: this.tableService.pageSize,
-      pageIndex: this.tableService.page,
+      pageSize: pageSize,
+      pageIndex: pageIndex,
       sort: '',
       direction: ''
     };
@@ -185,7 +188,7 @@ export class VehicleComponent implements OnInit {
         
         if (ret && ret.content && ret.content.resultList) {
           this.list = ret.content.resultList;
-          this.tableService.totalRecords = ret.content.totalRecords;
+          this.tableService.totalRecords = ret.content.totalRecords = 30;
           this.tableService.startIndex = (ret.content.pageIndex * ret.content.pageSize) + 1;
           this.tableService.endIndex = this.tableService.startIndex + ret.content.resultList.length - 1;
           
@@ -196,12 +199,14 @@ export class VehicleComponent implements OnInit {
           this.list = [];
           this.tableService.totalRecords = 0;
         }
+        this.isLoading = false;
       },
       error: (error) => {
         console.error('Erro ao carregar veículos:', error);
         this.notificationService.showMessage('Erro ao carregar lista de veículos.', 'error');
         this.list = [];
         this.tableService.totalRecords = 0;
+        this.isLoading = false;
       }
     });
   }
@@ -345,7 +350,7 @@ export class VehicleComponent implements OnInit {
         }
         break;
       case 'exit':
-        this.router.navigate(['/']);
+        this.router.navigate(['apps/tools']);
         break;
       case 'photos':
         // lógica para fotos
@@ -431,4 +436,14 @@ export class VehicleComponent implements OnInit {
         `);
   }
 
+  onTablePageChange(pageNumber: number): void {
+    console.log('Página da tabela mudou para:', pageNumber);
+    const currentPageSize = this.advancedTable?.service?.pageSize || 10;
+    this._fetchData(pageNumber, currentPageSize); // Recarrega os dados com a nova página
+  }
+
+  onTablePageSizeChange(pageSize: number): void {
+    console.log('Tamanho da página da tabela mudou para:', pageSize);
+    this._fetchData(1, pageSize); // Recarrega os dados com o novo pageSize (e página 1)
+  }
 }

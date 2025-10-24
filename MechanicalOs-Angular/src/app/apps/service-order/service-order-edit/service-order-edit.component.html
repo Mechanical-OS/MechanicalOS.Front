@@ -22,6 +22,12 @@
                         <div class="d-flex align-items-center gap-2">
                             <span class="badge bg-info">OS #{{ orderId.toString().padStart(6, '0') }}</span>
                             <span class="badge bg-warning">{{ serviceOrder?.entryDate | date:'dd/MM/yyyy HH:mm' }}</span>
+                            <button 
+                                class="btn btn-danger btn-sm" 
+                                (click)="generatePdfOrder()"
+                                title="Gerar PDF da Ordem de Serviço">
+                                <i class="fas fa-file-pdf me-1"></i> Gerar PDF
+                            </button>
                         </div>
                     </div>
                     

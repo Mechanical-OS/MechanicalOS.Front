@@ -6,6 +6,11 @@ import { ServiceOrderDraftService } from '../shared/service-order-draft.service'
 import { ServiceOrder, ServiceOrderStatus, mapStatusToNumber } from '../../Shared/models/service-order.model';
 import { NotificationService } from 'src/app/shared/services/notification.service';
 import { ServiceItem } from 'src/app/shared/service-search';
+import pdfMake from 'pdfmake/build/pdfmake';
+import pdfFonts from 'pdfmake/build/vfs_fonts';
+
+// Configura as fontes do pdfMake
+(pdfMake as any).vfs = pdfFonts;
 
 @Component({
   selector: 'app-service-order-edit',
@@ -490,5 +495,451 @@ export class ServiceOrderEditComponent implements OnInit {
     if (confirm('Tem certeza que deseja cancelar? As alterações serão perdidas.')) {
       this.router.navigate(['/apps/service-orders']);
     }
+  }
+
+  /**
+   * Gera um PDF da ordem de serviço com layout moderno e profissional
+   */
+  generatePdfOrder(): void {
+    if (!this.serviceOrder) {
+      this.notificationService.showMessage('Nenhuma ordem de serviço carregada', 'error');
+      return;
+    }
+
+    console.log('📄 Gerando PDF da ordem de serviço:', this.orderId);
+
+    const docDefinition: any = {
+      pageSize: 'A4',
+      pageMargins: [40, 40, 40, 40],
+      
+      content: [
+        // Cabeçalho - Logo e Data
+        {
+          columns: [
+            // Logo e nome da empresa (esquerda)
+            {
+              width: 'auto',
+              stack: [
+                {
+                  columns: [
+                    {
+                      width: 'auto',
+                      canvas: [
+                        {
+                          type: 'rect',
+                          x: 0,
+                          y: 0,
+                          w: 25,
+                          h: 25,
+                          r: 12.5,
+                          color: '#000000'
+                        }
+                      ],
+                      margin: [0, 0, 10, 0]
+                    },
+                    {
+                      width: '*',
+                      stack: [
+                        {
+                          text: 'Jackson Mecanico',
+                          style: 'companyName'
+                        },
+                        {
+                          text: 'excelencia em serviços automecanicos',
+                          style: 'companyTagline',
+                          margin: [0, 2, 0, 0]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            // Data (direita)
+            {
+              width: '*',
+              text: `Data: ${new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}`,
+              style: 'dateText',
+              alignment: 'right'
+            }
+          ],
+          margin: [0, 0, 0, 30]
+        },
+
+        // Título e Número da OS
+        {
+          columns: [
+            // Título
+            {
+              width: 'auto',
+              text: 'Ordem de Serviço',
+              style: 'documentTitle'
+            },
+            // Bloco do número da OS
+            {
+              width: 'auto',
+              stack: [
+                {
+                  text: 'Orçamento N.',
+                  style: 'orderLabel',
+                  alignment: 'center'
+                },
+                {
+                  text: `#${this.orderId.toString().padStart(8, '0')}`,
+                  style: 'orderNumber',
+                  alignment: 'center'
+                }
+              ],
+              background: '#F5F5F5',
+              margin: [20, 0, 0, 0]
+            }
+          ],
+          margin: [0, 0, 0, 40]
+        },
+
+        // Informações do Cliente
+        {
+          stack: [
+            {
+              text: 'Orçamento para:',
+              style: 'clientSectionTitle',
+              margin: [0, 0, 0, 10]
+            },
+            {
+              text: this.customerData?.name || 'N/A',
+              style: 'clientName',
+              margin: [0, 0, 0, 15]
+            },
+            {
+              text: `Tel:${this.customerData?.phone || 'N/A'} - Email: ${this.customerData?.email || 'N/A'}`,
+              style: 'clientContact',
+              margin: [0, 0, 0, 30]
+            }
+          ]
+        },
+
+        // Tabela de Serviços
+        {
+          table: {
+            widths: ['*', '15%', '10%', '15%'],
+            headerRows: 1,
+            body: [
+              [
+                { text: 'Descrição do serviço', style: 'tableHeader', border: [false, false, false, false] },
+                { text: 'Valor', style: 'tableHeader', alignment: 'right', border: [false, false, false, false] },
+                { text: 'Quant.', style: 'tableHeader', alignment: 'center', border: [false, false, false, false] },
+                { text: 'Sub. Total', style: 'tableHeader', alignment: 'right', border: [false, false, false, false] }
+              ],
+              ...this.services.map((service, index) => [
+                { text: service.name, style: 'tableCell', border: [false, false, false, false] },
+                { text: this.formatCurrency(service.price), style: 'tableCell', alignment: 'right', border: [false, false, false, false] },
+                { text: service.quantity.toString(), style: 'tableCell', alignment: 'center', border: [false, false, false, false] },
+                { text: this.formatCurrency(service.total), style: 'tableCell', alignment: 'right', border: [false, false, false, false] }
+              ])
+            ]
+          },
+          layout: {
+            fillColor: (rowIndex: number) => (rowIndex === 0 ? '#E0E0E0' : '#FFFFFF'),
+            hLineWidth: () => 0,
+            vLineWidth: () => 0,
+            paddingLeft: () => 15,
+            paddingRight: () => 15,
+            paddingTop: () => 12,
+            paddingBottom: () => 12
+          },
+          margin: [0, 0, 0, 30]
+        },
+
+        // Resumo dos Valores
+        {
+          columns: [
+            { width: '*', text: '' },
+            {
+              width: 200,
+              stack: [
+                {
+                  columns: [
+                    { text: 'Subtotal', style: 'summaryLabel', width: '*' },
+                    { text: this.formatCurrency(this.subtotal), style: 'summaryValue', alignment: 'right', width: 'auto' }
+                  ],
+                  margin: [0, 0, 0, 8]
+                },
+                {
+                  columns: [
+                    { text: 'Desconto (10%)', style: 'summaryLabel', width: '*' },
+                    { text: this.formatCurrency(this.discount), style: 'summaryValue', alignment: 'right', width: 'auto' }
+                  ],
+                  margin: [0, 0, 0, 8]
+                },
+                {
+                  columns: [
+                    { text: 'TOTAL', style: 'summaryLabelFinal', width: '*' },
+                    { text: this.formatCurrency(this.total), style: 'summaryValueFinal', alignment: 'right', width: 'auto' }
+                  ]
+                }
+              ]
+            }
+          ],
+          margin: [0, 0, 0, 40]
+        },
+
+        // Rodapé com informações completas
+        {
+          stack: [
+            // Barra cinza do rodapé
+            {
+              columns: [
+                // Método de pagamento (esquerda)
+                {
+                  width: '25%',
+                  stack: [
+                    {
+                      text: 'Metodo de pagamento',
+                      style: 'footerTitle',
+                      margin: [0, 0, 0, 8]
+                    },
+                    {
+                      text: 'Cartão de credito',
+                      style: 'footerText',
+                      margin: [0, 0, 0, 2]
+                    },
+                    {
+                      text: 'Parcelado 3x',
+                      style: 'footerText'
+                    }
+                  ]
+                },
+                // Agradecimento e site (centro-esquerda)
+                {
+                  width: '35%',
+                  stack: [
+                    {
+                      text: 'Obrigado por utilizar os nossos serviços',
+                      style: 'thankYouMessage',
+                      margin: [0, 0, 0, 8]
+                    },
+                    {
+                      text: 'www.oficinadojackson.com.br',
+                      style: 'websiteText'
+                    }
+                  ]
+                },
+                // Termos e condições (centro-direita)
+                {
+                  width: '25%',
+                  stack: [
+                    {
+                      text: 'Termos & Condições',
+                      style: 'footerTitle',
+                      margin: [0, 0, 0, 8]
+                    },
+                    {
+                      text: 'Serviços executados conforme especificação técnica.',
+                      style: 'footerText',
+                      margin: [0, 0, 0, 2]
+                    },
+                    {
+                      text: 'Garantia de 90 dias para peças e serviços',
+                      style: 'footerText'
+                    }
+                  ]
+                },
+                // Endereço (direita)
+                {
+                  width: '15%',
+                  stack: [
+                    {
+                      canvas: [
+                        {
+                          type: 'rect',
+                          x: 0,
+                          y: 0,
+                          w: 120,
+                          h: 60,
+                          r: 5,
+                          color: '#666666'
+                        },
+                        {
+                          type: 'text',
+                          text: '📍',
+                          x: 8,
+                          y: 8,
+                          fontSize: 12,
+                          color: '#ffffff'
+                        },
+                        {
+                          type: 'text',
+                          text: 'Rua das Oficinas, 123',
+                          x: 25,
+                          y: 8,
+                          fontSize: 9,
+                          color: '#ffffff'
+                        },
+                        {
+                          type: 'text',
+                          text: 'Centro, São Paulo - SP',
+                          x: 25,
+                          y: 20,
+                          fontSize: 9,
+                          color: '#ffffff'
+                        },
+                        {
+                          type: 'text',
+                          text: '01234-567',
+                          x: 25,
+                          y: 32,
+                          fontSize: 9,
+                          color: '#ffffff'
+                        },
+                        {
+                          type: 'text',
+                          text: 'Brasil',
+                          x: 25,
+                          y: 44,
+                          fontSize: 9,
+                          color: '#ffffff'
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              background: '#E0E0E0',
+              margin: [0, 0, 0, 0]
+            }
+          ]
+        }
+      ],
+
+      // Estilos exatos da imagem
+      styles: {
+        companyName: {
+          fontSize: 14,
+          bold: true,
+          color: '#333333'
+        },
+        companyTagline: {
+          fontSize: 9,
+          color: '#666666'
+        },
+        dateText: {
+          fontSize: 10,
+          color: '#333333'
+        },
+        documentTitle: {
+          fontSize: 28,
+          bold: true,
+          color: '#333333'
+        },
+        orderLabel: {
+          fontSize: 9,
+          color: '#333333',
+          margin: [15, 8, 15, 0]
+        },
+        orderNumber: {
+          fontSize: 28,
+          bold: true,
+          color: '#333333',
+          margin: [15, 0, 15, 8]
+        },
+        clientSectionTitle: {
+          fontSize: 10,
+          color: '#333333'
+        },
+        clientName: {
+          fontSize: 24,
+          bold: true,
+          color: '#333333'
+        },
+        clientContact: {
+          fontSize: 10,
+          color: '#333333'
+        },
+        tableHeader: {
+          fontSize: 10,
+          bold: true,
+          color: '#333333'
+        },
+        tableCell: {
+          fontSize: 10,
+          color: '#333333'
+        },
+        summaryLabel: {
+          fontSize: 10,
+          color: '#333333'
+        },
+        summaryValue: {
+          fontSize: 10,
+          color: '#333333'
+        },
+        summaryLabelFinal: {
+          fontSize: 10,
+          bold: true,
+          color: '#333333'
+        },
+        summaryValueFinal: {
+          fontSize: 10,
+          bold: true,
+          color: '#333333'
+        },
+        footerTitle: {
+          fontSize: 10,
+          bold: true,
+          color: '#333333'
+        },
+        footerText: {
+          fontSize: 10,
+          color: '#333333'
+        },
+        thankYouMessage: {
+          fontSize: 20,
+          bold: true,
+          color: '#333333'
+        },
+        websiteText: {
+          fontSize: 10,
+          color: '#333333'
+        }
+      }
+    };
+
+    // Gera e faz download do PDF
+    const fileName = `OS_${this.orderId.toString().padStart(6, '0')}_${new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')}.pdf`;
+    
+    pdfMake.createPdf(docDefinition).download(fileName);
+    
+    console.log('✅ PDF gerado com sucesso:', fileName);
+    this.notificationService.showMessage('PDF gerado com sucesso!', 'success');
+  }
+
+  /**
+   * Retorna o label do status
+   */
+  private getStatusLabel(status: string): string {
+    const statusItem = this.statusList.find(s => s.value === status);
+    return statusItem ? statusItem.label : 'Desconhecido';
+  }
+
+  /**
+   * Retorna a cor de fundo baseada no status
+   */
+  private getStatusColor(status: string): string {
+    const colorMap: { [key: string]: string } = {
+      [ServiceOrderStatus.ORCAMENTO]: '#f39c12',
+      [ServiceOrderStatus.EM_ANDAMENTO]: '#3498db',
+      [ServiceOrderStatus.CONCLUIDO]: '#27ae60',
+      [ServiceOrderStatus.CANCELADO]: '#e74c3c'
+    };
+    return colorMap[status] || '#95a5a6';
+  }
+
+  /**
+   * Formata valor para moeda brasileira
+   */
+  private formatCurrency(value: number): string {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(value);
   }
 }

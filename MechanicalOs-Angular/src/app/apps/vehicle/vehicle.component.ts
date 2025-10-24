@@ -11,7 +11,7 @@ import { GetAllRequest } from 'src/app/Http/models/Input/get-all-request.model';
 import { VehicleService } from './vehicle.service';
 import { NotificationService } from 'src/app/shared/services/notification.service';
 import { FilterConfig, FilterOption } from 'src/app/shared/ui/advanced-filter/advanced-filter.component';
-
+import Swal from 'sweetalert2';
 @Component({
   selector: 'app-vehicle',
   templateUrl: './vehicle.component.html',
@@ -20,6 +20,7 @@ import { FilterConfig, FilterOption } from 'src/app/shared/ui/advanced-filter/ad
 export class VehicleComponent implements OnInit {
   pageTitle: BreadcrumbItem[] = [];
   columns: Column[] = [];
+  isLoading: boolean = false;
 
   @ViewChild("advancedTable") advancedTable: any;
 
@@ -69,7 +70,7 @@ export class VehicleComponent implements OnInit {
     private route: ActivatedRoute,
     private sanitizer: DomSanitizer,
     private service: VehicleService,
-    private tableService: AdvancedTableServices,
+    public tableService: AdvancedTableServices,
     private metroMenuService: MetroMenuService,
     private notificationService: NotificationService
   ) { }
@@ -80,12 +81,18 @@ export class VehicleComponent implements OnInit {
       { label: "Vehicle", path: "/", active: true },
     ];
 
+    document.addEventListener('click', this.delegatedClickHandler);
+
     const initialButtons = this.menuButtons;
     this.metroMenuService.setButtons(initialButtons);
 
     this.initAdvancedTableData();
     this._fetchData();
   }
+
+  ngOnDestroy(): void {
+  document.removeEventListener('click', this.delegatedClickHandler);
+}
 
   //#region ADVANCED TABLE
 
@@ -144,38 +151,16 @@ export class VehicleComponent implements OnInit {
    * 
    * @param event 
    */
-  handleTableLoad(event: any): void {
-    // Adiciona event listeners para botões de ação
-    setTimeout(() => {
-      document.querySelectorAll(".edit-btn").forEach((btn) => {
-        btn.addEventListener("click", (e) => {
-          e.preventDefault();
-          const vehicleId = btn.getAttribute('data-id');
-          if (vehicleId) {
-            this.router.navigate([`apps/vehicles/${vehicleId}/edit`]);
-          }
-        });
-      });
-
-      document.querySelectorAll(".delete-btn").forEach((btn) => {
-        btn.addEventListener("click", (e) => {
-          e.preventDefault();
-          const vehicleId = btn.getAttribute('data-id');
-          if (vehicleId && !this.isDisabled) {
-            this.deleteVehicle(parseInt(vehicleId));
-          }
-        });
-      });
-    }, 100);
-  }
 
   /**
    * Load data
    */
-  async _fetchData(): Promise<void> {
+  async _fetchData(pageIndex: number = 1, pageSize: number = 10): Promise<void> {
+    this.isLoading = true;
+
     const request: GetAllRequest = {
-      pageSize: this.tableService.pageSize,
-      pageIndex: this.tableService.page,
+      pageSize: pageSize,
+      pageIndex: pageIndex,
       sort: '',
       direction: ''
     };
@@ -196,12 +181,14 @@ export class VehicleComponent implements OnInit {
           this.list = [];
           this.tableService.totalRecords = 0;
         }
+        this.isLoading = false;
       },
       error: (error) => {
         console.error('Erro ao carregar veículos:', error);
         this.notificationService.showMessage('Erro ao carregar lista de veículos.', 'error');
         this.list = [];
         this.tableService.totalRecords = 0;
+        this.isLoading = false;
       }
     });
   }
@@ -291,7 +278,7 @@ export class VehicleComponent implements OnInit {
       this.metroMenuService.enableButton('delete');
     } else {
       this.metroMenuService.disableButton('edit');
-      this.metroMenuService.enableButton('delete');
+      this.metroMenuService.disableButton('delete');
     }
   }
   //#endregion
@@ -333,29 +320,104 @@ export class VehicleComponent implements OnInit {
   ];
 
   handleMenuAction(action: any) {
-    switch (action) {
-      case 'edit':
+  switch (action) {
+    case 'edit':
         if (this.selectedRowId) {
           this.router.navigate([`apps/vehicles/${this.selectedRowId}/edit`]);
         }
-        break;
-      case 'delete':
-        if (this.selectedRowId) {
-          this.deleteVehicle(this.selectedRowId);
-        }
-        break;
-      case 'exit':
-        this.router.navigate(['/']);
-        break;
-      case 'photos':
-        // lógica para fotos
-        console.log('Fotos acionado');
-        break;
-      case 'new':
-        this.router.navigate(['apps/vehicles/new']);
-        break;
-    }
+    break;
+
+    case 'delete':
+      if (this.selectedRowId) {
+        Swal.fire({
+          title: 'Excluir veículo!',
+          text: 'Tem certeza que deseja excluir este veículo? Esta ação não poderá ser desfeita!',
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonText: 'Sim, excluir',
+          cancelButtonText: 'Cancelar'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            this.deleteVehicle(this.selectedRowId);
+          }
+        });
+      } else {
+        Swal.fire({
+          title: 'Nenhum veículo selecionado',
+          text: 'Por favor, selecione um veículo antes de continuar.',
+          icon: 'warning',
+          confirmButtonText: 'OK'
+        });
+      }
+      break;
+    case 'exit':
+      this.router.navigate(['apps/tools']); 
+      break;
+    case 'photos':
+      // lógica para fotos 
+      console.log('Fotos acionado'); 
+      break;
+    case 'new':
+      this.router.navigate(['apps/vehicles/new']);
+      break;
   }
+}
+
+private delegatedClickHandler = (event: Event) => {
+  const target = event.target as HTMLElement;
+
+  // Editar
+  const editBtn = target.closest('.edit-btn') as HTMLElement | null;
+  if (editBtn) {
+    event.preventDefault();
+    const vehicleId = editBtn.getAttribute('data-id');
+    console.log('Delegated click edit ->', vehicleId);
+    if (vehicleId) {
+      this.router.navigate([`apps/vehicles/${vehicleId}/edit`]);
+    }
+    return;
+  }
+
+  // Excluir
+  const deleteBtn = target.closest('.delete-btn') as HTMLElement | null;
+  if (deleteBtn) {
+    event.preventDefault();
+    const vehicleId = deleteBtn.getAttribute('data-id');
+    console.log('Delegated click delete ->', vehicleId);
+    if (vehicleId && !this.isDisabled) {
+      // Substituindo o confirm() pelo SweetAlert2
+      import('sweetalert2').then(Swal => {
+        Swal.default.fire({
+          title: 'Excluir Veículo!',
+          text: 'Tem certeza que deseja excluir este veículo? Ação não poderá ser desfeita!',
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonText: 'Sim, excluir!',
+          cancelButtonText: 'Não'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            this.service.delete(parseInt(vehicleId, 10)).subscribe({
+              next: (ret: any) => {
+                if (ret.statusCode === 200) {
+                  this.notificationService.showMessage(ret.message, 'success');
+                  // Atualiza a lista de veículos após exclusão
+                  this.list = this.list.filter(v => v.id !== parseInt(vehicleId!, 10));
+                } else {
+                  this.notificationService.showMessage('Erro ao excluir veículo.', 'error');
+                }
+              },
+              error: (err) => {
+                console.error(err);
+                this.notificationService.showMessage('Erro ao excluir veículo.', 'error');
+              }
+            });
+          }
+        });
+      });
+    }
+    return;
+  }
+};
   //#endregion
 
   //#region CRUD OPERATIONS
@@ -364,7 +426,6 @@ export class VehicleComponent implements OnInit {
    * @param vehicleId ID do veículo a ser excluído
    */
   deleteVehicle(vehicleId: number): void {
-    if (confirm('Tem certeza que deseja excluir este veículo?')) {
       this.service.delete(vehicleId).subscribe({
         next: (result) => {
           if (result.statusCode === 200) {
@@ -382,7 +443,6 @@ export class VehicleComponent implements OnInit {
           this.notificationService.showMessage('Erro ao excluir veículo.', 'error');
         }
       });
-    }
   }
   //#endregion
 
@@ -431,4 +491,14 @@ export class VehicleComponent implements OnInit {
         `);
   }
 
+  onTablePageChange(pageNumber: number): void {
+    console.log('Página da tabela mudou para:', pageNumber);
+    const currentPageSize = this.advancedTable?.service?.pageSize || 10;
+    this._fetchData(pageNumber, currentPageSize); // Recarrega os dados com a nova página
+  }
+
+  onTablePageSizeChange(pageSize: number): void {
+    console.log('Tamanho da página da tabela mudou para:', pageSize);
+    this._fetchData(1, pageSize); // Recarrega os dados com o novo pageSize (e página 1)
+  }
 }

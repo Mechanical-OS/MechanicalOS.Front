@@ -520,6 +520,12 @@ export class VehicleFormComponent implements OnInit {
   }
   //#endregion
 
+  toUppercaseField(event: any) {
+  const input = event.target as HTMLInputElement;
+  input.value = input.value.toUpperCase();
+}
+
+
   openBrandModal(): void {
     this.newBrandName = '';
     this.newBrandDescription = '';

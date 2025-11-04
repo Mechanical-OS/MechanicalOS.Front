@@ -44,7 +44,9 @@ export class PartnersComponent implements OnInit {
     this.loading = true;
     this.partnersService.getPartners().subscribe({
       next: (data) => {
-        this.partners = data;
+        if (data.statusCode === 200 && data.content) {
+          this.partners = data.content;
+        }
         this.loading = false;
       },
       error: (err) => {
@@ -60,6 +62,25 @@ export class PartnersComponent implements OnInit {
     this.partnerName = partner.name;
     this.copyFeedback = '';
     this.modalService.open(this.partnerInfoModal, { centered: true });
+  }
+
+    openWhatsApp(): void {
+    if (!this.modalContent) {
+      console.error('Nenhum número de telefone para abrir no WhatsApp.');
+      return;
+    }
+    const whatsappNumber = this.formatPhoneNumberForWhatsApp(this.modalContent);
+    const url = `https://wa.me/${whatsappNumber}`;
+    window.open(url, '_blank', 'noopener noreferrer');
+  }
+
+  private formatPhoneNumberForWhatsApp(phone: string): string {
+    const cleanedNumber = phone.replace(/\D/g, '');
+    if (cleanedNumber.length <= 11) {
+      return '55' + cleanedNumber;
+    }
+    
+    return cleanedNumber;
   }
 
   openEmail(partner: Partner) {

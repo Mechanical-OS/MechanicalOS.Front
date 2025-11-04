@@ -67,10 +67,20 @@
     </div>
 
     <div class="modal-footer justify-content-between">
-        <button class="btn btn-secondary" type="button" (click)="modal.dismiss('Close click')">Fechar</button>
-        <button class="btn btn-primary" type="button" (click)="copyText(modalContent)">
-            <i class="fas fa-copy me-1"></i>
-            Copiar
-        </button>
-    </div>
+      <button class="btn btn-secondary" type="button" (click)="modal.dismiss('Close click')">Fechar</button>
+      <div class="d-flex gap-2">
+          <button *ngIf="modalTitle === 'Telefone' && modalContent" 
+                  class="btn btn-success" 
+                  type="button" 
+                  (click)="openWhatsApp()">
+              <i class="fab fa-whatsapp me-1"></i>
+              WhatsApp
+          </button>
+
+          <button class="btn btn-primary" type="button" (click)="copyText(modalContent)">
+              <i class="fas fa-copy me-1"></i>
+              Copiar
+          </button>
+      </div>
+  </div>
 </ng-template>

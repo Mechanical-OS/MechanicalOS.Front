@@ -11,6 +11,7 @@ export const VIA_CEP_URL = 'https://viacep.com.br/ws';
 export const COLOR_URL = 'https://api.mechanical-os.com.br/api/Color';
 export const BRAND_URL = 'https://api.mechanical-os.com.br/api/Brand';
 export const VEHICLE_MODEL_URL = 'https://api.mechanical-os.com.br/api/VehicleModel';
+export const PARTNERS_URL = 'https://api.mechanical-os.com.br/api/Partners';
 
 export const MODULE_URLS = {
   customers: CUSTOMER_URL,
@@ -23,5 +24,6 @@ export const MODULE_URLS = {
   cep: VIA_CEP_URL,
   colors: COLOR_URL,
   brands: BRAND_URL,
-  vehicleModels: VEHICLE_MODEL_URL
+  vehicleModels: VEHICLE_MODEL_URL,
+  partners: PARTNERS_URL
 };

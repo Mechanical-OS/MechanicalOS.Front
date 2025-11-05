@@ -1,0 +1,86 @@
+<app-page-title [breadcrumbItems]="pageTitle" title=""></app-page-title>
+
+<section class="partners-wrap">
+  <h2 class="title">Parceiros e Lojas</h2>
+
+  <div *ngIf="loading" class="loading-container">
+    <p>Carregando parceiros...</p>
+    <div class="spinner"></div>
+  </div>
+
+  <div class="grid-container" *ngIf="!loading && partners.length > 0">
+    <article class="card" *ngFor="let p of partners">
+      
+      <div class="card-body">
+        <h3 class="card-title">{{ p.name }}</h3>
+        <p class="desc">{{ p.description }}</p>
+        <p class="address">End: {{ p.address }}</p>
+      </div>
+
+      <footer class="card-footer">
+        <button class="icon-action-btn" (click)="openPhone(p)">
+          <i class="fas fa-phone-alt"></i>
+          <span class="label">Telefone</span>
+        </button>
+
+        <button class="icon-action-btn" (click)="openEmail(p)">
+          <i class="fas fa-envelope"></i>
+          <span class="label">Email</span>
+        </button>
+
+        <button class="icon-action-btn" (click)="openSite(p)" [disabled]="!p.website">
+          <i class="fas fa-edit"></i>
+          <span class="label">Site</span>
+        </button>
+
+        <button class="icon-action-btn" (click)="orderFor(p)">
+          <i class="fas fa-bars"></i>
+          <span class="label">Fazer Pedido</span>
+        </button>
+      </footer>
+
+    </article>
+  </div>
+  <div *ngIf="!loading && partners.length === 0" class="empty-state">
+    <p>Nenhum parceiro encontrado no momento.</p>
+  </div>
+</section>
+
+<ng-template #partnerInfoModal let-modal>
+    <div class="modal-header">
+        <h5 class="modal-title">{{ modalTitle }} do Parceiro</h5>
+        <button type="button" class="btn-close" (click)="modal.dismiss('Cross click')" aria-label="Close"></button>
+    </div>
+
+    <div class="modal-body">
+        <p class="mb-2">
+            <strong>Parceiro:</strong> {{ partnerName }}
+        </p>
+
+        <div class="alert alert-light bg-light border-0" role="alert">
+            <h4 class="alert-heading text-center my-2 user-select-all">{{ modalContent }}</h4>
+        </div>
+
+        <div class="text-center mt-3" *ngIf="copyFeedback">
+            <span class="text-success">{{ copyFeedback }}</span>
+        </div>
+    </div>
+
+    <div class="modal-footer justify-content-between">
+      <button class="btn btn-secondary" type="button" (click)="modal.dismiss('Close click')">Fechar</button>
+      <div class="d-flex gap-2">
+          <button *ngIf="modalTitle === 'Telefone' && modalContent" 
+                  class="btn btn-success" 
+                  type="button" 
+                  (click)="openWhatsApp()">
+              <i class="fab fa-whatsapp me-1"></i>
+              WhatsApp
+          </button>
+
+          <button class="btn btn-primary" type="button" (click)="copyText(modalContent)">
+              <i class="fas fa-copy me-1"></i>
+              Copiar
+          </button>
+      </div>
+  </div>
+</ng-template>

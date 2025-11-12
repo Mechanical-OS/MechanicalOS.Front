@@ -14,6 +14,7 @@ import Swal from 'sweetalert2';
 import { MetroButton } from 'src/app/shared/metro-menu/metro-menu.component';
 import { MetroMenuService } from 'src/app/shared/metro-menu/metro-menu.service';
 import { AdvancedTableServices } from 'src/app/shared/advanced-table/advanced-table-service.service';
+import { NotificationService } from 'src/app/shared/services/notification.service';
 
 @Component({
   selector: 'app-customers',
@@ -37,6 +38,7 @@ export class CustomersComponent {
     private sanitizer: DomSanitizer,
     private service: CustomerService,
     private tableService: AdvancedTableServices,
+    private notificationService: NotificationService,
     private metroMenuService: MetroMenuService) {
 
   }
@@ -55,6 +57,11 @@ export class CustomersComponent {
 
     // initialize advance table
     this.initAdvancedTableData();
+    document.addEventListener('click', this.delegatedClickHandler);
+  }
+
+  ngOnDestroy(): void {
+    document.removeEventListener('click', this.delegatedClickHandler);
   }
 
   async _fetchData(): Promise<void> {
@@ -113,7 +120,7 @@ export class CustomersComponent {
       this.metroMenuService.enableButton('delete');
     } else {
       this.metroMenuService.disableButton('edit');
-      this.metroMenuService.enableButton('delete');
+      this.metroMenuService.disableButton('delete');
     }
   }
 
@@ -169,7 +176,27 @@ export class CustomersComponent {
         this.router.navigate([`apps/customers/${this.selectedCustomerId}/edit`]);
         break;
       case 'delete':
-
+        if (this.selectedCustomerId) {
+          Swal.fire({
+            title: 'Excluir Cliente!',
+            text: 'Tem certeza que deseja excluir este cliente? Esta ação não poderá ser desfeita!',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Sim, excluir',
+            cancelButtonText: 'Cancelar'
+          }).then((result) => {
+            if (result.isConfirmed) {
+              this.deleteCustomer(this.selectedCustomerId);
+            }
+          });
+        } else {
+          Swal.fire({
+            title: 'Nenhum cliente selecionado',
+            text: 'Por favor, selecione um cliente antes de continuar.',
+            icon: 'warning',
+            confirmButtonText: 'OK'
+          });
+        }
         break;
       case 'exit':
         this.router.navigate([`apps/tools`]);
@@ -197,6 +224,75 @@ export class CustomersComponent {
     });
   }
 
+deleteCustomer(customerId: number): void {
+  this.service.delete(customerId).subscribe({
+    next: (result) => {
+      if (result.statusCode === 200) {
+        this.notificationService.showMessage('Cliente excluído com sucesso.', 'success');
+        this._fetchData();
+        this.selectedCustomerId = 0;
+        this.metroMenuService.disableButton('edit');
+        this.metroMenuService.disableButton('delete');
+      } else {
+        this.notificationService.showMessage('Erro ao excluir cliente.', 'error');
+      }
+    },
+    error: (error) => {
+      console.error('Erro ao excluir cliente:', error);
+      this.notificationService.showMessage('Erro ao excluir cliente.', 'error');
+    }
+  });
+}
+
+private delegatedClickHandler = (event: Event) => {
+  const target = event.target as HTMLElement;
+
+  // Editar
+  const editBtn = target.closest('.edit-btn') as HTMLElement | null;
+  if (editBtn) {
+    event.preventDefault();
+    const customerId = editBtn.getAttribute('data-id');
+    if (customerId) {
+      this.router.navigate([`apps/customers/${customerId}/edit`]);
+    }
+    return;
+  }
+
+  // Excluir
+  const deleteBtn = target.closest('.delete-btn') as HTMLElement | null;
+  if (deleteBtn) {
+    event.preventDefault();
+    const customerId = deleteBtn.getAttribute('data-id');
+    if (customerId && !this.isDisabled) {
+      Swal.fire({
+        title: 'Excluir Cliente!',
+        text: 'Tem certeza que deseja excluir este cliente? Ação não poderá ser desfeita!',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sim, excluir!',
+        cancelButtonText: 'Não'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.service.delete(parseInt(customerId, 10)).subscribe({
+            next: (ret: any) => {
+              if (ret.statusCode === 200) {
+                this.notificationService.showMessage(ret.message || 'Cliente excluído com sucesso.', 'success');
+                this.customerList = this.customerList.filter(c => c.id !== parseInt(customerId!, 10));
+              } else {
+                this.notificationService.showMessage('Erro ao excluir cliente.', 'error');
+              }
+            },
+            error: (err) => {
+              console.error(err);
+              this.notificationService.showMessage('Erro ao excluir cliente.', 'error');
+            }
+          });
+        }
+      });
+    }
+    return;
+  }
+};
   /**
      * Search Method
      */

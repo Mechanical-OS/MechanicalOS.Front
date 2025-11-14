@@ -12,6 +12,8 @@ import { Result } from 'src/app/Http/models/operation-result.model';
 import { SelectizeModel } from 'src/app/shared/selectize/selectize.component';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { PlateConsultationResponse } from '../../Shared/models/plate-consultation.model';
+import { forkJoin, of } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
 
 // Interface para o modelo de dados enviado para a API
 interface VehicleApiModel {
@@ -120,6 +122,7 @@ export class VehicleFormComponent implements OnInit {
     this.setupPageTitle();
     this.checkEditMode();
     this.loadInitialData();
+    this.buildForm();
   }
 
   /**
@@ -137,19 +140,11 @@ export class VehicleFormComponent implements OnInit {
    * Verifica se está em modo de edição baseado na rota
    */
   checkEditMode(): void {
-    this.vehicleId = this.route.snapshot.paramMap.get('id');
-    this.isEditMode = !!this.vehicleId;
-    
-    // Atualiza o título após detectar o modo
-    this.setupPageTitle();
-    
-    if (this.isEditMode) {
-      console.log('Modo de edição ativado para veículo ID:', this.vehicleId);
-      this.loadVehicleForEdit();
-    } else {
-      console.log('Modo de cadastro novo');
-    }
+  this.vehicleId = this.route.snapshot.paramMap.get('id');
+  if (this.vehicleId) {
+    this.isEditMode = true;
   }
+}
 
   /**
    * Carrega os dados do veículo para edição
@@ -158,10 +153,10 @@ export class VehicleFormComponent implements OnInit {
     if (!this.vehicleId) return;
 
     this.service.findById(parseInt(this.vehicleId)).subscribe({
-      next: (result: Result<Vehicle>) => {
-        if (result.statusCode === 200 && result.content) {
+    next: (result: Result<Vehicle>) => {
+      if (result.statusCode === 200 && result.content) {
           this.populateFormWithVehicleData(result.content);
-        } else {
+      } else {
           this.notificationService.showMessage('Erro ao carregar dados do veículo.', 'error');
           this.router.navigate(['apps/vehicles']);
         }
@@ -250,28 +245,28 @@ export class VehicleFormComponent implements OnInit {
     // Armazena o status original do veículo
     this.originalVehicleStatus = vehicle.status || 1;
     
-    // Aguarda os dados iniciais carregarem antes de popular o form
-    setTimeout(() => {
-      this.form.patchValue({
-        brand: vehicle.brand?.id || '',
-        vehicleModel: vehicle.vehicleModel?.id || '',
-        version: vehicle.version || '',
-        year: vehicle.year || '',
-        chassi: vehicle.chassi || '',
-        color: vehicle.color?.id || '',
-        transmission: vehicle.transmission || '',
-        engine: vehicle.engine || '',
-        plate: vehicle.plate || ''
-      });
+    this.form.patchValue({
+      brand: vehicle.brand?.id || '',
+      vehicleModel: vehicle.vehicleModel?.id || '',
+      version: vehicle.version || '',
+      year: vehicle.year || '',
+      chassi: vehicle.chassi || '',
+      color: vehicle.color?.id || '',
+      transmission: vehicle.transmission || '',
+      engine: vehicle.engine || '',
+      plate: vehicle.plate || ''
+    });
 
-      // Se tem marca, carrega os modelos
-      if (vehicle.brand?.id) {
-        this.selectedBrandName = vehicle.brand.name;
-        this.loadVehicleModelsByBrand(vehicle.brand.id);
-      }
+    if (vehicle.brand?.id) {
+      this.selectedBrandName = vehicle.brand.name;
+      this.loadVehicleModelsByBrand(vehicle.brand.id);
+    }
 
-      console.log('Formulário populado com sucesso');
-    }, 1000); // Aguarda 1 segundo para garantir que os dados iniciais foram carregados
+    if (this.form.valid) {
+      this.metroMenuService.enableButton('save');
+    }
+
+    console.log('Formulário populado com sucesso');
   }
 
   //#region FORM
@@ -381,26 +376,39 @@ export class VehicleFormComponent implements OnInit {
    * para evitar erro de mapeamento duplicado no backend
    */
   loadInitialData(): void {
-    console.log('Iniciando carregamento sequencial de dados...');
+    console.log('Iniciando carregamento de dados com forkJoin...');
     
-    // Carrega cores primeiro
-    this.service.getAllColors().subscribe({
-      next: (colors) => {
-        console.log('✅ Cores carregadas:', colors.length);
-        this.colors = colors.map(color => ({
-          id: color.id,
-          label: color.name
-        }));
-        this.cdr.detectChanges();
-        
-        // Após cores carregadas, carrega marcas
-        this.loadBrandsAfterColors();
-      },
-      error: (error) => {
+    const colors$ = this.service.getAllColors().pipe(
+      map(colors => colors.map(color => ({ id: color.id, label: color.name }))),
+      catchError(error => {
         console.error('❌ Erro ao carregar cores:', error);
-        this.notificationService.showMessage('Erro ao carregar cores. Tente novamente.', 'error');
-        // Mesmo com erro, tenta carregar marcas
-        this.loadBrandsAfterColors();
+        this.notificationService.showMessage('Erro ao carregar lista de cores.', 'error');
+        return of([]);
+      })
+    );
+
+    const brands$ = this.service.getAllBrands().pipe(
+      map(brands => brands.map(brand => ({ id: brand.id, label: brand.name }))),
+      catchError(error => {
+        console.error('❌ Erro ao carregar marcas:', error);
+        this.notificationService.showMessage('Erro ao carregar lista de marcas.', 'error');
+        return of([]);
+      })
+    );
+
+    forkJoin({
+      colors: colors$,
+      brands: brands$
+    }).subscribe(({ colors, brands }) => {
+      this.colors = colors;
+      this.brands = brands;
+      this.vehicleModels = [];
+      
+      console.log('✅ Dados iniciais (cores e marcas) carregados com sucesso.');
+      this.cdr.detectChanges();
+
+      if (this.isEditMode && this.vehicleId) {
+        this.loadVehicleForEdit();
       }
     });
   }
@@ -416,7 +424,6 @@ export class VehicleFormComponent implements OnInit {
         }));
         this.cdr.detectChanges();
 
-        // Inicializa lista vazia de modelos
         this.vehicleModels = [];
 
         console.log('✅ Dados iniciais carregados com sucesso:', {
@@ -521,9 +528,9 @@ export class VehicleFormComponent implements OnInit {
   //#endregion
 
   toUppercaseField(event: any) {
-  const input = event.target as HTMLInputElement;
-  input.value = input.value.toUpperCase();
-}
+    const input = event.target as HTMLInputElement;
+    input.value = input.value.toUpperCase();
+  }
 
 
   openBrandModal(): void {
@@ -844,21 +851,10 @@ export class VehicleFormComponent implements OnInit {
   }
 
   //#region Métodos de busca de placa
-  onPlateSearchChange(event: any): void {
-    const value = event.target.value;
-    this.searchedPlate = value.toUpperCase();
-    
-    // Atualiza o campo plate do formulário
-    this.form.patchValue({ plate: this.searchedPlate });
-    
-    // Se a placa foi limpa, limpa também o formulário
-    if (!this.searchedPlate || this.searchedPlate.trim() === '') {
-      this.clearFormData();
-    }
-  }
 
   searchPlate(): void {
-    if (!this.searchedPlate || this.searchedPlate.trim() === '') {
+    const plateToSearch = this.form.get('plate')?.value;
+    if (!plateToSearch || plateToSearch.trim() === '') {
       this.notificationService.showMessage('Por favor, digite uma placa para buscar.', 'warning');
       return;
     }
@@ -866,7 +862,7 @@ export class VehicleFormComponent implements OnInit {
     this.isSearchingPlate = true;
     
     // Busca na API externa de consulta de placas
-    this.service.consultPlateExternal(this.searchedPlate).subscribe({
+    this.service.consultPlateExternal(plateToSearch).subscribe({
       next: (result: PlateConsultationResponse) => {
         this.isSearchingPlate = false;
         

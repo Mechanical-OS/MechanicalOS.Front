@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core'
+import { Component, OnInit, ChangeDetectorRef} from '@angular/core'
 import { FormBuilder, FormGroup, Validators } from '@angular/forms'
 import { MetroButton } from 'src/app/shared/metro-menu/metro-menu.component'
 import { BreadcrumbItem } from 'src/app/shared/page-title/page-title.model'
@@ -28,6 +28,8 @@ export class CustomerFormComponent implements OnInit {
   customerId: string | null = null
   isDisabled: boolean = false
 
+  private initialFormValue: any
+
   constructor(
     private router: Router,
     private route: ActivatedRoute,
@@ -36,7 +38,8 @@ export class CustomerFormComponent implements OnInit {
     private service: CustomerService,
     private viaCepService: ViaCepService,
     private notificationService: NotificationService,
-    private metroMenuService: MetroMenuService
+    private metroMenuService: MetroMenuService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -80,6 +83,25 @@ export class CustomerFormComponent implements OnInit {
       number: ['', [Validators.required]],
       complement: ['']
     })
+
+    this.initialFormValue = JSON.parse(JSON.stringify(this.form.value));
+  }
+
+  ngAfterViewInit(): void {
+    setTimeout(() => {
+      
+      const initialButtons = this.menuButtons;
+      this.metroMenuService.setButtons(initialButtons);
+
+      if (this.form) {
+        this.form.valueChanges.subscribe(() => {
+          this.updateSaveButtonState();
+        });
+      }
+
+      this.cdr.detectChanges();
+      
+    }, 1500);
   }
 
   onlyNumber(event: KeyboardEvent) {
@@ -278,6 +300,19 @@ export class CustomerFormComponent implements OnInit {
       case 'new': this.router.navigate(['apps/customers/new']); break;
     }
   }
+
+  private updateSaveButtonState(): void {
+    const initialValueString = JSON.stringify(this.initialFormValue);
+    const currentValueString = JSON.stringify(this.form.value);
+    const hasChanged = initialValueString !== currentValueString;
+
+    if (this.form.valid && hasChanged) {
+      this.metroMenuService.enableButton('save');
+    } else {
+      this.metroMenuService.disableButton('save');
+    }
+  }
+
   //#endregion
 
   //#region HELPERS

@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef, TemplateRef, ViewChild, ElementRef} from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, TemplateRef, ViewChild, ElementRef, AfterViewInit} from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { BreadcrumbItem } from 'src/app/shared/page-title/page-title.model';
@@ -37,7 +37,7 @@ declare var bootstrap: any;
   templateUrl: './vehicle-form.component.html',
   styleUrl: './vehicle-form.component.scss'
 })
-export class VehicleFormComponent implements OnInit {
+export class VehicleFormComponent implements OnInit, AfterViewInit {
   pageTitle: BreadcrumbItem[] = [];
   form!: FormGroup;
   vehicleForm!: FormGroup;
@@ -48,6 +48,8 @@ export class VehicleFormComponent implements OnInit {
   selectedImage: { base64: string } | null = null;
   mainImageIndex: number = 0;
   maxImages: number = 10;
+
+  private initialFormValue: any
   
   // Propriedades para busca de placa
   searchedPlate: string = '';
@@ -98,16 +100,16 @@ export class VehicleFormComponent implements OnInit {
     });
   }
 
-  ngAfterViewInit() {
-  if (this.carouselEl) {
-    const carouselElement = this.carouselEl.nativeElement;
-    new bootstrap.Carousel(carouselElement, { interval: 3000 });
+  carouselViewInit() {
+    if (this.carouselEl) {
+      const carouselElement = this.carouselEl.nativeElement;
+      new bootstrap.Carousel(carouselElement, { interval: 3000 });
 
-    // Sincroniza o índice da miniatura
-    carouselElement.addEventListener('slid.bs.carousel', (event: any) => {
-      this.mainImageIndex = event.to; // 'to' é o índice do slide ativo
-    });
-  }
+      carouselElement.addEventListener('slid.bs.carousel', (event: any) => {
+        this.mainImageIndex = event.to;
+      });
+    }
+
   }
 
   openFileDialog() {
@@ -125,6 +127,20 @@ export class VehicleFormComponent implements OnInit {
     this.buildForm();
   }
 
+  ngAfterViewInit(): void {
+    setTimeout(() => {
+      const initialButtons = this.menuButtons;
+      this.metroMenuService.setButtons(initialButtons);
+
+      if (this.form) {
+        this.form.valueChanges.subscribe(() => {
+          this.updateSaveButtonState();
+        });
+      }
+
+      this.cdr.detectChanges();
+    }, 2500);
+  }
   /**
    * Configura o título da página baseado no modo
    */
@@ -255,7 +271,10 @@ export class VehicleFormComponent implements OnInit {
       transmission: vehicle.transmission || '',
       engine: vehicle.engine || '',
       plate: vehicle.plate || ''
-    });
+    }, { emitEvent: false });
+
+    this.initialFormValue = JSON.parse(JSON.stringify(this.form.value));
+    this.updateSaveButtonState();
 
     if (vehicle.brand?.id) {
       this.selectedBrandName = vehicle.brand.name;
@@ -280,8 +299,10 @@ export class VehicleFormComponent implements OnInit {
       color: [''],
       transmission: [''],
       engine: [''],
-      plate: ['']
+      plate: [''],
     });
+
+    this.initialFormValue = JSON.parse(JSON.stringify(this.form.value));
   }
 
   get brandControl(): FormControl {
@@ -848,6 +869,18 @@ export class VehicleFormComponent implements OnInit {
       return error;
     }
     return error.message || error.statusText || 'Erro ao processar operação.';
+  }
+
+  private updateSaveButtonState(): void {
+    const initialValueString = JSON.stringify(this.initialFormValue);
+    const currentValueString = JSON.stringify(this.form.value);
+    const hasChanged = initialValueString !== currentValueString;
+
+    if (this.form.valid && hasChanged) {
+      this.metroMenuService.enableButton('save');
+    } else {
+      this.metroMenuService.disableButton('save');
+    }
   }
 
   //#region Métodos de busca de placa

@@ -6,7 +6,7 @@ import { PageTitleModule } from "src/app/shared/page-title/page-title.module";
 import { SharedModule } from "src/app/shared/shared.module";
 import { UiModule } from 'src/app/shared/ui/ui.module';
 import { PartnersComponent } from "./partners.component";
-import { PartnesRoutingModule } from "./partnes-routing.module";
+import { PartnersRoutingModule } from "./partners-routing.module";
 
 @NgModule({
     declarations: [PartnersComponent],
@@ -18,7 +18,7 @@ import { PartnesRoutingModule } from "./partnes-routing.module";
             WidgetModule,
             PageTitleModule,
             UiModule,
-            PartnesRoutingModule
+            PartnersRoutingModule
         ]
 })
 export class PartnersModule { }

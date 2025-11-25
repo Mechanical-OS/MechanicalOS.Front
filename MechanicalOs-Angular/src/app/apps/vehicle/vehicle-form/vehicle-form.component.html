@@ -139,9 +139,7 @@
                                   type="text"
                                   class="form-control"
                                   placeholder="Digite a placa"
-                                  [(ngModel)]="searchedPlate"
-                                  [ngModelOptions]="{standalone: true}"
-                                  (input)="onPlateSearchChange($event)"
+                                  formControlName="plate"
                                   maxlength="8"
                                 />
                                 <button
@@ -348,6 +346,11 @@
                                 (selectionChange)="
                                   onSelectTrasmissionChange($event)
                                 "
+                                [ngClass]="{
+                                  'is-invalid':
+                                    form.get('transmission')?.invalid &&
+                                    form.get('transmission')?.touched
+                                }"
                               >
                               </app-selectize>
                             </div>
@@ -389,11 +392,9 @@
                               <div class="plate-display">
                                 <span
                                   class="plate-number"
-                                  [class.has-plate]="searchedPlate"
+                                  [class.has-plate]="form.get('plate')?.value"
                                 >
-                                  {{
-                                    searchedPlate ? searchedPlate : 'N. #000001'
-                                  }}
+                                  {{ form.get('plate')?.value ? form.get('plate')?.value : 'N. #000001' }}
                                 </span>
                               </div>
                             </div>

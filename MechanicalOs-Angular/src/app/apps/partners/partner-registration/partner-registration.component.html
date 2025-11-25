@@ -1,1 +1,131 @@
-<p>partner-registration works!</p>
+<!-- partner-store-form.component.html -->
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-body">
+        <h4 class="fw-bold mb-4">
+          {{ isEditMode ? 'Editar Loja Parceira' : 'Cadastro de Loja Parceira' }}
+        </h4>
+
+        <div class="row">
+          <!-- Coluna Esquerda: Upload CSV -->
+          <div class="col-lg-4">
+            <label class="form-label">Estoque da Loja (Arquivo .csv)</label>
+            <div 
+              class="upload-box" 
+              (click)="fileInput.click()" 
+              (dragover)="onDragOver($event)" 
+              (dragleave)="onDragLeave($event)" 
+              (drop)="onDrop($event)"
+              [class.dragging]="isDragging">
+              <input #fileInput type="file" accept=".csv" (change)="onFileSelected($event)" hidden />
+              <div class="upload-content">
+                <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                <p class="fw-bold">Arraste seu arquivo aqui, ou clique.</p>
+                <small>Arquivo .csv</small>
+                <p *ngIf="selectedFileName" class="mt-2 text-success">
+                  <i class="fas fa-check-circle"></i> {{ selectedFileName }}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Coluna Direita: Formulário -->
+          <div class="col-lg-8">
+            <form>
+              <!-- Linha 1: CNPJ, Razão Social, Nome Fantasia -->
+              <div class="row mb-3">
+                <div class="col-md-4">
+                  <label for="cnpj" class="form-label">CNPJ</label>
+                  <input type="text" id="cnpj" class="form-control" formControlName="cnpj">
+                </div>
+                <div class="col-md-4">
+                  <label for="razaoSocial" class="form-label">Razão Social</label>
+                  <input type="text" id="razaoSocial" class="form-control" formControlName="razaoSocial">
+                </div>
+                <div class="col-md-4">
+                  <label for="nomeFantasia" class="form-label">Nome Fantasia</label>
+                  <input type="text" id="nomeFantasia" class="form-control" formControlName="nomeFantasia">
+                </div>
+              </div>
+
+              <!-- Linha 2: Email, Telefone, WhatsApp -->
+              <div class="row mb-3">
+                <div class="col-md-4">
+                  <label for="email" class="form-label">Email</label>
+                  <input type="email" id="email" class="form-control" formControlName="email">
+                </div>
+                <div class="col-md-4">
+                  <label for="telefone" class="form-label">Telefone</label>
+                  <input type="text" id="telefone" class="form-control" formControlName="telefone">
+                </div>
+                <div class="col-md-4">
+                  <label for="whatsapp" class="form-label">WhatsApp</label>
+                  <input type="text" id="whatsapp" class="form-control" formControlName="whatsapp">
+                </div>
+              </div>
+
+              <hr class="my-4">
+              <h5>Endereço</h5>
+
+              <!-- Linha 3: Endereço (CEP, UF, Cidade, Bairro) -->
+              <div class="row mb-3">
+                <div class="col-md-3">
+                  <label for="cep" class="form-label">CEP</label>
+                  <input type="text" id="cep" class="form-control" formControlName="cep">
+                </div>
+                <div class="col-md-2">
+                  <label for="uf" class="form-label">UF</label>
+                  <input type="text" id="uf" class="form-control" formControlName="uf">
+                </div>
+                <div class="col-md-4">
+                  <label for="cidade" class="form-label">Cidade</label>
+                  <input type="text" id="cidade" class="form-control" formControlName="cidade">
+                </div>
+                <div class="col-md-3">
+                  <label for="bairro" class="form-label">Bairro</label>
+                  <input type="text" id="bairro" class="form-control" formControlName="bairro">
+                </div>
+              </div>
+
+              <!-- Linha 4: Endereço (Rua, Número, Complemento) -->
+              <div class="row mb-3">
+                <div class="col-md-6">
+                  <label for="rua" class="form-label">Rua</label>
+                  <input type="text" id="rua" class="form-control" formControlName="rua">
+                </div>
+                <div class="col-md-3">
+                  <label for="numero" class="form-label">Número</label>
+                  <input type="text" id="numero" class="form-control" formControlName="numero">
+                </div>
+                <div class="col-md-3">
+                  <label for="complemento" class="form-label">Complemento</label>
+                  <input type="text" id="complemento" class="form-control" formControlName="complemento">
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- O MetroMenu será renderizado pelo componente pai, mas a lógica está no .ts -->
+
+<!-- Modal para exibir resultado da validação do CSV -->
+<!-- <ng-template #validationModal let-modal>
+  <div class="modal-header">
+    <h5 class="modal-title" [ngClass]="validationResult.success ? 'text-success' : 'text-danger'">
+      <i class="fas" [ngClass]="validationResult.success ? 'fa-check-circle' : 'fa-times-circle'"></i>
+      {{ validationResult.success ? 'Validação bem-sucedida!' : 'Erro na Validação do Arquivo' }}
+    </h5>
+    <button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss()"></button>
+  </div>
+  <div class="modal-body">
+    <p *ngFor="let message of validationResult.messages">{{ message }}</p>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">Fechar</button>
+  </div>
+</ng-template> -->

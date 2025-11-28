@@ -87,4 +87,23 @@ export class PartnersService extends BaseService<Partner> {
     };
     return of(mockResult).pipe(delay(500));
   }
+
+  savePartner(storeData: Partner, stockFile: File): Observable<Result<Partner>> {
+    const formData = new FormData();
+  
+    formData.append('partnerData', JSON.stringify(storeData));
+    
+    formData.append('stockFile', stockFile, stockFile.name);
+
+    console.log('Enviando para a API:', { storeData, stockFile });
+    
+    // return this.save(formData); 
+    
+    const mockResponse: Result<Partner> = {
+      statusCode: 200,
+      content: { ...storeData, id: new Date().getTime() },
+      message: 'Loja Parceira salva com sucesso.'
+    };
+    return of(mockResponse).pipe(delay(1000));
+  }
 }

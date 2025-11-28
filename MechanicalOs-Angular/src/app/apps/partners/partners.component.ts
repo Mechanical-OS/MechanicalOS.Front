@@ -1,16 +1,18 @@
-import { Component, OnInit, TemplateRef, ViewChild } from '@angular/core';
+import { Component, OnInit, TemplateRef, ViewChild, AfterViewInit } from '@angular/core';
 import { PartnersService } from './partners.service';
 import { Partner } from '../Shared/models/partners.model';
 import { Router } from '@angular/router';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { BreadcrumbItem } from 'src/app/shared/page-title/page-title.model';
+import { MetroMenuService } from 'src/app/shared/metro-menu/metro-menu.service';
+import { MetroButton } from 'src/app/shared/metro-menu/metro-menu.component';
 
 @Component({
   selector: 'app-partners',
   templateUrl: './partners.component.html',
   styleUrls: ['./partners.component.scss']
 })
-export class PartnersComponent implements OnInit {
+export class PartnersComponent implements OnInit, AfterViewInit  {
   @ViewChild('partnerInfoModal') partnerInfoModal!: TemplateRef<any>;
 
   pageTitle: BreadcrumbItem[] = [];
@@ -25,8 +27,28 @@ export class PartnersComponent implements OnInit {
   constructor(
     private partnersService: PartnersService,
     private router: Router,
-    private modalService: NgbModal
+    private modalService: NgbModal,
+    private metroMenuService: MetroMenuService
   ) {}
+
+  menuButtons: MetroButton[] = [
+    {
+      id: 'new',
+      label: 'Novo',
+      iconClass: 'fas fa-plus',
+      colorClass: 'start',
+      visible: true,
+      enabled: true
+    },
+    {
+      id: 'exit_to_home',
+      label: 'Sair',
+      iconClass: 'fas fa-sign-out-alt',
+      colorClass: 'exit',
+      visible: true,
+      enabled: true
+    }
+  ];
 
   ngOnInit(): void {
     this.setupPageTitle();
@@ -55,6 +77,21 @@ export class PartnersComponent implements OnInit {
       }
     });
   }
+
+  ngAfterViewInit(): void {
+    this.metroMenuService.setButtons(this.menuButtons);
+  }
+
+handleMenuAction(action: string): void {
+  switch (action) {
+    case 'new':
+      this.router.navigate(['/apps/partners/new']);
+      break;
+    case 'exit_to_home':
+      this.router.navigate(['/apps/tools']);
+      break;
+  }
+}
 
   openPhone(partner: Partner) {
     this.modalTitle = 'Telefone';

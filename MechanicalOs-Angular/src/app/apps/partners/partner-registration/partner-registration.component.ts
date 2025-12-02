@@ -1,5 +1,3 @@
-// partner-store-form.component.ts
-
 import { Component, OnInit, AfterViewInit, TemplateRef, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -9,13 +7,13 @@ import { MetroMenuService } from 'src/app/shared/metro-menu/metro-menu.service';
 import { MetroButton } from 'src/app/shared/metro-menu/metro-menu.component';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { PartnersService } from '../partners.service';
-import { Partner } from 'src/app/apps/Shared/models/partners.model'
 import { HttpErrorResponse } from '@angular/common/http';
 import { ViaCepService } from 'src/app/Http/via-cep/via-cep.service';
 import { FormValidationService } from 'src/app/shared/services/form-validation.service';
 import { ZipCodeResponse } from 'src/app/Http/via-cep/zipcode-response'
+import { PartnerStore } from 'src/app/apps/Shared/models/partner-store.model';
 @Component({
-  selector: 'app-partner-store-form',
+  selector: 'app-partner-registration',
   templateUrl: './partner-registration.component.html',
   styleUrls: ['./partner-registration.component.scss']
 })
@@ -29,6 +27,7 @@ export class PartnerRegistrationComponent implements OnInit, AfterViewInit {
   selectedFile: File | null = null;
   selectedFileName: string = '';
   isDragging: boolean = false;
+  isFileValid: boolean = false;
   
   validationResult: { success: boolean; messages: string[] } = { success: false, messages: [] };
   @ViewChild('validationModal', { static: false }) validationModal!: TemplateRef<any>;
@@ -49,7 +48,6 @@ export class PartnerRegistrationComponent implements OnInit, AfterViewInit {
 
   ngOnInit(): void {
     this.checkEditMode();
-    this.setupPageTitle();
     this.buildForm();
     // this.loadInitialData();
   }
@@ -87,7 +85,6 @@ export class PartnerRegistrationComponent implements OnInit, AfterViewInit {
       email: ['', [Validators.required, Validators.email]],
       phone: ['', [Validators.required, Validators.pattern(/^\d{10,11}$/)]],
       whatsapp: ['', [Validators.pattern(/^\d{10,11}$/)]],
-      
       address: this.fb.group({
         cep: ['', [Validators.required, Validators.pattern(/^\d{8}$/)]],
         uf: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(2)]],
@@ -98,11 +95,10 @@ export class PartnerRegistrationComponent implements OnInit, AfterViewInit {
         complemento: ['']
       })
     });
-
     this.initialFormValue = JSON.parse(JSON.stringify(this.form.value));
   }
 
-    onlyNumber(event: KeyboardEvent) {
+  onlyNumber(event: KeyboardEvent) {
     const pattern = /[0-9]/;
     if (!pattern.test(event.key)) {
       event.preventDefault();
@@ -178,10 +174,14 @@ export class PartnerRegistrationComponent implements OnInit, AfterViewInit {
     if (file && (file.type === 'text/csv' || file.name.endsWith('.csv'))) {
       this.selectedFile = file;
       this.selectedFileName = file.name;
+      
+      this.validateCsvHeaders(file); 
+      
       this.updateSaveButtonState();
     } else {
       this.selectedFile = null;
       this.selectedFileName = '';
+      this.isFileValid = false;
       this.notificationService.showMessage('Por favor, selecione um arquivo no formato .csv', 'error');
     }
   }
@@ -192,20 +192,43 @@ export class PartnerRegistrationComponent implements OnInit, AfterViewInit {
       this.form.markAllAsTouched();
       return;
     }
-    if (!this.selectedFile) {
-      this.notificationService.showMessage('Por favor, adicione o arquivo CSV de estoque.', 'error');
+    if (!this.selectedFile || !this.isFileValid) {
+      this.notificationService.showMessage('Por favor, adicione um arquivo CSV de estoque válido.', 'error');
       return;
     }
 
-    this.validateCsvAndSubmit(this.selectedFile);
+    const storeData: PartnerStore = this.form.value;
+
+    if (this.isEditMode && this.storeId) {
+      storeData.id = parseInt(this.storeId, 10);
+    }
+
+    this.partnersService.savePartnerStore(storeData, this.selectedFile).subscribe({
+      next: (response) => {
+        if(response.statusCode === 200) {
+            this.notificationService.showMessage('Loja Parceira salva com sucesso!', 'success');
+            this.form.reset();
+            //this.router.navigate(['/apps/partners']);
+        } else {
+            this.notificationService.showMessage(response.message || 'Erro ao salvar.', 'error');
+        }
+      },
+      error: (err) => {
+        console.error('Erro ao salvar loja:', err);
+        this.notificationService.showMessage('Ocorreu um erro de comunicação ao salvar a loja.', 'error');
+      }
+    });
   }
 
-  private validateCsvAndSubmit(file: File): void {
+  private validateCsvHeaders(file: File): void {
     const reader = new FileReader();
+
     reader.onload = (e) => {
       const text = reader.result as string;
-      const headers = text.slice(0, text.indexOf('\n')).trim().toLowerCase().split(',');
-      const requiredColumns = ['sku', 'descrição', 'código', 'valor', 'quantidade', 'categoria', 'veículo_compatível'];
+      const firstLine = text.slice(0, text.indexOf('\n')).trim();
+      const headers = firstLine.toLowerCase().split(',').map(h => h.replace(/"/g, '').trim());
+      
+      const requiredColumns = ['id', 'name', 'code', 'price', 'status', 'description'];
       
       const missingColumns = requiredColumns.filter(col => !headers.includes(col.toLowerCase()));
 
@@ -215,31 +238,24 @@ export class PartnerRegistrationComponent implements OnInit, AfterViewInit {
           messages: missingColumns.map(col => `Coluna obrigatória não encontrada: "${col}"`)
         };
         this.modalService.open(this.validationModal, { centered: true });
-      } else {
-        this.notificationService.showMessage('Arquivo CSV validado com sucesso! Salvando dados...', 'info');
         
-        const formData = this.form.value;
-        const partnerData: Partner = {
-            id: this.isEditMode && this.storeId ? parseInt(this.storeId, 10) : 0,
-            name: formData.nomeFantasia || formData.razaoSocial, // Usar nome fantasia ou razão social
-            description: formData.description,
-            address: `${formData.address.rua}, ${formData.address.numero} - ${formData.address.bairro}, ${formData.address.cidade}/${formData.address.uf}`,
-            phone: formData.telefone,
-            email: formData.email,
-            website: formData.website
-        };
-
-        this.partnersService.savePartner(partnerData, file).subscribe({
-          next: (response) => {
-            this.notificationService.showMessage('Loja Parceira e estoque salvos com sucesso!', 'success');
-            this.router.navigate(['/apps/partners']);
-          },
-          error: (err) => {
-            this.notificationService.showMessage('Ocorreu um erro ao salvar a loja.', 'error');
-          }
-        });
+        this.isFileValid = false;
+        this.selectedFile = null; 
+        this.selectedFileName = `Erro no arquivo: ${file.name}`;
+        
+      } else {
+        this.isFileValid = true;
+        this.notificationService.showMessage('Arquivo CSV validado com sucesso!', 'success');
       }
+      this.updateSaveButtonState();
     };
+
+    reader.onerror = (e) => {
+        console.error("Erro ao ler o arquivo:", reader.error);
+        this.notificationService.showMessage('Ocorreu um erro ao tentar ler o arquivo.', 'error');
+        this.isFileValid = false;
+    };
+
     reader.readAsText(file);
   }
   
@@ -264,7 +280,7 @@ export class PartnerRegistrationComponent implements OnInit, AfterViewInit {
     const currentValueString = JSON.stringify(this.form.value);
     const hasChanged = initialValueString !== currentValueString;
 
-    if (this.form.valid && (hasChanged || this.selectedFile)) {
+    if (this.form.valid && (hasChanged || this.isFileValid)) {
       this.metroMenuService.enableButton('save');
     } else {
       this.metroMenuService.disableButton('save');

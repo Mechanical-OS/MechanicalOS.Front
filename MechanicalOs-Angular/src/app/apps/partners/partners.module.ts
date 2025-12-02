@@ -9,10 +9,9 @@ import { PartnersComponent } from "./partners.component";
 import { PartnerRegistrationComponent } from './partner-registration/partner-registration.component';
 import { PartnersRoutingModule } from "./partners-routing.module";
 import { ReactiveFormsModule } from '@angular/forms';
-import { CnpjPipe,PhonePipe, CepPipe } from 'src/app/shared/directives/mask-pipes.directive';
 
 @NgModule({
-    declarations: [PartnersComponent, PartnerRegistrationComponent, CnpjPipe, PhonePipe, CepPipe],
+    declarations: [PartnersComponent, PartnerRegistrationComponent],
     imports:
         [
             CommonModule,
@@ -23,11 +22,6 @@ import { CnpjPipe,PhonePipe, CepPipe } from 'src/app/shared/directives/mask-pipe
             UiModule,
             PartnersRoutingModule,
             ReactiveFormsModule
-        ],
-    exports:[
-         CnpjPipe,
-         PhonePipe,
-         CepPipe
-    ]
+        ]
 })
 export class PartnersModule { }

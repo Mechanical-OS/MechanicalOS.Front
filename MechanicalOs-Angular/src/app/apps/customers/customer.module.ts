@@ -6,14 +6,13 @@ import { PageTitleModule } from "src/app/shared/page-title/page-title.module";
 import { FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { WidgetModule } from "src/app/shared/widget/widget.module";
 import { CustomersRoutingModule } from "./customers-routing.module";
-import { SharedModule } from "../calendar/shared/shared.module";
+import { SharedModule } from "../../shared/shared.module";
 import { MetroMenuModule } from "src/app/shared/metro-menu/metro-menu.module";
 import { CustomerFormComponent } from "./customer-create/customer-form.component";
 import { NgbModule } from "@ng-bootstrap/ng-bootstrap";
-import { CpfPipe, RgPipe, PhonePipe, CepPipe } from 'src/app/shared/directives/mask-pipes.directive';
 
 @NgModule({
-    declarations: [CustomersComponent, CustomerFormComponent, CpfPipe, RgPipe, PhonePipe, CepPipe],
+    declarations: [CustomersComponent, CustomerFormComponent],
     imports: [
         CommonModule,
         FormsModule,
@@ -24,12 +23,7 @@ import { CpfPipe, RgPipe, PhonePipe, CepPipe } from 'src/app/shared/directives/m
         PageTitleModule,
         CustomersRoutingModule,
         NgbModule,
-    ],
-    exports: [
-        CpfPipe, 
-        RgPipe, 
-        PhonePipe, 
-        CepPipe
+        SharedModule
     ]
 })
 export class CustomerModule { }

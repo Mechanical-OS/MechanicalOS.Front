@@ -6,10 +6,12 @@ import { PageTitleModule } from "src/app/shared/page-title/page-title.module";
 import { SharedModule } from "src/app/shared/shared.module";
 import { UiModule } from 'src/app/shared/ui/ui.module';
 import { PartnersComponent } from "./partners.component";
+import { PartnerRegistrationComponent } from './partner-registration/partner-registration.component';
 import { PartnersRoutingModule } from "./partners-routing.module";
+import { ReactiveFormsModule } from '@angular/forms';
 
 @NgModule({
-    declarations: [PartnersComponent],
+    declarations: [PartnersComponent, PartnerRegistrationComponent],
     imports:
         [
             CommonModule,
@@ -18,7 +20,8 @@ import { PartnersRoutingModule } from "./partners-routing.module";
             WidgetModule,
             PageTitleModule,
             UiModule,
-            PartnersRoutingModule
+            PartnersRoutingModule,
+            ReactiveFormsModule
         ]
 })
 export class PartnersModule { }

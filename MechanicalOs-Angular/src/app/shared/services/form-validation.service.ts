@@ -24,6 +24,8 @@ export class FormValidationService {
           return 'WhatsApp deve ter 10 ou 11 dígitos';
         case 'cep':
           return 'CEP deve ter 8 dígitos';
+        case 'cnpj':
+          return 'CNPJ deve ter 14 dígitos';
         default:
           return `${fieldLabel} inválido`;
       }

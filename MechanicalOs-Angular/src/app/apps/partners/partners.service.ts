@@ -7,6 +7,7 @@ import { PARTNERS_URL } from 'src/app/Http/Config/config';
 import { Result } from 'src/app/Http/models/operation-result.model';
 import { NotificationService } from 'src/app/shared/services/notification.service';
 import { Partner } from '../Shared/models/partners.model';
+import { PartnerStore } from '../Shared/models/partner-store.model';
 
 @Injectable({
   providedIn: 'root'
@@ -86,5 +87,23 @@ export class PartnersService extends BaseService<Partner> {
       message: 'Consulta realizada com sucesso.'
     };
     return of(mockResult).pipe(delay(500));
+  }
+
+  savePartnerStore(storeData: PartnerStore, stockFile: File): Observable<Result<PartnerStore>> {
+    const formData = new FormData();
+    formData.append('storeData', JSON.stringify(storeData));
+    formData.append('stockFile', stockFile, stockFile.name);
+
+    // return this.http.post<Result<PartnerStore>>(this.url, formData);
+    
+    console.log('--- SIMULANDO CHAMADA DE API ---');
+    console.log('Dados enviados seriam:', { storeData, stockFile });
+    
+    const mockResponse: Result<PartnerStore> = {
+      statusCode: 200,
+      content: { ...storeData, id: new Date().getTime() },
+      message: 'Loja Parceira salva com sucesso (simulado).'
+    };
+    return of(mockResponse).pipe(delay(1000));
   }
 }

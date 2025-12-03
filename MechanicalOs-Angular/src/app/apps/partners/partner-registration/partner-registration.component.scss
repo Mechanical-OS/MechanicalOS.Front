@@ -1,21 +1,75 @@
-// partner-store-form.component.scss
+label.required::after {
+  content: "*";
+  color: red;
+  font: bold;
+}
+
+.form-control:disabled {
+  background-color: #e9ecef !important;
+  opacity: 1;
+}
+
+.card {
+  border: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  border-radius: 8px;
+  margin-top: 22px;
+}
+
+h4 {
+  font-size: 24px;
+  font-weight: 300;
+}
+
+h5 {
+  margin-top: 1rem !important;
+}
+
+.form-wrapper {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 1.5rem;
+  height: 100%;
+}
+
+.form-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #6c757d;
+  text-transform: uppercase;
+  margin-bottom: 0.25rem;
+}
+
+.form-control {
+  border-radius: 4px;
+  border: 1px solid #dee2e6;
+
+  &:focus {
+    border-color: #38a583;
+    box-shadow: 0 0 0 0.2rem rgba(56, 165, 131, 0.25);
+  }
+}
 
 .upload-box {
-  border: 2px dashed #ccc;
+  border: 2px dashed #e0e0e0;
   border-radius: 8px;
   padding: 2rem;
+  min-height: 236px;
   text-align: center;
   cursor: pointer;
   transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
   &:hover {
     background-color: #f8f9fa;
-    border-color: #007bff;
+    border-color: #38a583;
   }
 
   &.dragging {
-    background-color: #e9ecef;
-    border-color: #0056b3;
+    background-color: #f0fdf8;
+    border-color: #38a583;
   }
 
   .upload-content {
@@ -23,11 +77,16 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-  }
-
-  .upload-icon {
-    font-size: 3rem;
     color: #6c757d;
-    margin-bottom: 1rem;
+
+    .upload-icon {
+      font-size: 2.5rem;
+      color: #adb5bd;
+      margin-bottom: 1rem;
+    }
+
+    small {
+      color: #adb5bd;
+    }
   }
 }

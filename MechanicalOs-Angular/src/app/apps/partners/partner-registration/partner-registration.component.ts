@@ -85,6 +85,7 @@ export class PartnerRegistrationComponent implements OnInit, AfterViewInit {
       email: ['', [Validators.required, Validators.email]],
       phone: ['', [Validators.required, Validators.pattern(/^\d{10,11}$/)]],
       whatsapp: ['', [Validators.pattern(/^\d{10,11}$/)]],
+      website: [''],
       address: this.fb.group({
         cep: ['', [Validators.required, Validators.pattern(/^\d{8}$/)]],
         uf: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(2)]],

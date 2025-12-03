@@ -16,5 +16,6 @@ export interface PartnerStore {
   email: string;
   phone: string;
   whatsapp?: string;
+  website?: string;
   address: PartnerStoreAddress;
 }

@@ -9,9 +9,11 @@ import { PartnersComponent } from "./partners.component";
 import { PartnerRegistrationComponent } from './partner-registration/partner-registration.component';
 import { PartnersRoutingModule } from "./partners-routing.module";
 import { ReactiveFormsModule } from '@angular/forms';
+import { PartnersProductsComponent } from './partners-products/partners-products.component';
+import { FormsModule } from '@angular/forms';
 
 @NgModule({
-    declarations: [PartnersComponent, PartnerRegistrationComponent],
+    declarations: [PartnersComponent, PartnerRegistrationComponent, PartnersProductsComponent],
     imports:
         [
             CommonModule,
@@ -21,7 +23,8 @@ import { ReactiveFormsModule } from '@angular/forms';
             PageTitleModule,
             UiModule,
             PartnersRoutingModule,
-            ReactiveFormsModule
+            ReactiveFormsModule,
+            FormsModule 
         ]
 })
 export class PartnersModule { }

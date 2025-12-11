@@ -134,9 +134,14 @@ handleMenuAction(action: string): void {
     }
   }
 
-  orderFor(partner: Partner) {
-    this.router.navigate(['/products'], { queryParams: { partnerId: partner.id, partnerName: partner.name } });
-  }
+orderFor(partner: Partner) {
+  this.router.navigate(['/apps/partners/products'], { 
+    queryParams: { 
+      partnerId: partner.id, 
+      partnerName: partner.name 
+    } 
+  });
+}
   copyText(text: string | undefined) {
     if (!text) {
       this.copyFeedback = 'Nada para copiar';

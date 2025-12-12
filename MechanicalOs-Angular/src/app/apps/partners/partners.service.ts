@@ -106,4 +106,12 @@ export class PartnersService extends BaseService<Partner> {
     };
     return of(mockResponse).pipe(delay(1000));
   }
+
+  submitOrder(orderData: any): Observable<any> {
+    const orderUrl = `${PARTNERS_URL}/orders`;
+    console.log(`Simulando POST para: ${orderUrl}`);
+    console.log('Payload do Pedido:', orderData);
+    
+    return of({ success: true, orderId: new Date().getTime() }).pipe(delay(1000));
+  }
 }

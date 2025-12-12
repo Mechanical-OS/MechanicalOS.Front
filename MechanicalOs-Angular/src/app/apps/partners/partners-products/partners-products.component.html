@@ -51,12 +51,10 @@
                 </div>
               </div>
             </div>
+          </div>       
+          <div *ngIf="filteredProducts.length === 0" class="text-center p-5">
+            <p class="text-muted">Nenhum produto encontrado com os filtros selecionados.</p>
           </div>
-          
-          <div *ngIf="!loading && products.length === 0" class="text-center p-5">
-            <p class="text-muted">Nenhum produto encontrado.</p>
-          </div>
-
         </div>
       </div>
     </div>
@@ -96,24 +94,37 @@
               <span class="fw-bold fs-5">{{ total | currency:'BRL' }}</span>
             </div>
 
-            <button class="btn btn-enviar-pedido w-100 mt-4">
+            <button class="btn btn-enviar-pedido w-100 mt-4" (click)="openConfirmationModal()">
               ENVIAR PEDIDO
             </button>
           </div>
         </div>
       </div>
     </div>
-    <div *ngIf="!loading" class="row">
-      <div *ngFor="let product of filteredProducts" class="col-md-6 col-lg-4 mb-4">
-        <div class="card product-card h-100">
-        </div>
-      </div>
-    </div>
-
-    <div *ngIf="!loading && filteredProducts.length === 0" class="text-center p-5">
-      <p class="text-muted">Nenhum produto encontrado com os filtros selecionados.</p>
-    </div>
   </div>
 </div>
+
+<ng-template #confirmationModal let-modal>
+  <div class="modal-header">
+    <h5 class="modal-title">
+      <i class="fas fa-check-circle text-success me-2"></i>
+      Confirmar Orçamento
+    </h5>
+    <button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss()"></button>
+  </div>
+  <div class="modal-body">
+    <p>Você está prestes a enviar um pedido com <strong>{{ cart.length }} item(s)</strong>.</p>
+    <p class="fw-bold fs-5">Valor Total: {{ total | currency:'BRL' }}</p>
+    <hr>
+    <p>Deseja confirmar o envio do pedido?</p>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">Cancelar</button>
+    <button type="button" class="btn btn-success" (click)="confirmOrder(modal)">
+      <i class="fas fa-paper-plane me-1"></i>
+      Confirmar e Enviar
+    </button>
+  </div>
+</ng-template>
 
 <app-metro-menu (buttonClick)="handleMenuAction($event)"></app-metro-menu>

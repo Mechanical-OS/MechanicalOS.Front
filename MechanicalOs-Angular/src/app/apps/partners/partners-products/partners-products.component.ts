@@ -1,6 +1,9 @@
-import { Component, OnInit, AfterViewInit  } from '@angular/core';
+import { Component, OnInit, AfterViewInit, ViewChild, TemplateRef } from '@angular/core';
+import { NotificationService } from 'src/app/shared/services/notification.service';
 import { MetroMenuService } from 'src/app/shared/metro-menu/metro-menu.service';
 import { MetroButton } from 'src/app/shared/metro-menu/metro-menu.component';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { PartnersService } from '../partners.service';
 import { ActivatedRoute } from '@angular/router';
 import { Router } from '@angular/router';
 
@@ -57,11 +60,15 @@ export class PartnersProductsComponent implements OnInit, AfterViewInit  {
     }
   ];
 
+  @ViewChild('confirmationModal', { static: false }) confirmationModal!: TemplateRef<any>;
 
   constructor(
     private route: ActivatedRoute,
     private router: Router, 
-    private metroMenuService: MetroMenuService
+    private metroMenuService: MetroMenuService,
+    private modalService: NgbModal, 
+    private notificationService: NotificationService, 
+    private partnersService: PartnersService
   ) { }
 
   ngOnInit(): void {
@@ -150,5 +157,32 @@ export class PartnersProductsComponent implements OnInit, AfterViewInit  {
   calculateSummary(): void {
     this.subTotal = this.cart.reduce((sum, item) => sum + item.price, 0);    
     this.total = this.subTotal - this.discount + this.taxes;
+  }
+
+    openConfirmationModal(): void {
+    if (this.cart.length === 0) {
+      this.notificationService.showMessage('Seu orçamento está vazio.', 'warning');
+      return;
+    }
+    this.modalService.open(this.confirmationModal, { centered: true });
+  }
+
+  confirmOrder(modal: any): void {
+    modal.close();
+    this.notificationService.showMessage('Enviando pedido...', 'info');
+
+    console.log('--- ENVIANDO PEDIDO PARA A API (SIMULADO) ---');
+    console.log('ID do Parceiro:', this.partnerId);
+    console.log('Itens do Pedido:', this.cart);
+    console.log('Valor Total:', this.total);
+    setTimeout(() => {
+      this.notificationService.showMessage('Pedido enviado com sucesso!', 'success');
+      this.resetOrder();
+    }, 1500);
+  }
+
+  private resetOrder(): void {
+    this.cart = [];
+    this.calculateSummary();
   }
 }

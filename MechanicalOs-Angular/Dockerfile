@@ -7,7 +7,7 @@ WORKDIR /app
 
 # Copia os arquivos de definição de dependências e instala
 COPY package*.json ./
-RUN npm install
+RUN npm install --force
 
 # Copia todo o código-fonte
 COPY . .

@@ -31,7 +31,8 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           # Define o contexto (onde está o Dockerfile, neste caso, a raiz do repo)
-          context: .
+          context: ./MechanicalOs-Angular
+          file: ./MechanicalOs-Angular/Dockerfile
           # Ativa o push para o Docker Hub
           push: true
           # Define o nome e as tags da imagem

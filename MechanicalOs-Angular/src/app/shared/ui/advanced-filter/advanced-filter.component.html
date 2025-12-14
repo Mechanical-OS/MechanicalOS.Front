@@ -1,0 +1,176 @@
+<!-- Botão para abrir o filtro -->
+<div class="advanced-filter-trigger">
+  <button 
+    type="button" 
+    class="btn btn-outline-primary btn-sm"
+    (click)="toggleFilter()">
+    <i class="mdi mdi-filter-variant me-1"></i>
+    Filtro Avançado
+  </button>
+</div>
+
+<!-- Modal do filtro -->
+<div 
+  class="advanced-filter-modal" 
+  [class.show]="isVisible"
+  (click)="onBackdropClick($event)">
+  
+  <div class="advanced-filter-panel">
+    <!-- Header -->
+    <div class="filter-header">
+      <h5 class="filter-title">{{ config.title }}</h5>
+      <button 
+        type="button" 
+        class="btn-close" 
+        (click)="closeFilter()"
+        aria-label="Fechar">
+        <i class="mdi mdi-close"></i>
+      </button>
+    </div>
+
+    <!-- Conteúdo do filtro -->
+    <div class="filter-content">
+      <form [formGroup]="filterForm" (ngSubmit)="applyFilter()">
+        
+        <!-- Seção de Pesquisa -->
+        <div class="filter-section" *ngIf="config.showSearch">
+          <h6 class="section-title">Pesquisa</h6>
+          <div class="search-input">
+            <div class="input-group">
+              <span class="input-group-text">
+                <i class="mdi mdi-magnify"></i>
+              </span>
+              <input 
+                type="text" 
+                class="form-control" 
+                formControlName="search"
+                [placeholder]="config.searchPlaceholder">
+            </div>
+          </div>
+        </div>
+
+        <!-- Seção de Checkboxes -->
+        <div class="filter-section" *ngIf="getCheckboxOptions().length > 0">
+          <h6 class="section-title">Filtros por Tipo</h6>
+          <div class="checkbox-list">
+            <div 
+              class="form-check" 
+              *ngFor="let option of getCheckboxOptions()">
+              <input 
+                class="form-check-input" 
+                type="checkbox" 
+                [id]="option.id"
+                formControlName="{{ option.id }}">
+              <label 
+                class="form-check-label" 
+                [for]="option.id">
+                {{ option.label }}
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Seção de Campos de Texto -->
+        <div class="filter-section" *ngIf="getTextOptions().length > 0">
+          <h6 class="section-title">Filtros de Texto</h6>
+          <div class="text-inputs">
+            <div 
+              class="mb-3" 
+              *ngFor="let option of getTextOptions()">
+              <label [for]="option.id" class="form-label">{{ option.label }}</label>
+              <input 
+                type="text" 
+                class="form-control" 
+                [id]="option.id"
+                formControlName="{{ option.id }}"
+                [placeholder]="'Digite ' + option.label.toLowerCase()">
+            </div>
+          </div>
+        </div>
+
+        <!-- Seção de Select -->
+        <div class="filter-section" *ngIf="getSelectOptions().length > 0">
+          <h6 class="section-title">Seleção</h6>
+          <div class="select-inputs">
+            <div 
+              class="mb-3" 
+              *ngFor="let option of getSelectOptions()">
+              <label [for]="option.id" class="form-label">{{ option.label }}</label>
+              <select 
+                class="form-select" 
+                [id]="option.id"
+                formControlName="{{ option.id }}">
+                <option value="">{{ 'Selecione ' + option.label.toLowerCase() }}</option>
+                <option 
+                  *ngFor="let opt of option.options" 
+                  [value]="opt.value">
+                  {{ opt.label }}
+                </option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Seção de Range -->
+        <div class="filter-section" *ngIf="getRangeOptions().length > 0">
+          <h6 class="section-title">Faixa de Valores</h6>
+          <div class="range-inputs">
+            <div 
+              class="mb-3" 
+              *ngFor="let option of getRangeOptions()">
+              <label class="form-label">{{ option.label }}</label>
+              <div class="range-container">
+                <div class="range-inputs-row">
+                  <div class="col-6">
+                    <label class="form-label small">Mínimo</label>
+                    <input 
+                      type="number" 
+                      class="form-control" 
+                      [id]="option.id + '_min'"
+                      formControlName="{{ option.id }}"
+                      [min]="option.min || 0"
+                      [max]="option.max || 100"
+                      [step]="option.step || 1">
+                  </div>
+                  <div class="col-6">
+                    <label class="form-label small">Máximo</label>
+                    <input 
+                      type="number" 
+                      class="form-control" 
+                      [id]="option.id + '_max'"
+                      formControlName="{{ option.id }}_max"
+                      [min]="option.min || 0"
+                      [max]="option.max || 100"
+                      [step]="option.step || 1">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </form>
+    </div>
+
+    <!-- Footer com botões -->
+    <div class="filter-footer">
+      <div class="d-flex gap-2">
+        <button 
+          type="button" 
+          class="btn btn-outline-secondary flex-fill"
+          (click)="clearFilter()">
+          <i class="mdi mdi-refresh me-1"></i>
+          Limpar
+        </button>
+        <button 
+          type="button" 
+          class="btn btn-primary flex-fill"
+          (click)="applyFilter()">
+          <i class="mdi mdi-check me-1"></i>
+          Aplicar Filtro
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>

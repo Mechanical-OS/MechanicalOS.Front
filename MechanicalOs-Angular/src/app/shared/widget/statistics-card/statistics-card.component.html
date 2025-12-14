@@ -1,0 +1,20 @@
+<div class="widget-rounded-circle card">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-6">
+                <div
+                    class="avatar-lg rounded-circle bg-soft-{{statisticsCardData.variant}} border border-{{statisticsCardData.variant}} ">
+                    <i class="{{statisticsCardData.icon}}  text-{{statisticsCardData.variant}}"
+                        [ngClass]="{'avatar-title font-22':statisticsCardData.icon }"></i>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="text-end">
+                    <h3 class="text-dark mt-1"><span [countUp]="statisticsCardData.stats!"
+                            [options]="statisticsCardData.options!">{{statisticsCardData.stats | number}}</span></h3>
+                    <p class="text-muted mb-1 text-truncate">{{statisticsCardData.description}}</p>
+                </div>
+            </div>
+        </div> <!-- end row-->
+    </div>
+</div> <!-- end widget-rounded-circle-->

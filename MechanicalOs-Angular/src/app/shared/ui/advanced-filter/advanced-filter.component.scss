@@ -1,0 +1,310 @@
+// Paleta de Cores Oficina Mecânica
+$azul-escuro: #1e3a8a;
+$cinza-chumbo: #374151;
+$verde-ferramenta: #059669;
+$cinza-claro: #e5e7eb;
+$branco: #ffffff;
+$cinza-600: #6b7280;
+$cinza-700: #374151;
+$cinza-800: #1f2937;
+
+.advanced-filter-trigger {
+  display: inline-block;
+}
+
+.advanced-filter-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.4);
+  z-index: 10000;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease-in-out;
+
+  &.show {
+    opacity: 1;
+    visibility: visible;
+
+    .advanced-filter-panel {
+      transform: translateX(0);
+    }
+  }
+}
+
+.advanced-filter-panel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 400px;
+  max-width: 90vw;
+  height: 100vh;
+  background: $branco;
+  color: $cinza-700;
+  transform: translateX(100%);
+  transition: transform 0.3s ease-in-out;
+  display: flex;
+  flex-direction: column;
+  box-shadow: -5px 0 20px rgba(0, 0, 0, 0.15);
+  border-left: 1px solid $cinza-claro;
+}
+
+.filter-header {
+  background: $azul-escuro;
+  padding: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-radius: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+
+  .filter-title {
+    margin: 0;
+    font-weight: 600;
+    color: $branco;
+    font-size: 1.1rem;
+  }
+
+  .btn-close {
+    background: none;
+    border: none;
+    color: $branco;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background-color 0.2s ease;
+
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.2);
+    }
+  }
+}
+
+.filter-content {
+  flex: 1;
+  padding: 1.5rem;
+  overflow-y: auto;
+}
+
+.filter-section {
+  margin-bottom: 2rem;
+
+  .section-title {
+    color: $cinza-700;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    font-size: 1rem;
+    border-bottom: 2px solid $cinza-claro;
+    padding-bottom: 0.5rem;
+  }
+}
+
+.search-input {
+  .input-group {
+    .input-group-text {
+      background-color: $cinza-claro;
+      border: 1px solid $cinza-claro;
+      color: $cinza-600;
+    }
+
+    .form-control {
+      background-color: $branco;
+      border: 1px solid $cinza-claro;
+      color: $cinza-700;
+
+      &::placeholder {
+        color: $cinza-600;
+      }
+
+      &:focus {
+        background-color: $branco;
+        border-color: $azul-escuro;
+        box-shadow: 0 0 0 0.2rem rgba(30, 58, 138, 0.15);
+        color: $cinza-700;
+      }
+    }
+  }
+}
+
+.checkbox-list {
+  .form-check {
+    margin-bottom: 0.75rem;
+
+    .form-check-input {
+      background-color: $branco;
+      border: 1px solid $cinza-claro;
+      width: 1.2rem;
+      height: 1.2rem;
+
+      &:checked {
+        background-color: $azul-escuro;
+        border-color: $azul-escuro;
+      }
+
+      &:focus {
+        box-shadow: 0 0 0 0.2rem rgba(30, 58, 138, 0.15);
+      }
+    }
+
+    .form-check-label {
+      color: $cinza-700;
+      font-size: 0.95rem;
+      margin-left: 0.5rem;
+    }
+  }
+}
+
+.text-inputs, .select-inputs {
+  .form-label {
+    color: $cinza-700;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+  }
+
+  .form-control, .form-select {
+    background-color: $branco;
+    border: 1px solid $cinza-claro;
+    color: $cinza-700;
+
+    &::placeholder {
+      color: $cinza-600;
+    }
+
+    &:focus {
+      background-color: $branco;
+      border-color: $azul-escuro;
+      box-shadow: 0 0 0 0.2rem rgba(30, 58, 138, 0.15);
+      color: $cinza-700;
+    }
+  }
+
+  .form-select {
+    option {
+      background-color: $branco;
+      color: $cinza-700;
+    }
+  }
+}
+
+.range-inputs {
+  .form-label {
+    color: $cinza-700;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+  }
+
+  .range-container {
+    .range-inputs-row {
+      display: flex;
+      gap: 1rem;
+
+      .col-6 {
+        flex: 1;
+
+        .form-label.small {
+          font-size: 0.8rem;
+          color: $cinza-600;
+          margin-bottom: 0.25rem;
+        }
+
+        .form-control {
+          background-color: $branco;
+          border: 1px solid $cinza-claro;
+          color: $cinza-700;
+
+          &:focus {
+            background-color: $branco;
+            border-color: $azul-escuro;
+            box-shadow: 0 0 0 0.2rem rgba(30, 58, 138, 0.15);
+            color: $cinza-700;
+          }
+        }
+      }
+    }
+  }
+}
+
+.filter-footer {
+  padding: 1.5rem;
+  border-top: 1px solid $cinza-claro;
+  background-color: $cinza-claro;
+
+  .btn {
+    font-weight: 500;
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+    transition: all 0.2s ease;
+
+    &.btn-outline-secondary {
+      border-color: $cinza-600;
+      color: $cinza-600;
+
+      &:hover {
+        background-color: $cinza-600;
+        border-color: $cinza-600;
+        color: $branco;
+      }
+    }
+
+    &.btn-primary {
+      background: $azul-escuro;
+      border: 1px solid $azul-escuro;
+      color: $branco;
+
+      &:hover {
+        background: darken($azul-escuro, 10%);
+        border-color: darken($azul-escuro, 10%);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(30, 58, 138, 0.3);
+      }
+    }
+  }
+}
+
+// Responsividade
+@media (max-width: 768px) {
+  .advanced-filter-panel {
+    width: 100vw;
+    max-width: 100vw;
+  }
+
+  .filter-header, .filter-content, .filter-footer {
+    padding: 1rem;
+  }
+
+  .range-inputs .range-container .range-inputs-row {
+    flex-direction: column;
+    gap: 0.5rem;
+
+    .col-6 {
+      flex: none;
+    }
+  }
+}
+
+// Scrollbar personalizada
+.filter-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.filter-content::-webkit-scrollbar-track {
+  background: $cinza-claro;
+  border-radius: 3px;
+}
+
+.filter-content::-webkit-scrollbar-thumb {
+  background: $cinza-600;
+  border-radius: 3px;
+
+  &:hover {
+    background: $cinza-700;
+  }
+}

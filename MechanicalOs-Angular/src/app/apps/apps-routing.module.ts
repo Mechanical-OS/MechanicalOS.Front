@@ -1,0 +1,18 @@
+import { NgModule } from '@angular/core';
+import { RouterModule, Routes } from '@angular/router';
+
+const routes: Routes = [
+  { path: 'calendar', loadChildren: () => import('./calendar/calendar.module').then(m => m.CalendarModule) },
+  { path: 'tools', loadChildren: () => import('./tools/tools.module').then(m => m.ToolsModule) },
+  { path: 'services', loadChildren: () => import('./services/services.module').then(m => m.ServicesModule) },
+  { path: 'customers', loadChildren: () => import('./customers/customer.module').then(m => m.CustomerModule) },
+  { path: 'vehicles', loadChildren: () => import('./vehicle/vehicle.module').then(m => m.VehicleModule) },
+  { path: 'service-orders', loadChildren: () => import('./service-order/service-order.module').then(m => m.ServiceOrderModule) },
+  { path: 'partners', loadChildren: () => import('./partners/partners.module').then(m => m.PartnersModule) },
+];
+
+@NgModule({
+  imports: [RouterModule.forChild(routes)],
+  exports: [RouterModule]
+})
+export class AppsRoutingModule { }

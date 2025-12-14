@@ -1,0 +1,73 @@
+tr.highlighted {
+    background-color: #f0f0f0 !important; // cinza claro
+}
+
+/* Skeleton Loading Styles */
+.skeleton-row {
+  pointer-events: none;
+  user-select: none;
+}
+
+.skeleton {
+  animation: skeleton-loading 1s linear infinite alternate;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  border-radius: 4px;
+}
+
+.skeleton-text {
+  height: 16px;
+  width: 100%;
+  max-width: 200px;
+  margin: 8px 0;
+}
+
+.skeleton-checkbox {
+  height: 18px;
+  width: 18px;
+  border-radius: 3px;
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Opacidade reduzida para skeleton rows */
+tbody .skeleton-row {
+  opacity: 0.7;
+}
+
+/* Estilos para a área de paginação */
+.pagination-controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1rem;
+  
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: stretch;
+    
+    > div {
+      justify-content: center !important;
+    }
+  }
+}
+
+/* Estilos para o seletor de pageSize */
+.page-size-selector {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  
+  .form-select {
+    min-width: 70px;
+  }
+}

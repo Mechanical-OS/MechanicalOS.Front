@@ -1,0 +1,25 @@
+<div class="row" [class]="containerClass">
+    @for (item of rawFAQ; track $index) {
+    <ng-container>
+
+        @if(item.id%2==0){
+        <div class="col-lg-5">
+            <!-- Question/Answer -->
+            <div>
+                <div class="faq-question-q-box">Q.</div>
+                <h4 class="faq-question">{{item.question}}</h4>
+                <p class="faq-answer mb-4" [class]="item.textClass">{{item.answer}}</p>
+            </div>
+        </div>
+        }@else{
+        <div class="col-lg-5 offset-lg-1">
+            <!-- Question/Answer -->
+            <div>
+                <div class="faq-question-q-box">Q.</div>
+                <h4 class="faq-question">{{item.question}}</h4>
+                <p class="faq-answer mb-4" [class]="item.textClass">{{item.answer}}</p>
+            </div>
+        </div>
+        }
+    </ng-container>}
+</div>

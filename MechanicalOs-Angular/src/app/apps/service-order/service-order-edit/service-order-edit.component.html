@@ -1,0 +1,244 @@
+<app-page-title [breadcrumbItems]="pageTitle" title=""></app-page-title>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <!-- Header com dados da ordem (somente leitura) -->
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h4 class="mb-2">Edição de Ordem de Serviço</h4>
+                            <select 
+                                class="form-select form-select-sm status-select"
+                                [(ngModel)]="currentStatus"
+                                (change)="onStatusChange()"
+                                [ngClass]="getStatusClass(currentStatus)">
+                                <option *ngFor="let status of statusList" [value]="status.value">
+                                    {{ status.label }}
+                                </option>
+                            </select>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-info">OS #{{ orderId.toString().padStart(6, '0') }}</span>
+                            <span class="badge bg-warning">{{ serviceOrder?.entryDate | date:'dd/MM/yyyy HH:mm' }}</span>
+                            <button 
+                                class="btn btn-danger btn-sm" 
+                                (click)="generatePdfOrder()"
+                                title="Gerar PDF da Ordem de Serviço">
+                                <i class="fas fa-file-pdf me-1"></i> Gerar PDF
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Dados do Cliente, Veículo e Endereço -->
+                    <div class="row">
+                        <!-- Dados do Cliente -->
+                        <div class="col-md-4">
+                            <div class="card border-info">
+                                <div class="card-header bg-info text-white">
+                                    <h6 class="mb-0"><i class="fas fa-user me-2"></i>Dados do Cliente</h6>
+                                </div>
+                                <div class="card-body">
+                                    <p class="mb-1"><strong>Nome:</strong> {{ customerData?.name }}</p>
+                                    <p class="mb-1"><strong>Email:</strong> {{ customerData?.email }}</p>
+                                    <p class="mb-1"><strong>Telefone:</strong> {{ customerData?.phone }}</p>
+                                    <p class="mb-0"><strong>CPF:</strong> {{ customerData?.document }}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Dados do Veículo -->
+                        <div class="col-md-4">
+                            <div class="card border-success">
+                                <div class="card-header bg-success text-white">
+                                    <h6 class="mb-0"><i class="fas fa-car me-2"></i>Dados do Veículo</h6>
+                                </div>
+                                <div class="card-body">
+                                    <p class="mb-1"><strong>Marca/Modelo:</strong> {{ vehicleData?.brand }} {{ vehicleData?.model }}</p>
+                                    <p class="mb-1"><strong>Versão:</strong> {{ vehicleData?.version }}</p>
+                                    <p class="mb-1"><strong>Ano:</strong> {{ vehicleData?.year }}</p>
+                                    <p class="mb-1"><strong>Cor:</strong> {{ vehicleData?.color }}</p>
+                                    <p class="mb-0"><strong>Placa:</strong> {{ vehicleData?.plate }}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Dados do Endereço -->
+                        <div class="col-md-4">
+                            <div class="card border-warning">
+                                <div class="card-header bg-warning text-dark">
+                                    <h6 class="mb-0"><i class="fas fa-map-marker-alt me-2"></i>Endereço</h6>
+                                </div>
+                                <div class="card-body">
+                                    <p class="mb-1"><strong>Cidade:</strong> {{ addressData?.city }}/{{ addressData?.state }}</p>
+                                    <p class="mb-1"><strong>Bairro:</strong> {{ addressData?.neighborhood }}</p>
+                                    <p class="mb-1"><strong>Rua:</strong> {{ addressData?.street }}, {{ addressData?.number }}</p>
+                                    <p class="mb-1"><strong>Complemento:</strong> {{ addressData?.complement }}</p>
+                                    <p class="mb-0"><strong>CEP:</strong> {{ addressData?.zipCode }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Seção de Serviços -->
+                <div class="row">
+                    <!-- Lista de Serviços -->
+                    <div class="col-md-8">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">Serviços a serem realizados...</h5>
+                                
+                                <!-- Componente de busca de serviços -->
+                                <app-service-search
+                                    [placeholder]="'Pesquise por código ou descrição do serviço'"
+                                    [minCharacters]="2"
+                                    [debounceTime]="500"
+                                    [showPriceInList]="true"
+                                    [showCodeBadge]="true"
+                                    (serviceSelected)="onServiceSelected($event)"
+                                    (searchError)="onSearchError($event)">
+                                </app-service-search>
+
+                                <!-- Tabela de serviços selecionados -->
+                                <div class="services-table-container" *ngIf="services.length > 0">
+                                    <table class="table table-striped mb-0">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>SERVIÇO</th>
+                                                <th>Preço</th>
+                                                <th>Quantidade</th>
+                                                <th>Total</th>
+                                                <th>Ações</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr *ngFor="let service of services; let i = index">
+                                                <td>{{ service.name }}</td>
+                                                <td>R$ {{ service.price.toFixed(2).replace('.', ',') }}</td>
+                                                <td>
+                                                    <input 
+                                                        type="number" 
+                                                        class="form-control form-control-sm" 
+                                                        style="width: 80px;"
+                                                        [value]="service.quantity"
+                                                        min="1"
+                                                        (change)="updateServiceQuantity(i, $any($event.target).value)"
+                                                        (input)="updateServiceQuantity(i, $any($event.target).value)">
+                                                </td>
+                                                <td>R$ {{ service.total.toFixed(2).replace('.', ',') }}</td>
+                                                <td>
+                                                    <div class="action-buttons">
+                                                        <button 
+                                                            class="btn btn-sm btn-outline-danger" 
+                                                            (click)="removeService(i)"
+                                                            title="Remover serviço">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <!-- Seção de observações -->
+                                <div class="mt-4">
+                                    <h6>Observações</h6>
+                                    <textarea 
+                                        class="form-control" 
+                                        rows="4" 
+                                        placeholder="Digite suas observações aqui..."
+                                        [(ngModel)]="observations"
+                                        (blur)="updateObservations()">
+                                    </textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Resumo do Orçamento -->
+                    <div class="col-md-4">
+                        <div class="card resumo-orcamento-fixed">
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    <i class="fas fa-calculator me-2"></i>Resumo do orçamento
+                                </h5>
+                                
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between">
+                                        <span>Sub total:</span>
+                                        <span><strong>R$ {{ subtotal.toFixed(2).replace('.', ',') }}</strong></span>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between">
+                                        <span>Desconto:</span>
+                                        <span class="text-danger">- R$ {{ discount.toFixed(2).replace('.', ',') }}</span>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between">
+                                        <span>Taxas:</span>
+                                        <span>R$ 0,00</span>
+                                    </div>
+                                </div>
+
+                                <hr>
+
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between">
+                                        <span><strong>Total:</strong></span>
+                                        <span><strong class="text-success fs-5">R$ {{ total.toFixed(2).replace('.', ',') }}</strong></span>
+                                    </div>
+                                </div>
+
+                                <!-- Campo de cupom de desconto -->
+                                <div class="mb-3">
+                                    <label class="form-label">Cupom de desconto</label>
+                                    <div class="input-group">
+                                        <input 
+                                            type="text" 
+                                            class="form-control" 
+                                            placeholder="Digite o cupom"
+                                            [(ngModel)]="discountCoupon">
+                                        <button 
+                                            class="btn btn-outline-success" 
+                                            type="button" 
+                                            (click)="applyDiscountCoupon()">
+                                            APLICAR
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Informações adicionais -->
+                                <div class="mt-3 p-2 bg-light rounded">
+                                    <small class="text-muted">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        {{ services.length }} serviço(s) selecionado(s)
+                                    </small>
+                                </div>
+
+                                <!-- Botões de ação -->
+                                <div class="mt-3">
+                                    <button type="button" class="btn btn-success w-100 btn-finalizar-fixed" (click)="saveChanges()">
+                                        <i class="fas fa-save me-2"></i>Salvar Alterações
+                                    </button>
+                                </div>
+
+                                <div class="mt-2">
+                                    <button type="button" class="btn btn-outline-secondary w-100" (click)="cancel()">
+                                        <i class="fas fa-times me-2"></i>Cancelar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,602 @@
+<app-page-title [breadcrumbItems]="pageTitle" title=""></app-page-title>
+
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-body">
+        <div class="mb-4">
+          <h4 class="fw-bold">
+            {{ isEditMode ? 'Editar Veículo' : 'Cadastro de Veículos' }}
+          </h4>
+        </div>
+
+        <div class="row vehicle-form-container">
+          <!-- Coluna esquerda: Upload e imagens -->
+          <div class="col-md-4 image-section">
+            <!-- Carrossel da imagem principal -->
+            <div *ngIf="images.length > 0" class="main-carousel-container">
+              <div id="mainImageCarousel" class="carousel slide">
+                <div class="carousel-inner">
+                  <div
+                    class="carousel-item"
+                    *ngFor="let img of images; let i = index"
+                    [ngClass]="{ active: i === mainImageIndex }"
+                  >
+                    <img
+                      [src]="img.base64"
+                      class="d-block w-100 main-image"
+                      alt="Imagem do veículo"
+                      (click)="openImageModal(i)"
+                    />
+                  </div>
+                </div>
+                <button
+                  class="carousel-control-prev"
+                  type="button"
+                  data-bs-target="#mainImageCarousel"
+                  data-bs-slide="prev"
+                >
+                  <span
+                    class="carousel-control-prev-icon"
+                    aria-hidden="true"
+                  ></span>
+                  <span class="visually-hidden">Anterior</span>
+                </button>
+                <button
+                  class="carousel-control-next"
+                  type="button"
+                  data-bs-target="#mainImageCarousel"
+                  data-bs-slide="next"
+                >
+                  <span
+                    class="carousel-control-next-icon"
+                    aria-hidden="true"
+                  ></span>
+                  <span class="visually-hidden">Próximo</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Campo de upload -->
+            <div class="upload-box mt-3" (click)="triggerFileInput()">
+              <input
+                #fileInput
+                type="file"
+                accept=".jpg,.jpeg,.png,.webp"
+                multiple
+                [disabled]="images.length >= maxImages"
+                (change)="handleImageUpload($event)"
+              />
+              <div
+                class="upload-btn d-flex align-items-center justify-content-center"
+              >
+                <i class="fas fa-cloud-upload-alt"></i>
+                <span>Adicionar Imagens</span>
+              </div>
+              <small *ngIf="images.length >= maxImages" class="text-danger">
+                Limite máximo de 10 imagens atingido.
+              </small>
+            </div>
+            <!-- Miniaturas -->
+            <div class="thumbnail-container mt-3">
+              <div
+                class="thumbnail"
+                *ngFor="let img of images; let i = index"
+                [ngClass]="{ selected: i === mainImageIndex }"
+                (click)="setMainImage(i)"
+              >
+                <img [src]="img.base64" alt="Miniatura {{ i + 1 }}" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Coluna direita: Formulário -->
+          <div class="col-md-8">
+            <div class="card h-100">
+              <div class="card-body">
+                <form [formGroup]="form">
+                  <!-- Modal de visualização da imagem -->
+                  <div
+                    class="modal fade"
+                    id="imageModal"
+                    tabindex="-1"
+                    aria-hidden="true"
+                  >
+                    <div class="modal-dialog modal-dialog-centered modal-lg">
+                      <div class="modal-content">
+                        <div class="modal-body text-center">
+                          <img
+                            [src]="selectedImage?.base64"
+                            class="img-fluid rounded shadow"
+                            alt="Imagem ampliada"
+                          />
+                        </div>
+                        <div class="modal-footer justify-content-center">
+                          <button
+                            type="button"
+                            class="btn btn-secondary"
+                            data-bs-dismiss="modal"
+                          >
+                            Fechar
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <!-- Coluna do formulário -->
+                  <div class="col-md-12">
+                    <div class="card h-100">
+                      <div class="card-body">
+                        <form [formGroup]="form">
+                          <div class="row mb-3">
+                            <div class="mb-3">
+                              <label for="plateSearch" class="form-label"
+                                >Buscar Placa</label
+                              >
+                              <div class="input-group">
+                                <input
+                                  id="plateSearch"
+                                  type="text"
+                                  class="form-control"
+                                  placeholder="Digite a placa"
+                                  formControlName="plate"
+                                  maxlength="8"
+                                />
+                                <button
+                                  class="btn btn-outline-success"
+                                  type="button"
+                                  (click)="searchPlate()"
+                                  [disabled]="isSearchingPlate"
+                                  title="Buscar placa"
+                                >
+                                  <i
+                                    class="fas fa-search"
+                                    *ngIf="!isSearchingPlate"
+                                  ></i>
+                                  <i
+                                    class="fas fa-spinner fa-spin"
+                                    *ngIf="isSearchingPlate"
+                                  ></i>
+                                </button>
+                              </div>
+                            </div>
+                            <div class="col-md-6">
+                              <div
+                                class="d-flex align-items-center justify-content-between"
+                              >
+                                <div style="flex: 1">
+                                  <app-selectize
+                                    placeholder="Selecione a marca"
+                                    [items]="brands"
+                                    [control]="brandControl"
+                                    [label]="'Marca'"
+                                    (selectionChange)="
+                                      onSelectBrandChange($event)
+                                    "
+                                  >
+                                  </app-selectize>
+                                </div>
+                                <div class="ms-2">
+                                  <button
+                                    type="button"
+                                    class="btn btn-link p-0 text-success"
+                                    (click)="openBrandModal()"
+                                    aria-label="Adicionar marca"
+                                    title="Adicionar marca"
+                                  >
+                                    <i class="fas fa-plus-circle"></i>
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                            <div class="col-md-6">
+                              <div
+                                class="d-flex align-items-center justify-content-between"
+                              >
+                                <div style="flex: 1">
+                                  <app-selectize
+                                    placeholder="Selecione o modelo"
+                                    [items]="vehicleModels"
+                                    [control]="vehicleModelControl"
+                                    [label]="'Modelo'"
+                                    (selectionChange)="
+                                      onSelectVehicleModelChange($event)
+                                    "
+                                  >
+                                  </app-selectize>
+                                </div>
+                                <div class="ms-2">
+                                  <button
+                                    type="button"
+                                    class="btn btn-link p-0 text-success"
+                                    (click)="openModelModal()"
+                                    aria-label="Adicionar modelo"
+                                    title="Adicionar modelo"
+                                  >
+                                    <i class="fas fa-plus-circle"></i>
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          <!--ROW-->
+                          <div class="row mb-3">
+                            <div class="col-md-4">
+                              <label for="version" class="form-label"
+                                >Versão</label
+                              >
+                              <input
+                                id="version"
+                                formControlName="version"
+                                class="form-control"
+                                [ngClass]="{
+                                  'is-invalid':
+                                    form.get('version')?.invalid &&
+                                    form.get('version')?.touched
+                                }"
+                              />
+
+                              <div class="invalid-feedback">
+                                <span
+                                  style="font-weight: bold; color: #b91c1c"
+                                  >{{
+                                    messageValidationService.getErrorMessage(
+                                      form.get('version'),
+                                      'Versão'
+                                    )
+                                  }}</span
+                                >
+                              </div>
+                            </div>
+
+                            <div class="col-md-4">
+                              <label for="year" class="form-label"
+                                >Ano (fabricação)</label
+                              >
+                              <input
+                                id="year"
+                                formControlName="year"
+                                class="form-control"
+                                [ngClass]="{
+                                  'is-invalid':
+                                    form.get('year')?.invalid &&
+                                    form.get('year')?.touched
+                                }"
+                              />
+
+                              <div class="invalid-feedback">
+                                <span
+                                  style="font-weight: bold; color: #b91c1c"
+                                  >{{
+                                    messageValidationService.getErrorMessage(
+                                      form.get('year'),
+                                      'Ano'
+                                    )
+                                  }}</span
+                                >
+                              </div>
+                            </div>
+
+                            <div class="col-md-4">
+                              <label for="chassi" class="form-label"
+                                >Chassi</label
+                              >
+                              <input
+                                id="chassi"
+                                formControlName="chassi"
+                                class="form-control"
+                                [ngClass]="{
+                                  'is-invalid':
+                                    form.get('chassi')?.invalid &&
+                                    form.get('chassi')?.touched
+                                }"
+                              />
+
+                              <div class="invalid-feedback">
+                                <span
+                                  style="font-weight: bold; color: #b91c1c"
+                                  >{{
+                                    messageValidationService.getErrorMessage(
+                                      form.get('chassi'),
+                                      'Chassi'
+                                    )
+                                  }}</span
+                                >
+                              </div>
+                            </div>
+                          </div>
+                          <!--ROW-->
+                          <div class="row mb-3">
+                            <div class="col-md-4">
+                              <div
+                                class="d-flex align-items-center justify-content-between"
+                              >
+                                <div style="flex: 1">
+                                  <app-selectize
+                                    placeholder="Selecione a cor"
+                                    [items]="colors"
+                                    [control]="colorControl"
+                                    [label]="'Cor'"
+                                    (selectionChange)="
+                                      onSelectColorChange($event)
+                                    "
+                                  >
+                                  </app-selectize>
+                                </div>
+                                <div class="ms-2">
+                                  <button
+                                    type="button"
+                                    class="btn btn-link p-0 text-success"
+                                    (click)="openColorModal()"
+                                    aria-label="Adicionar cor"
+                                    title="Adicionar cor"
+                                  >
+                                    <i class="fas fa-plus-circle"></i>
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div class="col-md-4">
+                              <app-selectize
+                                placeholder="Selecione"
+                                [items]="transmissions"
+                                [control]="transmissionControl"
+                                [label]="'Cambio (transmissão)'"
+                                (selectionChange)="
+                                  onSelectTrasmissionChange($event)
+                                "
+                                [ngClass]="{
+                                  'is-invalid':
+                                    form.get('transmission')?.invalid &&
+                                    form.get('transmission')?.touched
+                                }"
+                              >
+                              </app-selectize>
+                            </div>
+
+                            <div class="col-md-4">
+                              <label for="engine" class="form-label"
+                                >Motor</label
+                              >
+                              <input
+                                id="engine"
+                                formControlName="engine"
+                                class="form-control"
+                                [ngClass]="{
+                                  'is-invalid':
+                                    form.get('engine')?.invalid &&
+                                    form.get('engine')?.touched
+                                }"
+                              />
+
+                              <div class="invalid-feedback">
+                                <span
+                                  style="font-weight: bold; color: #b91c1c"
+                                  >{{
+                                    messageValidationService.getErrorMessage(
+                                      form.get('engine'),
+                                      'Motor'
+                                    )
+                                  }}</span
+                                >
+                              </div>
+                            </div>
+                          </div>
+                          <!--ROW-->
+                          <div class="row mb-3">
+                            <div class="col-md-4">
+                              <label for="plate" class="form-label"
+                                >PLACA</label
+                              >
+                              <div class="plate-display">
+                                <span
+                                  class="plate-number"
+                                  [class.has-plate]="form.get('plate')?.value"
+                                >
+                                  {{ form.get('plate')?.value ? form.get('plate')?.value : 'N. #000001' }}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </form>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!--MENU-->
+                  <app-metro-menu
+                    [orientation]="'horizontal'"
+                    [buttons]="menuButtons"
+                    (buttonClick)="handleMenuAction($event)"
+                  ></app-metro-menu>
+                  </form>
+                  <!-- Modal: Nova Marca -->
+                  <ng-template #brandModal let-modal>
+                    <div class="modal-header">
+                      <h5 class="modal-title">Nova Marca</h5>
+                      <button
+                        type="button"
+                        class="btn-close"
+                        aria-label="Close"
+                        (click)="modal.dismiss('Cross click')"
+                      ></button>
+                    </div>
+                    <div class="modal-body">
+                      <div class="mb-3">
+                        <label for="newBrandName" class="form-label"
+                          >Nome da marca</label
+                        >
+                        <input
+                          id="newBrandName"
+                          type="text"
+                          class="form-control"
+                          [(ngModel)]="newBrandName"
+                          [ngModelOptions]="{standalone: true}"
+                          placeholder="Digite o nome da marca"
+                          (input)="toUppercaseField($event)"
+                        />
+                      </div>
+                      <div class="mb-3">
+                        <label for="newBrandDescription" class="form-label"
+                          >Descrição</label
+                        >
+                        <input
+                          id="newBrandDescription"
+                          type="text"
+                          class="form-control"
+                          [(ngModel)]="newBrandDescription"
+                          [ngModelOptions]="{standalone: true}"
+                          placeholder="Digite a descrição da marca"
+                        />
+                      </div>
+                    </div>
+                    <div class="modal-footer">
+                      <button
+                        type="button"
+                        class="btn btn-light"
+                        (click)="modal.dismiss()"
+                      >
+                        Cancelar
+                      </button>
+                      <button
+                        type="button"
+                        class="btn btn-primary"
+                        (click)="SaveNewBrand(modal)"
+                      >
+                        Salvar
+                      </button>
+                    </div>
+                  </ng-template>
+
+                  <!-- Modal: Novo Modelo -->
+                  <ng-template #modelModal let-modal>
+                    <div class="modal-header">
+                      <h5 class="modal-title">Novo Modelo</h5>
+                      <button
+                        type="button"
+                        class="btn-close"
+                        aria-label="Close"
+                        (click)="modal.dismiss('Cross click')"
+                      ></button>
+                    </div>
+                    <div class="modal-body">
+                      <div class="mb-3">
+                        <label for="newModelName" class="form-label"
+                          >Nome do modelo</label
+                        >
+                        <input
+                          id="newModelName"
+                          type="text"
+                          class="form-control"
+                          [(ngModel)]="newModelName"
+                          [ngModelOptions]="{standalone: true}"
+                          placeholder="Digite o nome do modelo"
+                          (input)="toUppercaseField($event)"
+                        />
+                      </div>
+                      <div class="mb-3">
+                        <label for="newModelDescription" class="form-label"
+                          >Descrição</label
+                        >
+                        <input
+                          id="newModelDescription"
+                          type="text"
+                          class="form-control"
+                          [(ngModel)]="newModelDescription"
+                          [ngModelOptions]="{standalone: true}"
+                          placeholder="Digite a descrição do modelo"
+                        />
+                      </div>
+                      <div class="mb-3">
+                        <label class="form-label">Marca</label>
+                        <div class="alert alert-info" role="alert">
+                          <i class="fas fa-info-circle me-2"></i>
+                          {{ selectedBrandName || 'Nenhuma marca selecionada' }}
+                        </div>
+                      </div>
+                    </div>
+                    <div class="modal-footer">
+                      <button
+                        type="button"
+                        class="btn btn-light"
+                        (click)="modal.dismiss()"
+                      >
+                        Cancelar
+                      </button>
+                      <button
+                        type="button"
+                        class="btn btn-primary"
+                        (click)="SaveNewModel(modal)"
+                        [disabled]="!brandControl.value"
+                      >
+                        Salvar
+                      </button>
+                    </div>
+                  </ng-template>
+
+                  <!-- Modal: Nova Cor -->
+                  <ng-template #colorModal let-modal>
+                    <div class="modal-header">
+                      <h5 class="modal-title">Nova Cor</h5>
+                      <button
+                        type="button"
+                        class="btn-close"
+                        aria-label="Close"
+                        (click)="modal.dismiss('Cross click')"
+                      ></button>
+                    </div>
+                    <div class="modal-body">
+                      <div class="mb-3">
+                        <label for="newColorName" class="form-label"
+                          >Nome da cor</label
+                        >
+                        <input
+                          id="newColorName"
+                          type="text"
+                          class="form-control"
+                          [(ngModel)]="newColorName"
+                          [ngModelOptions]="{standalone: true}"
+                          placeholder="Digite o nome da cor"
+                          (input)="toUppercaseField($event)"
+                        />
+                      </div>
+                      <div class="mb-3">
+                        <label for="newColorDescription" class="form-label"
+                          >Descrição</label
+                        >
+                        <input
+                          id="newColorDescription"
+                          type="text"
+                          class="form-control"
+                          [(ngModel)]="newColorDescription"
+                          [ngModelOptions]="{standalone: true}"
+                          placeholder="Digite a descrição da cor"
+                        />
+                      </div>
+                    </div>
+                    <div class="modal-footer">
+                      <button
+                        type="button"
+                        class="btn btn-light"
+                        (click)="modal.dismiss()"
+                      >
+                        Cancelar
+                      </button>
+                      <button
+                        type="button"
+                        class="btn btn-primary"
+                        (click)="SaveNewColor(modal)"
+                      >
+                        Salvar
+                      </button>
+                    </div>
+                  </ng-template>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,24 @@
+<!-- Plans -->
+<div class="row {{containerClass}}">
+    @for (plan of pricingPlans; track $index) {
+    <div class="col-md-4">
+        <div class="card card-pricing {{pricingCardClass}}" [class.card-pricing-recommended]="plan.recommended">
+            <div class="card-body text-center">
+                <p class="card-pricing-plan-name fw-bold text-uppercase">{{plan.name}}</p>
+                <span class="card-pricing-icon" [class]="plan.recommended ? 'text-white' : 'text-primary'">
+                    <i [class]="plan.icon"></i>
+                </span>
+                <h2 class="card-pricing-price" [class.text-white]="plan.recommended">{{plan.price | currency}} <span>/
+                        {{plan.duration ? plan.duration :
+                        'Month'}}</span></h2>
+                <ul class="card-pricing-features">
+                    @for (feature of plan.features; track $index) {
+                    <li>{{feature}}</li>
+                    }
+                </ul>
+                <button class="btn waves-effect waves-light mt-4 mb-2 width-sm" [class]="plan.recommended ? 'btn-light' : 'btn-primary'">Sign Up</button>
+            </div>
+        </div> <!-- end Pricing_card -->
+    </div> }<!-- end col -->
+</div>
+<!-- end row -->

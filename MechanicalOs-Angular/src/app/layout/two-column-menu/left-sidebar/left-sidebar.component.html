@@ -1,0 +1,19 @@
+<!-- ========== Left Sidebar Start ========== -->
+<div class="left-side-menu" (clickOutside)="hideMenu()" [exclude]="'.open-left'" [excludeBeforeClick]="true">
+    <div class="h-100">
+        <div class="sidebar-content" id="two-column-menu">
+            <!-- Iconmenu -->
+            <app-icon-menu [menuItems]="twoColumnMenuItems" [openMenuItems]="openMenuItems"
+                [activeMenuItems]="activeMenuItems" (toggleMenu)="toggleMenuItem($event)"></app-icon-menu>
+            <!--- Sidemenu -->
+            <app-main-menu [menuItems]="twoColumnMenuItems" [openMenuItems]="openMenuItems"
+                [activeMenuItems]="activeMenuItems" (toggleMenu)="toggleMenuItem($event)" [sidebarType]="sidebarType"
+                *ngIf="showMobileMenu">
+            </app-main-menu>
+            <div class="clearfix"></div>
+        </div>
+        <!-- End Sidebar -->
+    </div>
+    <!-- Sidebar -left -->
+</div>
+<!-- Left Sidebar End -->

@@ -1,0 +1,16 @@
+<div class="widget-rounded-circle card" [class.bg-blue]="user.premiumUser">
+    <div class="card-body">
+        <div class="row align-items-center">
+            <div class="col-auto">
+                <div class="avatar-lg">
+                    <img [src]="user.avatar" class="img-fluid rounded-circle" alt="user-img"
+                        [class.img-thumbnail]="user.premiumUser">
+                </div>
+            </div>
+            <div class="col">
+                <h5 class="mb-1 mt-2 font-16" [class.text-white]="user.premiumUser">{{user.name}}</h5>
+                <p class="mb-2 text-muted" [class.text-white-50]="user.premiumUser">{{user.title}}</p>
+            </div>
+        </div> <!-- end row-->
+    </div>
+</div> <!-- end widget-rounded-circle-->

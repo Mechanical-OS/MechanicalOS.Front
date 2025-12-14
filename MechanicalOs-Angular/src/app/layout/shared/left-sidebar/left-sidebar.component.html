@@ -1,0 +1,151 @@
+<!-- ========== Left Sidebar Start ========== -->
+<div class="app-menu" (clickOutside)="hideMenu()" [exclude]="'.open-left'" [excludeBeforeClick]="true">
+
+    <!-- Brand Logo -->
+    <div class="logo-box">
+        <!-- Brand Logo Light -->
+        <a href="index.html" class="logo-light">
+            <img src="assets/images/logo-light.png" alt="logo" class="logo-lg">
+            <img src="assets/images/logo-sm.png" alt="small logo" class="logo-sm">
+        </a>
+
+        <!-- Brand Logo Dark -->
+        <a href="index.html" class="logo-dark">
+            <img src="assets/images/logo-dark.png" alt="dark logo" class="logo-lg">
+            <img src="assets/images/logo-sm.png" alt="small logo" class="logo-sm">
+        </a>
+    </div>
+
+    <ngx-simplebar class="h-100 scrollbar">
+        <!-- User box -->
+        <div class="user-box text-center">
+            <img [src]="loggedInUser.avatar" alt="user-img" title="Mat Helme" class="rounded-circle avatar-md">
+            <div ngbDropdown>
+                <a href="javascript: void(0);" class="text-dark h5 mt-2 mb-1 d-block" id="profileMenu" ngbDropdownToggle>{{loggedInUser.name}}</a>
+                <div class="user-pro-dropdown" ngbDropdownMenu aria-labelledby="profileMenu">
+
+                    <!-- item-->
+                    <a href="javascript:void(0);" class="notify-item" ngbDropdownItem>
+                        <i class="fe-user me-1"></i>
+                        <span>My Account</span>
+                    </a>
+
+                    <!-- item-->
+                    <a href="javascript:void(0);" class="notify-item" ngbDropdownItem>
+                        <i class="fe-settings me-1"></i>
+                        <span>Settings</span>
+                    </a>
+
+                    <!-- item-->
+                    <a href="javascript:void(0);" class="notify-item" ngbDropdownItem>
+                        <i class="fe-lock me-1"></i>
+                        <span>Lock Screen</span>
+                    </a>
+
+                    <!-- item-->
+                    <a href="javascript:void(0);" class="notify-item" ngbDropdownItem>
+                        <i class="fe-log-out me-1"></i>
+                        <span>Logout</span>
+                    </a>
+
+                </div>
+            </div>
+            <p class="text-muted">Admin Head</p>
+        </div>
+
+        <!--- Sidemenu -->
+
+            <ul class="menu" id="menu">
+                <ng-container *ngFor="let menu of menuItems;let i = index">
+                    <li *ngIf="menu.isTitle" class="menu-title">
+                        {{menu.label}}
+                    </li>
+                    <ng-container *ngIf="!menu.isTitle">
+
+                        <!-- menu item without any child -->
+                        <ng-container *ngIf="!hasSubmenu(menu)">
+                            <ng-container
+                                *ngTemplateOutlet="MenuItem;context:{menu: menu, linkClassName: 'menu-link'}">
+                            </ng-container>
+                        </ng-container>
+
+                        <!-- menu item with child -->
+                        <ng-container *ngIf="hasSubmenu(menu)">
+                            <ng-container
+                                *ngTemplateOutlet="MenuItemWithChildren;context:{menu: menu, linkClassName: 'menu-link', subMenuClassNames: ''}">
+                            </ng-container>
+                        </ng-container>
+                    </ng-container>
+
+                </ng-container>
+            </ul>
+        <!-- End Sidebar -->
+
+        <div class="clearfix"></div>
+
+    </ngx-simplebar>
+
+</div>
+<!-- Left Sidebar End -->
+
+<!-- Reusable Templates -->
+<ng-template #MenuItemWithChildren let-menu="menu" let-linkClassName="linkClassName" let-subMenuClassNames="subMenuClassNames" let-subMenuLabel="subMenuLabel">
+    <li class="menu-item" [ngClass]="{'menuitem-active': activeMenuItems.includes(menu.key)}">
+        <a href="javascript: void(0)" [class]="linkClassName" (click)="toggleMenuItem(menu,collapse)" [attr.aria-expanded]="!menu.collapsed" [attr.data-menu-key]="menu.key">
+            @if(menu.icon){
+            <span class="menu-icon">
+                <i [attr.data-feather]="menu.icon"></i>
+            </span>
+            }
+            <span class="menu-text" [class]="subMenuLabel">{{ menu.label }}</span>
+            @if(menu.badge){
+            <span class="badge bg-{{menu.badge.variant}} rounded-pill ms-auto">{{menu.badge.text}}</span>
+            }@else{
+            <span class="menu-arrow"></span>
+            }
+        </a>
+
+        <div #collapse="ngbCollapse" [(ngbCollapse)]="menu.collapsed">
+            <ul [class]="subMenuClassNames">
+                @for(child of menu.children;track $index){
+                <ng-container>
+                    @if(hasSubmenu(child)){
+                    <ng-container>
+                        <ng-container *ngTemplateOutlet="MenuItemWithChildren;context:{menu: child, linkClassName: 'menu-link', subMenuClassNames: 'sub-menu',subMenuLabel:'menu-text'}">
+                        </ng-container>
+                    </ng-container>
+                    }@else{
+                    <ng-container>
+                        <ng-container *ngTemplateOutlet="MenuItem;context:{menu: child, linkClassName: 'menu-link'}">
+                        </ng-container>
+                    </ng-container>
+                    }
+
+                </ng-container>
+                }
+            </ul>
+        </div>
+    </li>
+</ng-template>
+
+<ng-template #MenuItem let-menu="menu" let-linkClassName="linkClassName">
+    <li class="menu-item" [ngClass]="{'menuitem-active': activeMenuItems.includes(menu.key)}">
+        <ng-container *ngTemplateOutlet="MenuItemLink;context:{menu: menu, className: linkClassName}">
+        </ng-container>
+    </li>
+</ng-template>
+
+<ng-template #MenuItemLink let-menu="menu" let-className="className">
+    <a [routerLink]="menu.link" [class]="className" [ngClass]="{'active': activeMenuItems.includes(menu.key)}" [attr.data-menu-key]="menu.key">
+
+        @if(menu.icon){
+        <span class="menu-icon">
+            <i [attr.data-feather]="menu.icon"></i>
+        </span>
+        }
+        <span class="menu-text">{{ menu.label }}</span>
+        @if(menu.badge){
+        <span class="badge bg-{{menu.badge.variant}}  float-end ms-auto">{{menu.badge.text}}</span>
+        }
+    </a>
+</ng-template>

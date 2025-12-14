@@ -1,0 +1,10 @@
+label.required::after {
+  content: "*";
+  color: red;
+  font: bold;
+}
+
+.form-control:disabled {
+  background-color: #e9ecef !important;
+  opacity: 1;
+}

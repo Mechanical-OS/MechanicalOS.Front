@@ -1,0 +1,41 @@
+name: Deploy Angular Docker Image to Docker Hub
+
+on:
+  push:
+    # O workflow será executado quando houver um push na branch main
+    branches: [ "main" ]
+
+jobs:
+  build_and_push:
+    # O job será executado em um ambiente Ubuntu
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        # Baixa o código do seu repositório
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        # Configura o Buildx, que é necessário para o multi-stage build e builds otimizados
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        # Realiza a autenticação no Docker Hub usando os secrets
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and push Docker image
+        # Realiza o build e o push da imagem
+        uses: docker/build-push-action@v5
+        with:
+          # Define o contexto (onde está o Dockerfile, neste caso, a raiz do repo)
+          context: .
+          # Ativa o push para o Docker Hub
+          push: true
+          # Define o nome e as tags da imagem
+          tags: ${{ secrets.DOCKER_USERNAME }}/mechanicalos-webapp:latest
+          # Define que queremos builds otimizados e seguros
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

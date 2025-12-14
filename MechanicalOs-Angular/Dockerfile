@@ -31,7 +31,7 @@ COPY ./nginx-custom.conf /etc/nginx/conf.d/default.conf
 
 # Copia os arquivos estáticos compilados da Stage 1 (builder) para o diretório do Nginx
 # OBS: O caminho de origem (dist/nome-do-seu-projeto) deve ser ajustado para o nome real da pasta gerada pelo seu 'npm run build'
-COPY --from=builder /app/dist/MechanicalOs-Angular /usr/share/nginx/html
+COPY --from=builder /app/dist/mechanical-os /usr/share/nginx/html
 
 # A porta padrão do Nginx é 80, que é a que mapeamos no Nginx do Host
 EXPOSE 80

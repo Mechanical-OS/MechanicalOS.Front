@@ -11,7 +11,7 @@
   },
   "private": true,
   "dependencies": {
-    "@angular-slider/ngx-slider": "^18.0.0",
+    "@angular-slider/ngx-slider": "^18.2.10",
     "@angular/animations": "^18.2.10",
     "@angular/cdk": "^18.2.10",
     "@angular/common": "^18.2.10",
@@ -53,7 +53,7 @@
     "ng2-charts": "^6.0.1",
     "ngx-countup": "^13.2.0",
     "ngx-dropzone": "^3.1.0",
-    "ngx-infinite-scroll": "^18.0.0",
+    "ngx-infinite-scroll": "^18.2.10",
     "ngx-joyride": "^2.5.0",
     "ngx-lightbox": "^3.0.0",
     "ngx-quill": "^26.0.5",
@@ -68,8 +68,8 @@
     "zone.js": "0.14.7"
   },
   "devDependencies": {
-    "@angular-devkit/build-angular": "^18.0.6",
-    "@angular/cli": "^18.0.6",
+    "@angular-devkit/build-angular": "^18.2.10",
+    "@angular/cli": "^18.2.10",
     "@angular/compiler-cli": "^18.2.10",
     "@angular/localize": "18.2.10",
     "@types/jasmine": "^5.1.4",

@@ -1,12 +1,12 @@
 # --- STAGE 1: BUILD (Compilação) ---
 # Usa uma imagem base que contém o Node.js e o NPM para compilar o código
-FROM node:20.10-alpine AS builder
+FROM node:lts-alpine
 
 # Define o diretório de trabalho dentro do container
 WORKDIR /app
 
 # Copia os arquivos de definição de dependências e instala
-COPY package.json package-lock.json ./
+COPY package*.json ./
 RUN npm install
 
 # Copia todo o código-fonte

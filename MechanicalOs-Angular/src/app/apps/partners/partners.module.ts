@@ -11,6 +11,7 @@ import { PartnersRoutingModule } from "./partners-routing.module";
 import { ReactiveFormsModule } from '@angular/forms';
 import { PartnersProductsComponent } from './partners-products/partners-products.component';
 import { FormsModule } from '@angular/forms';
+import { NgbModule } from "@ng-bootstrap/ng-bootstrap";
 
 @NgModule({
     declarations: [PartnersComponent, PartnerRegistrationComponent, PartnersProductsComponent],
@@ -24,7 +25,8 @@ import { FormsModule } from '@angular/forms';
             UiModule,
             PartnersRoutingModule,
             ReactiveFormsModule,
-            FormsModule 
+            FormsModule,
+            NgbModule
         ]
 })
 export class PartnersModule { }

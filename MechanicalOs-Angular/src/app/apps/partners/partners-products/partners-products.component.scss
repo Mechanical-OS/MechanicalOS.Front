@@ -1,0 +1,187 @@
+.container-fluid {
+  margin-top: 22px;
+}
+
+.product-card {
+  border: 1px solid #e9ecef;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+  display: flex;
+  flex-direction: column;
+
+  &:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: translateY(-4px);
+  }
+
+  .card-img-top {
+    height: 140px;
+    object-fit: contain;
+    padding: 0.75rem;
+  }
+
+  .card-body {
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+  }
+
+  .card-title {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+  }
+
+  .card-text {
+    font-size: 0.85rem;
+    color: #6c757d;
+    flex-grow: 1;
+    margin-bottom: 1rem;
+  }
+
+  .price {
+    font-size: 1.25rem;
+    font-weight: bold;
+    color: #38a583;
+    margin-bottom: 1rem;
+    margin-top: auto;
+  }
+
+  .btn-solicitar {
+    background-color: #38a583;
+    color: white;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.5rem;
+    padding: 0.5rem;
+  }
+}
+
+// Estilos para o resumo do orçamento
+.summary-item,
+.summary-total {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 0.9rem;
+}
+
+.summary-total {
+  border-bottom: none;
+  margin-top: 1rem;
+  font-size: 1.1rem;
+}
+
+.action-buttons-container {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn-enviar-pedido {
+  background-color: #38a583;
+  color: white;
+  font-weight: bold;
+  text-transform: uppercase;
+  padding: 0.75rem;
+  font-size: 0.9rem;
+  border: none;
+  transition: background-color 0.2s ease;
+  flex-grow: 2;
+
+  &:hover {
+    background-color: #2c8467;
+  }
+
+  &:disabled {
+    background-color: #a0a0a0;
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+}
+
+.btn-pdf {
+  background-color: #dc3545;
+  color: white;
+  font-weight: bold;
+  text-transform: uppercase;
+  padding: 0.75rem;
+  font-size: 0.9rem;
+  border: none;
+  transition: background-color 0.2s ease;
+  flex-grow: 1;
+
+  &:hover {
+    background-color: #c82333;
+  }
+}
+
+.cart-items-container {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.cart-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #f0f0f0;
+
+  &:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+  }
+}
+
+.item-image {
+  width: 50px;
+  height: 50px;
+  object-fit: contain;
+  border-radius: 4px;
+  border: 1px solid #eee;
+  flex-shrink: 0;
+}
+
+.item-details {
+  flex-grow: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.item-name {
+  font-weight: 500;
+  font-size: 0.9rem;
+  line-height: 1.2;
+  margin-right: 1rem;
+}
+
+.item-price {
+  font-size: 0.9rem;
+  color: #333;
+  font-weight: 500;
+}
+
+.item-remove-btn {
+  border: none;
+  background-color: transparent;
+  padding: 0.25rem 0.5rem;
+  flex-shrink: 0;
+}
+
+.summary-card-sticky {
+  position: sticky;
+  top: calc(60px + 1.5rem);
+  z-index: 100;
+}
+
+@media (max-width: 991px) {
+  .summary-card-sticky {
+    position: relative;
+    top: auto;
+    margin-top: 2rem;
+  }
+}

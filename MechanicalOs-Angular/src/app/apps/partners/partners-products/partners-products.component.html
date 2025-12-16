@@ -1,0 +1,174 @@
+<div class="container-fluid">
+  <div class="row">
+    <!-- Coluna Esquerda: Filtros e Produtos -->
+    <div class="col-lg-8">
+      <div class="card">
+        <div class="card-body">
+          <h4 class="fw-bold">Estoque: {{ partnerName }}</h4>
+          <p class="text-muted">Obs. O estoque do parceiro pode estar desatualizado, e se trata de um orçamento</p>
+          <div class="row my-4">
+            <div class="col-12">
+              <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  placeholder="Pesquisar por nome ou descrição do produto..."
+                  [(ngModel)]="searchTerm"
+                  (input)="onSearchTermChange()">
+              </div>
+            </div>
+          </div>
+
+          <!-- Filtros -->
+          <div class="row my-4">
+            <div class="col-md-4">
+              <label class="form-label">Filtrar por Marca</label>
+              <select class="form-select" [(ngModel)]="filters.brand" (change)="onFilterChange()">
+                <option value="">Todas as Marcas</option>
+                <option *ngFor="let brand of availableBrands" [value]="brand">{{ brand }}</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Filtrar por Modelo de Veículo</label>
+              <select class="form-select" [(ngModel)]="filters.model" (change)="onFilterChange()">
+                <option value="">Todos os Modelos</option>
+                <option *ngFor="let model of availableModels" [value]="model">{{ model }}</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Filtrar por ano modelo</label>
+              <select class="form-select" [(ngModel)]="filters.year" (change)="onFilterChange()">
+                <option value="">Todos os Anos</option>
+                <option *ngFor="let year of availableYears" [value]="year">{{ year }}</option>
+              </select>
+            </div>
+          </div>
+          
+          <!-- Seção de Listagem de Produtos -->
+          <div *ngIf="isLoading" class="text-center p-5">
+            <div class="spinner-border text-primary" role="status"></div>
+          </div>
+
+          <div *ngIf="!isLoading">
+            <div class="row">
+              <div *ngFor="let product of paginatedProducts" class="col-12 col-sm-6 col-md-4 col-lg-3 mb-4">
+                <div class="card product-card h-100">
+                  <img src="{{ product.imageUrl || 'https://via.placeholder.com/300x200.png?text=Sem+Imagem' }}" class="card-img-top" alt="{{ product.name }}">
+                  <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">{{ product.name }}</h5>
+                    <p class="card-text text-muted">{{ product.description }}</p>
+                    <h4 class="price mt-auto">{{ product.price | currency:'BRL' }}</h4>
+                    <button class="btn btn-solicitar w-100" (click)="addToCart(product)">
+                      Adicionar ao orçamento
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div *ngIf="paginatedProducts.length === 0" class="text-center p-5">
+              <p class="text-muted">Nenhum produto encontrado com os filtros selecionados.</p>
+            </div>
+          </div>
+          
+          <!-- SEÇÃO DE PAGINAÇÃO -->
+          <div *ngIf="!isLoading && totalRecords > 0" class="d-flex flex-wrap justify-content-between align-items-center mt-3">
+            <div class="d-flex align-items-center gap-2">
+              <select class="form-select form-select-sm" style="width: auto;" 
+                      [(ngModel)]="pageSize" 
+                      (ngModelChange)="onPageSizeChange()">
+                  <option *ngFor="let size of availablePageSizes" [ngValue]="size">{{size}} por página</option>
+              </select>
+              <div class="text-muted">
+                  Mostrando {{startIndex}} a {{endIndex}} de {{totalRecords}} registros
+              </div>
+            </div>
+
+            <ngb-pagination class="pagination-rounded custom-pagination mb-0" 
+                [collectionSize]="totalRecords"
+                [(page)]="page" 
+                [maxSize]="3" 
+                [rotate]="true" 
+                [pageSize]="pageSize"
+                (pageChange)="onPageChange()">
+            </ngb-pagination>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Coluna Direita: Resumo do Orçamento -->
+    <div class="col-lg-4">
+      <div class="card summary-card-sticky">
+        <div class="card-body">
+          <h5 class="fw-bold mb-3">Resumo do orçamento</h5>
+          <div class="cart-items-container mb-3">
+            <div *ngIf="cart.length === 0" class="text-center text-muted p-4">
+              <i class="fas fa-shopping-cart fa-2x mb-2"></i>
+              <p>Seu orçamento está vazio.</p>
+            </div>
+
+            <div *ngFor="let item of cart; let i = index" class="cart-item">
+              <img [src]="item.imageUrl || 'Foto de perfil.jpg'" alt="{{ item.name }}" class="item-image">
+              <div class="item-details">
+                <span class="item-name">{{ item.name }}</span>
+                <span class="item-price">{{ item.price | currency:'BRL' }}</span>
+              </div>
+              <button class="btn btn-sm btn-outline-danger item-remove-btn" (click)="removeFromCart(i)">
+                <i class="fas fa-trash-alt"></i>
+              </button>
+            </div>
+          </div>
+
+          <div *ngIf="cart.length > 0">
+            <hr>
+            <div class="summary-item">
+              <span>Sub total:</span>
+              <span>{{ subTotal | currency:'BRL' }}</span>
+            </div>
+            
+            <div class="summary-total mt-2">
+              <span class="fw-bold">Total:</span>
+              <span class="fw-bold fs-5">{{ total | currency:'BRL' }}</span>
+            </div>
+
+            <div class="action-buttons-container mt-4">
+              <button class="btn btn-pdf">
+                <i class="fas fa-file-pdf me-1"></i>
+                GERAR PDF
+              </button>
+              <button class="btn btn-enviar-pedido" (click)="openConfirmationModal()" [disabled]="cart.length === 0">
+                ENVIAR PEDIDO
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<ng-template #confirmationModal let-modal>
+  <div class="modal-header">
+    <h5 class="modal-title">
+      <i class="fas fa-check-circle text-success me-2"></i>
+      Confirmar Orçamento
+    </h5>
+    <button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss()"></button>
+  </div>
+  <div class="modal-body">
+    <p>Você está prestes a enviar um pedido com <strong>{{ cart.length }} item(s)</strong>.</p>
+    <p class="fw-bold fs-5">Valor Total: {{ total | currency:'BRL' }}</p>
+    <hr>
+    <p>Deseja confirmar o envio do pedido?</p>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">Cancelar</button>
+    <button type="button" class="btn btn-success" (click)="confirmOrder(modal)">
+      <i class="fas fa-paper-plane me-1"></i>
+      Confirmar e Enviar
+    </button>
+  </div>
+</ng-template>
+
+<app-metro-menu (buttonClick)="handleMenuAction($event)"></app-metro-menu>

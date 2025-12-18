@@ -14,8 +14,12 @@ interface Product {
   brand: string; 
   model: string; 
   year: number;
+  quantityToAdd: number;
 }
 
+interface CartItem extends Product {
+  quantity: number;
+}
 @Component({
   selector: 'app-products',
   templateUrl: './partners-products.component.html',
@@ -42,10 +46,11 @@ export class PartnersProductsComponent implements OnInit, AfterViewInit  {
     model: '', 
     year: '' 
   };
-  cart: Product[] = [];
+  cart: CartItem[] = [];
   subTotal: number = 0;
   total: number = 0;
   searchTerm: string = '';
+  totalCartItems: number = 0;
 
   @ViewChild('confirmationModal', { static: false }) confirmationModal!: TemplateRef<any>;
 
@@ -71,16 +76,16 @@ export class PartnersProductsComponent implements OnInit, AfterViewInit  {
   
   loadInitialMockData(): void {
     this.allProducts = [
-        { id: 101, name: 'Caixa de direção', description: 'para Honda civic 2017', price: 1900.00, imageUrl: 'assets/images/Foto-de-perfil.jpg', brand: 'HONDA', model: 'CIVIC', year: 2017 },
-        { id: 102, name: 'Filtro de Ar', description: 'para Fiat Uno 2015', price: 75.50, imageUrl: 'assets/images/bg-auth_old.jpg', brand: 'FIAT', model: 'UNO', year: 2015 },
-        { id: 103, name: 'Vela de Ignição', description: 'para VW Gol G5', price: 120.00, imageUrl: 'assets/images/bg-auth.jpg', brand: 'VW', model: 'GOL', year: 2010 },
-        { id: 104, name: 'Amortecedor Dianteiro', description: 'para Honda civic 2018', price: 800.00, imageUrl: 'assets/images/logo-sm-light.png', brand: 'HONDA', model: 'CIVIC', year: 2018 },
-        { id: 105, name: 'Bomba de Combustível', description: 'para VW Gol G5', price: 250.00, imageUrl: 'assets/images/Foto-de-perfil.jpg', brand: 'VW', model: 'GOL', year: 2010 },
-        { id: 106, name: 'Correia Dentada', description: 'para Fiat Uno 2016', price: 95.00, imageUrl: 'assets/images/bg-auth_old.jpg', brand: 'FIAT', model: 'UNO', year: 2016 },
-        { id: 107, name: 'Pastilha de Freio', description: 'para Honda Fit 2019', price: 180.00, imageUrl: 'assets/images/bg-auth.jpg', brand: 'HONDA', model: 'FIT', year: 2019 },
-        { id: 108, name: 'Óleo de Motor 5W30', description: 'Sintético', price: 55.00, imageUrl: 'assets/images/logo-sm-light.png', brand: 'MOBIL', model: 'GERAL', year: 2023 },
-        { id: 109, name: 'Pneu Aro 15', description: '195/65R15', price: 400.00, imageUrl: 'assets/images/Foto-de-perfil.jpg', brand: 'PIRELLI', model: 'GERAL', year: 2023 },
-        { id: 110, name: 'Bateria 60Ah', description: '12V', price: 350.00, imageUrl: 'assets/images/bg-auth_old.jpg', brand: 'MOURA', model: 'GERAL', year: 2023 },
+        { id: 101, name: 'Caixa de direção', description: 'para Honda civic 2017', price: 1900.00, imageUrl: 'assets/images/Foto-de-perfil.jpg', brand: 'HONDA', model: 'CIVIC', year: 2017, quantityToAdd: 1 },
+        { id: 102, name: 'Filtro de Ar', description: 'para Fiat Uno 2015', price: 75.50, imageUrl: 'assets/images/bg-auth_old.jpg', brand: 'FIAT', model: 'UNO', year: 2015, quantityToAdd: 1 },
+        { id: 103, name: 'Vela de Ignição', description: 'para VW Gol G5', price: 120.00, imageUrl: 'assets/images/bg-auth.jpg', brand: 'VW', model: 'GOL', year: 2010, quantityToAdd: 1 },
+        { id: 104, name: 'Amortecedor Dianteiro', description: 'para Honda civic 2018', price: 800.00, imageUrl: 'assets/images/logo-sm-light.png', brand: 'HONDA', model: 'CIVIC', year: 2018, quantityToAdd: 1 },
+        { id: 105, name: 'Bomba de Combustível', description: 'para VW Gol G5', price: 250.00, imageUrl: 'assets/images/Foto-de-perfil.jpg', brand: 'VW', model: 'GOL', year: 2010, quantityToAdd: 1 },
+        { id: 106, name: 'Correia Dentada', description: 'para Fiat Uno 2016', price: 95.00, imageUrl: 'assets/images/bg-auth_old.jpg', brand: 'FIAT', model: 'UNO', year: 2016, quantityToAdd: 1 },
+        { id: 107, name: 'Pastilha de Freio', description: 'para Honda Fit 2019', price: 180.00, imageUrl: 'assets/images/bg-auth.jpg', brand: 'HONDA', model: 'FIT', year: 2019, quantityToAdd: 1 },
+        { id: 108, name: 'Óleo de Motor 5W30', description: 'Sintético', price: 55.00, imageUrl: 'assets/images/logo-sm-light.png', brand: 'MOBIL', model: 'GERAL', year: 2023, quantityToAdd: 1 },
+        { id: 109, name: 'Pneu Aro 15', description: '195/65R15', price: 400.00, imageUrl: 'assets/images/Foto-de-perfil.jpg', brand: 'PIRELLI', model: 'GERAL', year: 2023, quantityToAdd: 1 },
+        { id: 110, name: 'Bateria 60Ah', description: '12V', price: 350.00, imageUrl: 'assets/images/bg-auth_old.jpg', brand: 'MOURA', model: 'GERAL', year: 2023, quantityToAdd: 1 },
     ];
     this.populateFilterOptions();
     this.fetchProducts();
@@ -141,9 +146,44 @@ export class PartnersProductsComponent implements OnInit, AfterViewInit  {
     this.availableYears = [...new Set(this.allProducts.map(p => p.year))].sort((a, b) => b - a);
   }
 
-  addToCart(product: Product): void { this.cart.push(product); this.calculateSummary(); }
-  removeFromCart(index: number): void { if (index > -1) { this.cart.splice(index, 1); this.calculateSummary(); } }
-  calculateSummary(): void { this.subTotal = this.cart.reduce((sum, item) => sum + item.price, 0); this.total = this.subTotal; }
+  addToCart(product: Product): void {
+    const existingItem = this.cart.find(item => item.id === product.id);
+    const quantityToAdd = product.quantityToAdd > 0 ? product.quantityToAdd : 1;
+
+    if (existingItem) {
+      existingItem.quantity += quantityToAdd;
+    } else {
+      this.cart.push({ ...product, quantity: quantityToAdd });
+    }
+
+    product.quantityToAdd = 1;
+
+    this.calculateSummary();
+    //this.notificationService.showMessage(`${quantityToAdd}x ${product.name} adicionado(s) ao orçamento!`, 'success');
+  }
+
+  removeFromCart(index: number): void {
+    if (index > -1) {
+      this.cart.splice(index, 1);
+      this.calculateSummary();
+    }
+  }
+
+  updateQuantity(index: number, newQuantity: string): void {
+    const quantity = parseInt(newQuantity, 10);
+    if (quantity > 0) {
+      this.cart[index].quantity = quantity;
+    } else {
+      this.cart.splice(index, 1);
+    }
+    this.calculateSummary();
+  }
+
+  calculateSummary(): void {
+    this.subTotal = this.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    this.total = this.subTotal;
+    this.totalCartItems = this.cart.reduce((sum, item) => sum + item.quantity, 0);
+  }
   
   openConfirmationModal(): void {
     if (this.cart.length === 0) {

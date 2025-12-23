@@ -124,9 +124,9 @@ export class NotificationService {
     }
   }
 
-  showMessage(message: string, title: string = 'Sucesso') {
+  showMessage(message: string, title: string = 'Sucesso'): Promise<any> {
     this.hideLoading();
-    Swal.fire({
+    return Swal.fire({
       title,
       text: message,
       icon: title == 'Sucesso' ? 'success' : 'info',
@@ -146,6 +146,7 @@ export class NotificationService {
       showConfirmButton: false,
       timer: 3000,
       timerProgressBar: true,
+      backdrop: false,
       didOpen: (toast) => {
         toast.addEventListener('mouseenter', Swal.stopTimer)
         toast.addEventListener('mouseleave', Swal.resumeTimer)

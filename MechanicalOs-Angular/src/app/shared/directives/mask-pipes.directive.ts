@@ -65,3 +65,23 @@ export class CnpjPipe implements PipeTransform {
     return cnpj;
   }
 }
+@Pipe({
+  name: 'brlCurrency'
+})
+export class BrlCurrencyPipe implements PipeTransform {
+  transform(value: number | string | null | undefined): string {
+    if (value === null || value === undefined) {
+      return '';
+    }
+    
+    const numberValue = Number(value);
+    if (isNaN(numberValue)) {
+      return '';
+    }
+    
+    return numberValue.toLocaleString('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    });
+  }
+}

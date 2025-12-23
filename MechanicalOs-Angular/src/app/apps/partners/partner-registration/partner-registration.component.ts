@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit, TemplateRef, ViewChild } from '@angular/core';
+import { Component, OnInit, AfterViewInit, TemplateRef, ViewChild, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { BreadcrumbItem } from 'src/app/shared/page-title/page-title.model';
@@ -7,7 +7,6 @@ import { MetroMenuService } from 'src/app/shared/metro-menu/metro-menu.service';
 import { MetroButton } from 'src/app/shared/metro-menu/metro-menu.component';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { PartnersService } from '../partners.service';
-import { HttpErrorResponse } from '@angular/common/http';
 import { ViaCepService } from 'src/app/Http/via-cep/via-cep.service';
 import { FormValidationService } from 'src/app/shared/services/form-validation.service';
 import { ZipCodeResponse } from 'src/app/Http/via-cep/zipcode-response'
@@ -17,7 +16,7 @@ import { PartnerStore } from 'src/app/apps/Shared/models/partner-store.model';
   templateUrl: './partner-registration.component.html',
   styleUrls: ['./partner-registration.component.scss']
 })
-export class PartnerRegistrationComponent implements OnInit, AfterViewInit {
+export class PartnerRegistrationComponent implements OnInit, AfterViewInit, OnDestroy {
 
   pageTitle: BreadcrumbItem[] = [];
   form!: FormGroup;
@@ -43,7 +42,8 @@ export class PartnerRegistrationComponent implements OnInit, AfterViewInit {
     private modalService: NgbModal,
     private partnersService: PartnersService,
     private viaCepService: ViaCepService,
-    public messageValidationService: FormValidationService
+    public messageValidationService: FormValidationService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -53,13 +53,14 @@ export class PartnerRegistrationComponent implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit(): void {
-    this.metroMenuService.setButtons(this.menuButtons);
+    setTimeout(() => {
+      this.metroMenuService.setButtons(this.menuButtons);
+      this.cdr.detectChanges();
+    }, 0);
+  }
 
-    if (this.form) {
-      this.form.valueChanges.subscribe(() => {
-        this.updateSaveButtonState();
-      });
-    }
+  ngOnDestroy(): void {
+    this.metroMenuService.setButtons([]);
   }
 
   setupPageTitle(): void {
@@ -126,23 +127,23 @@ export class PartnerRegistrationComponent implements OnInit, AfterViewInit {
     this.form.get('address.cep')?.setValue(value, { emitEvent: false });
   }
 
-  getZipCode(): void {
+  async getZipCode(): Promise<void> {
     const cepControl = this.form.get('address.cep');
     if (cepControl && cepControl.valid && cepControl.value.length === 8) {
-      this.viaCepService.getCep(cepControl.value).subscribe({
-        next: (ret: ZipCodeResponse) => {
-          this.form.get('address')?.patchValue({
-            rua: ret.logradouro,
-            uf: ret.uf,
-            cidade: ret.localidade,
-            bairro: ret.bairro,
-            complemento: ret.complemento
-          });
-        },
-        error: (error: HttpErrorResponse) => {
-          this.notificationService.showMessage('CEP inválido ou não encontrado.', 'error');
-        }
-      });
+      try {
+        const ret: ZipCodeResponse = await this.viaCepService.getCep(cepControl.value).toPromise();
+        this.form.get('address')?.patchValue({
+          rua: ret.logradouro,
+          uf: ret.uf,
+          cidade: ret.localidade,
+          bairro: ret.bairro,
+          complemento: ret.complemento
+        });
+      } catch (error) {
+        this.metroMenuService.setButtons([]);
+        await this.notificationService.showMessage('CEP inválido ou não encontrado.', 'error');
+        this.metroMenuService.setButtons(this.menuButtons);
+      }
     }
   }
 
@@ -171,93 +172,117 @@ export class PartnerRegistrationComponent implements OnInit, AfterViewInit {
     }
   }
 
-  handleFile(file: File): void {
+  async handleFile(file: File): Promise<void> {
     if (file && (file.type === 'text/csv' || file.name.endsWith('.csv'))) {
       this.selectedFile = file;
       this.selectedFileName = file.name;
-      
-      this.validateCsvHeaders(file); 
-      
+      this.validateCsvHeaders(file);
       this.updateSaveButtonState();
+
     } else {
       this.selectedFile = null;
       this.selectedFileName = '';
       this.isFileValid = false;
-      this.notificationService.showMessage('Por favor, selecione um arquivo no formato .csv', 'error');
+      
+      this.metroMenuService.setButtons([]);
+      await this.notificationService.showMessage('Por favor, selecione um arquivo no formato .csv', 'Erro');
+      this.metroMenuService.setButtons(this.menuButtons);
     }
   }
+
   
-  onSubmit(): void {
+  async onSubmit(): Promise<void> {
     if (!this.form.valid) {
-      this.notificationService.showMessage('Por favor, preencha todos os campos obrigatórios do formulário.', 'error');
+      this.metroMenuService.setButtons([]);
+      await this.notificationService.showMessage('Por favor, preencha todos os campos obrigatórios.', 'Erro');
+      this.metroMenuService.setButtons(this.menuButtons);
       this.form.markAllAsTouched();
       return;
     }
     if (!this.selectedFile || !this.isFileValid) {
-      this.notificationService.showMessage('Por favor, adicione um arquivo CSV de estoque válido.', 'error');
+      this.metroMenuService.setButtons([]);
+      await this.notificationService.showMessage('Por favor, adicione um arquivo CSV de estoque válido.', 'Erro');
+      this.metroMenuService.setButtons(this.menuButtons);
       return;
     }
 
     const storeData: PartnerStore = this.form.value;
-
     if (this.isEditMode && this.storeId) {
       storeData.id = parseInt(this.storeId, 10);
     }
 
-    this.partnersService.savePartnerStore(storeData, this.selectedFile).subscribe({
-      next: (response) => {
-        if(response.statusCode === 200) {
-            this.notificationService.showMessage('Loja Parceira salva com sucesso!', 'success');
-            this.form.reset();
-            //this.router.navigate(['/apps/partners']);
-        } else {
-            this.notificationService.showMessage(response.message || 'Erro ao salvar.', 'error');
-        }
-      },
-      error: (err) => {
-        console.error('Erro ao salvar loja:', err);
-        this.notificationService.showMessage('Ocorreu um erro de comunicação ao salvar a loja.', 'error');
+    try {
+      this.metroMenuService.setButtons([]);
+      const response = await this.partnersService.savePartnerStore(storeData, this.selectedFile).toPromise();
+
+      if (response && response.statusCode === 200) {
+        await this.notificationService.showMessage('Loja Parceira salva com sucesso!', 'Sucesso');
+        this.form.reset();
+        this.router.navigate(['apps/partners']);
+      } else {
+        await this.notificationService.showMessage(response?.message || 'Erro ao salvar.', 'Erro');
+        this.metroMenuService.setButtons(this.menuButtons);
       }
-    });
+    } catch (err) {
+      console.error('Erro ao salvar loja:', err);
+      await this.notificationService.showMessage('Ocorreu um erro de comunicação ao salvar a loja.', 'Erro');
+      this.metroMenuService.setButtons(this.menuButtons);
+    }
   }
 
-  private validateCsvHeaders(file: File): void {
-    const reader = new FileReader();
+  private async validateCsvHeaders(file: File): Promise<void> {
+    return new Promise(async (resolve) => {
+      const reader = new FileReader();
 
-    reader.onload = (e) => {
-      const text = reader.result as string;
-      const firstLine = text.slice(0, text.indexOf('\n')).trim();
-      const headers = firstLine.toLowerCase().split(',').map(h => h.replace(/"/g, '').trim());
-      
-      const requiredColumns = ['id', 'name', 'code', 'price', 'status', 'description'];
-      
-      const missingColumns = requiredColumns.filter(col => !headers.includes(col.toLowerCase()));
-
-      if (missingColumns.length > 0) {
-        this.validationResult = {
-          success: false,
-          messages: missingColumns.map(col => `Coluna obrigatória não encontrada: "${col}"`)
-        };
-        this.modalService.open(this.validationModal, { centered: true });
+      reader.onload = async (e) => {
+        const text = reader.result as string;
+        const firstLine = text.slice(0, text.indexOf('\n')).trim();
+        const headers = firstLine.toLowerCase().split(',').map(h => h.replace(/"/g, '').trim());
         
-        this.isFileValid = false;
-        this.selectedFile = null; 
-        this.selectedFileName = `Erro no arquivo: ${file.name}`;
+        const requiredColumns = ['id', 'name', 'code', 'price', 'status', 'description'];
+        const missingColumns = requiredColumns.filter(col => !headers.includes(col.toLowerCase()));
+
+        if (missingColumns.length > 0) {
+          this.validationResult = {
+            success: false,
+            messages: missingColumns.map(col => `Coluna obrigatória não encontrada: "${col}"`)
+          };
+          
+          this.metroMenuService.setButtons([]); 
+          const modalRef = this.modalService.open(this.validationModal, { centered: true });
+          
+          modalRef.result.then(
+            () => { this.metroMenuService.setButtons(this.menuButtons); },
+            () => { this.metroMenuService.setButtons(this.menuButtons); }
+          );
+          
+          this.isFileValid = false;
+          this.selectedFile = null; 
+          this.selectedFileName = `Erro no arquivo: ${file.name}`;
+          
+        } else {
+          this.isFileValid = true;
+          this.metroMenuService.setButtons([]);
+          await this.notificationService.showMessage('Arquivo CSV validado com sucesso!', 'Sucesso');
+          this.metroMenuService.setButtons(this.menuButtons);
+        }
         
-      } else {
-        this.isFileValid = true;
-        this.notificationService.showMessage('Arquivo CSV validado com sucesso!', 'success');
-      }
-      this.updateSaveButtonState();
-    };
+        this.updateSaveButtonState();
+        resolve();
+      };
 
-    reader.onerror = (e) => {
-        console.error("Erro ao ler o arquivo:", reader.error);
-        this.notificationService.showMessage('Ocorreu um erro ao tentar ler o arquivo.', 'error');
-        this.isFileValid = false;
-    };
+      reader.onerror = async (e) => {
+          console.error("Erro ao ler o arquivo:", reader.error);
+          this.metroMenuService.setButtons([]);
+          await this.notificationService.showMessage('Ocorreu um erro ao tentar ler o arquivo.', 'error');
+          this.metroMenuService.setButtons(this.menuButtons);
+          
+          this.isFileValid = false;
+          resolve();
+      };
 
-    reader.readAsText(file);
+      reader.readAsText(file);
+    });
   }
   
   menuButtons: MetroButton[] = [

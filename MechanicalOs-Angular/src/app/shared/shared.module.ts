@@ -4,7 +4,7 @@ import { MetroMenuComponent } from './metro-menu/metro-menu.component';
 import { SelectizeComponent } from './selectize/selectize.component';
 import { ServiceSearchModule } from './service-search/service-search.module';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { CpfPipe, RgPipe, PhonePipe, CepPipe, CnpjPipe } from './directives/mask-pipes.directive'; 
+import { CpfPipe, RgPipe, PhonePipe, CepPipe, CnpjPipe, BrlCurrencyPipe  } from './directives/mask-pipes.directive'; 
 
 
 @NgModule({
@@ -14,7 +14,8 @@ import { CpfPipe, RgPipe, PhonePipe, CepPipe, CnpjPipe } from './directives/mask
     RgPipe, 
     PhonePipe, 
     CepPipe,
-    CnpjPipe
+    CnpjPipe,
+    BrlCurrencyPipe 
   ],
   imports: [
     CommonModule,
@@ -29,7 +30,8 @@ import { CpfPipe, RgPipe, PhonePipe, CepPipe, CnpjPipe } from './directives/mask
     RgPipe, 
     PhonePipe, 
     CepPipe,
-    CnpjPipe
+    CnpjPipe,
+    BrlCurrencyPipe 
   ]
 })
 export class SharedModule { }

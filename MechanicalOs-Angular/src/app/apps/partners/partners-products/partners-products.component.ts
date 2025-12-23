@@ -53,6 +53,9 @@ export class PartnersProductsComponent implements OnInit, AfterViewInit  {
   totalCartItems: number = 0;
 
   @ViewChild('confirmationModal', { static: false }) confirmationModal!: TemplateRef<any>;
+  @ViewChild('deleteConfirmationModal', { static: false }) deleteConfirmationModal!: TemplateRef<any>;
+  itemToDelete: CartItem | null = null;
+  itemToDeleteIndex: number = -1;
 
   constructor(
     private route: ActivatedRoute,
@@ -152,20 +155,50 @@ export class PartnersProductsComponent implements OnInit, AfterViewInit  {
 
     if (existingItem) {
       existingItem.quantity += quantityToAdd;
+      const itemIndex = this.cart.indexOf(existingItem);
+      if (itemIndex > -1) {
+        const [item] = this.cart.splice(itemIndex, 1);
+        this.cart.unshift(item);
+      }
     } else {
-      this.cart.push({ ...product, quantity: quantityToAdd });
+      this.cart.unshift({ ...product, quantity: quantityToAdd });
     }
 
     product.quantityToAdd = 1;
-
     this.calculateSummary();
-    //this.notificationService.showMessage(`${quantityToAdd}x ${product.name} adicionado(s) ao orçamento!`, 'success');
+    
+    this.notificationService.showToast(
+      `${quantityToAdd}x ${product.name} adicionado(s) ao orçamento!`, 
+      'success'
+    );
   }
 
-  removeFromCart(index: number): void {
-    if (index > -1) {
-      this.cart.splice(index, 1);
+  openDeleteConfirmation(index: number, item: CartItem): void {
+    this.itemToDelete = item;
+    this.itemToDeleteIndex = index;
+    this.metroMenuService.setButtons([]); 
+    const modalRef = this.modalService.open(this.deleteConfirmationModal, { centered: true });
+    modalRef.result.then(
+      () => {
+        this.confirmRemoveItem();
+      },
+      () => {
+        this.metroMenuService.setButtons(this.menuButtons);
+      }
+    );
+  }
+
+  async confirmRemoveItem(): Promise<void> {
+    if (this.itemToDeleteIndex > -1) {
+      const removedItemName = this.itemToDelete?.name;
+      this.cart.splice(this.itemToDeleteIndex, 1);
       this.calculateSummary();
+      this.itemToDelete = null;
+      this.itemToDeleteIndex = -1;
+      await this.notificationService.showMessage(`"${removedItemName}" foi removido.`, 'Sucesso');
+      this.metroMenuService.setButtons(this.menuButtons);
+    } else {
+      this.metroMenuService.setButtons(this.menuButtons);
     }
   }
 
@@ -190,20 +223,32 @@ export class PartnersProductsComponent implements OnInit, AfterViewInit  {
       this.notificationService.showMessage('Seu orçamento está vazio.', 'warning');
       return;
     }
-    this.modalService.open(this.confirmationModal, { centered: true });
+    this.metroMenuService.setButtons([]);
+    const modalRef = this.modalService.open(this.confirmationModal, { centered: true });
+    
+    modalRef.result.then(
+      () => {
+        this.confirmOrder();
+      },
+      () => {
+        console.log('Modal de pedido descartado:');
+        this.metroMenuService.setButtons(this.menuButtons);
+      }
+    );
   }
 
-  confirmOrder(modal: any): void {
-    modal.close();
-    this.notificationService.showMessage('Enviando pedido...', 'info');
+  async confirmOrder(): Promise<void> {
+    this.notificationService.showMessage('Enviando pedido...', 'Info');
 
     console.log('--- ENVIANDO PEDIDO PARA A API (SIMULADO) ---');
     console.log('ID do Parceiro:', this.partnerId);
     console.log('Itens do Pedido:', this.cart);
     console.log('Valor Total:', this.total);
-    setTimeout(() => {
-      this.notificationService.showMessage('Pedido enviado com sucesso!', 'success');
+
+    setTimeout(async () => {
+      await this.notificationService.showMessage('Pedido enviado com sucesso!', 'success');
       this.resetOrder();
+      this.metroMenuService.setButtons(this.menuButtons);
     }, 1500);
   }
 
@@ -215,5 +260,5 @@ export class PartnersProductsComponent implements OnInit, AfterViewInit  {
   menuButtons: MetroButton[] = [
     { id: 'exit_to_home', label: 'Sair', iconClass: 'fas fa-sign-out-alt', colorClass: 'exit', visible: true, enabled: true }
   ];
-  handleMenuAction(action: string): void { if (action === 'exit_to_home') { this.router.navigate(['/apps/tools']); } }
+  handleMenuAction(action: string): void { if (action === 'exit_to_home') { this.router.navigate(['/apps/partners']); } }
 }

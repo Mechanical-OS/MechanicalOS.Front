@@ -93,15 +93,20 @@ handleMenuAction(action: string): void {
   }
 }
 
-  openPhone(partner: Partner) {
+  openPhone(partner: Partner): void {
     this.modalTitle = 'Telefone';
     this.modalContent = partner.phone;
     this.partnerName = partner.name;
     this.copyFeedback = '';
-    this.modalService.open(this.partnerInfoModal, { centered: true });
+    this.metroMenuService.setButtons([]);
+    const modalRef = this.modalService.open(this.partnerInfoModal, { centered: true });
+    modalRef.result.then(
+      () => { this.metroMenuService.setButtons(this.menuButtons); },
+      () => { this.metroMenuService.setButtons(this.menuButtons); }
+    );
   }
 
-    openWhatsApp(): void {
+  openWhatsApp(): void {
     if (!this.modalContent) {
       console.error('Nenhum número de telefone para abrir no WhatsApp.');
       return;
@@ -120,12 +125,17 @@ handleMenuAction(action: string): void {
     return cleanedNumber;
   }
 
-  openEmail(partner: Partner) {
+  openEmail(partner: Partner): void {
     this.modalTitle = 'E-mail';
     this.modalContent = partner.email;
     this.partnerName = partner.name;
     this.copyFeedback = ''; 
-    this.modalService.open(this.partnerInfoModal, { centered: true });
+    this.metroMenuService.setButtons([]);
+    const modalRef = this.modalService.open(this.partnerInfoModal, { centered: true });
+    modalRef.result.then(
+      () => { this.metroMenuService.setButtons(this.menuButtons); },
+      () => { this.metroMenuService.setButtons(this.menuButtons); }
+    );
   }
 
   openSite(partner: Partner) {

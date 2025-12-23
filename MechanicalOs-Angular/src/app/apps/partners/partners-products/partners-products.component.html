@@ -58,7 +58,7 @@
                   <div class="card-body d-flex flex-column">
                     <h5 class="card-title">{{ product.name }}</h5>
                     <p class="card-text text-muted">{{ product.description }}</p>
-                    <h4 class="price mt-auto">{{ product.price | currency:'BRL' }}</h4>
+                    <h4 class="price mt-auto">{{ product.price | brlCurrency }}</h4>
                     <div class="card-quantity-control">
                       <label class="form-label">Quantidade:</label>
                       <input 
@@ -130,12 +130,12 @@
                     (change)="updateQuantity(i, $any($event.target).value)">
                   
                   <span class="item-price-total">
-                    {{ (item.price * item.quantity) | currency:'BRL' }}
-                  </span>
+                  {{ (item.price * item.quantity) | brlCurrency }}
+                </span>
                 </div>
               </div>
 
-              <button class="btn btn-sm btn-outline-danger item-remove-btn" (click)="removeFromCart(i)">
+              <button class="btn btn-sm btn-outline-danger item-remove-btn" (click)="openDeleteConfirmation(i, item)">
                 <i class="fas fa-trash-alt"></i>
               </button>
             </div>
@@ -145,12 +145,12 @@
             <hr>
             <div class="summary-item">
               <span>Sub total:</span>
-              <span>{{ subTotal | currency:'BRL' }}</span>
+              <span>{{ subTotal | brlCurrency }}</span>
             </div>
             
             <div class="summary-total mt-2">
               <span class="fw-bold">Total:</span>
-              <span class="fw-bold fs-5">{{ total | currency:'BRL' }}</span>
+              <span class="fw-bold fs-5">{{ total | brlCurrency }}</span>
             </div>
 
             <div class="action-buttons-container mt-4">
@@ -179,15 +179,35 @@
   </div>
   <div class="modal-body">
     <p>Você está prestes a enviar um pedido com <strong>{{ totalCartItems }} item(s)</strong>.</p>
-    <p class="fw-bold fs-5">Valor Total: {{ total | currency:'BRL' }}</p>
+    <p class="fw-bold fs-5">Valor Total: R$ {{ total.toFixed(2).replace('.', ',') }}</p>
     <hr>
     <p>Deseja confirmar o envio do pedido?</p>
   </div>
   <div class="modal-footer">
-    <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">Cancelar</button>
-    <button type="button" class="btn btn-success" (click)="confirmOrder(modal)">
+    <button type="button" class="btn btn-secondary" (click)="modal.dismiss('Cancel click')">Cancelar</button>
+    <button type="button" class="btn btn-success" (click)="modal.close('Confirm click')">
       <i class="fas fa-paper-plane me-1"></i>
       Confirmar e Enviar
+    </button>
+  </div>
+</ng-template>
+
+<ng-template #deleteConfirmationModal let-modal>
+  <div class="modal-header">
+    <h5 class="modal-title text-danger">
+      <i class="fas fa-exclamation-triangle me-2"></i>
+      Confirmar Remoção
+    </h5>
+    <button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss()"></button>
+  </div>
+  <div class="modal-body">
+    <p>Você tem certeza que deseja remover o item <strong>"{{ itemToDelete?.name }}"</strong> do orçamento?</p>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" (click)="modal.dismiss('Cancel click')">Cancelar</button>
+    <button type="button" class="btn btn-danger" (click)="modal.close('Confirm click')">
+      <i class="fas fa-trash-alt me-1"></i>
+      Sim, remover
     </button>
   </div>
 </ng-template>

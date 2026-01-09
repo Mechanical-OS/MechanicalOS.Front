@@ -1,5 +1,5 @@
-import { Component, OnInit, TemplateRef, ViewChild } from '@angular/core';
-import { PageTitleModule } from "../../shared/page-title/page-title.module";
+import { Component, OnInit, OnDestroy, AfterViewInit, TemplateRef, ViewChild } from '@angular/core';
+import { UiInteractionService } from 'src/app/shared/services/ui-interaction.service';
 import { BreadcrumbItem } from 'src/app/shared/page-title/page-title.model';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DomSanitizer } from '@angular/platform-browser';
@@ -24,7 +24,7 @@ import { MetroMenuService } from 'src/app/shared/metro-menu/metro-menu.service';
   templateUrl: './services.component.html',
   styleUrl: './services.component.scss'
 })
-export class ServicesComponent implements OnInit {
+export class ServicesComponent implements OnInit, AfterViewInit, OnDestroy {
   pageTitle: BreadcrumbItem[] = [];
   serviceList: ServiceModel[] = [];
   totalRecords: number = 0;
@@ -56,7 +56,8 @@ export class ServicesComponent implements OnInit {
     private modalService: NgbModal,
     public formValidationMessage: FormValidationService,
     private notificationService: NotificationService,
-    private metroMenuService: MetroMenuService
+    private metroMenuService: MetroMenuService,
+    private uiInteractionService: UiInteractionService
   ) { }
 
   ngOnInit(): void {
@@ -64,9 +65,6 @@ export class ServicesComponent implements OnInit {
       { label: "Service", path: "/" },
       { label: "Service", path: "/", active: true },
     ];
-
-    const initialButtons = this.menuButtons;
-    this.metroMenuService.setButtons(initialButtons);
 
     this.serviceForm = this.fb.group({
       id: [''],
@@ -85,50 +83,43 @@ export class ServicesComponent implements OnInit {
     this.initAdvancedTableData();
   }
 
+  ngAfterViewInit(): void {
+    document.addEventListener('click', (event: any) => this.handleActionClick(event));
+    setTimeout(() => {
+      this.metroMenuService.setButtons(this.menuButtons);
+    }, 0);
+  }
+
+  ngOnDestroy(): void {
+    this.metroMenuService.setButtons([]);
+  }
   /**
    *  fetches services list
    */
 
   async _fetchData(pageIndex: number = 1, pageSize: number = 10): Promise<void> {
     this.isTableLoading = true;
-    
-    const request: GetAllRequest = {
-      pageSize: pageSize,
-      pageIndex: pageIndex,
-      sort: '',
-      direction: ''
-    };
-
+    const request: GetAllRequest = { pageSize, pageIndex, sort: '', direction: '' };
     try {
-      // Converte o Observable em uma Promise usando firstValueFrom
       const result = await firstValueFrom(this.service.getAll(request));
       if (result.statusCode === 200) {
         this.serviceList = result.content.resultList;
         this.totalRecords = result.content.totalRecords;
       } else {
-        // Exibe o erro com SweetAlert
-        Swal.fire({
-          icon: 'error',
-          title: 'Erro na Requisição',
-          text: result.message || 'Algo deu errado ao buscar os dados.',
-          confirmButtonText: 'Entendi',
-        });
+        await this.uiInteractionService.showSweetAlert({
+          icon: 'error', title: 'Erro na Requisição',
+          text: result.message || 'Algo deu errado ao buscar os dados.'
+        }, this.menuButtons);
       }
     } catch (error) {
       console.error('Erro na API:', error);
-      Swal.fire({
-        icon: 'error',
-        title: 'Erro na API',
-        text: 'Não foi possível carregar os dados. Tente novamente mais tarde.',
-        confirmButtonText: 'Entendi',
-      });
+      await this.uiInteractionService.showSweetAlert({
+        icon: 'error', title: 'Erro na API',
+        text: 'Não foi possível carregar os dados. Tente novamente mais tarde.'
+      }, this.menuButtons);
     } finally {
       this.isTableLoading = false;
     }
-  }
-
-  ngAfterViewInit(): void {
-    document.addEventListener('click', (event: any) => this.handleActionClick(event));
   }
 
   // initialize advance table columns
@@ -344,30 +335,29 @@ export class ServicesComponent implements OnInit {
   }
 
   //#region SERVICES HTTP
-  deleteService(id: number) {
-    Swal.fire({
-      title: 'Excluir Registro!!!',
-      text: "Tem certeza que deseja excluir o serviço? Ação não poderá ser desfeita!!!",
-      icon: 'question',
+  async deleteService(id: number): Promise<void> {
+    const result = await this.uiInteractionService.showSweetAlert({
+      title: 'Excluir Registro!',
+      text: "Tem certeza que deseja excluir o serviço?",
+      icon: 'warning',
       showCancelButton: true,
       confirmButtonText: 'SIM',
       cancelButtonText: 'NÃO',
-    }).then((result) => {
-      if (result.isConfirmed) {
-        this.service.delete(id).subscribe((ret: Result<string>) => {
-          if (ret.statusCode === 200) {
-            this.notificationService.showMessage(ret.message, 'Sucesso');
+    }, this.menuButtons);
 
-            this.serviceList = this.serviceList.filter(item => item.id != id);
-            console.log(this.serviceList);
-
-          } else {
-            this.notificationService.showAlert(ret);
-          }
-        });
+    if (result.isConfirmed) {
+      try {
+        const ret: Result<string> | undefined = await this.service.delete(id).toPromise();
+        if (ret && ret.statusCode === 200) {
+          await this.uiInteractionService.showSweetAlert({ title: 'Sucesso', text: ret.message, icon: 'success' }, this.menuButtons);
+          this.serviceList = this.serviceList.filter(item => item.id != id);
+        } else {
+          await this.uiInteractionService.showSweetAlert({ title: 'Erro', text: (ret as any)?.message || 'Não foi possível excluir.', icon: 'error' }, this.menuButtons);
+        }
+      } catch (err) {
+        await this.uiInteractionService.showSweetAlert({ title: 'Erro', text: 'Erro de comunicação ao excluir.', icon: 'error' }, this.menuButtons);
       }
-    })
-
+    }
   }
 
   //#endregion
@@ -392,39 +382,40 @@ export class ServicesComponent implements OnInit {
     } else {
       this.serviceForm.controls['code'].enable();
     }
-
-    this.modalService.open(this.serviceModal, { centered: true, size: 'xl', backdrop: 'static' });
+    
+    this.uiInteractionService.openNgbModal(this.serviceModal, { size: 'xl' }, this.menuButtons);
   }
 
   save(modalRef: any): void {
-    if (this.serviceForm.valid) {
-      const data = this.serviceForm.getRawValue();
-      if (data.id != null && data.id > 0) {
-        this.service.updateService(data).subscribe((ret: any) => {
-          console.log(ret);
-          if (ret.statusCode === 200) {
-            this.notificationService.showSuccess(ret);
-
-            const index = this.serviceList.findIndex(s => s.id === ret.content.id);
-            if (index !== -1) {
-              this.serviceList[index] = ret.content;
-            }
-
-            modalRef.close();
-          }
-        });
-      } else {
-        this.service.saveNewService(data).subscribe((ret: any) => {
-          if (ret.statusCode === 200) {
-            this.notificationService.showSuccess(ret);
-            this.serviceList.push(ret.content);
-            modalRef.close();
-          }
-        });
-      }
-
-
+    if (!this.serviceForm.valid) {
+        this.uiInteractionService.showSweetAlert({ title: 'Atenção', text: 'Formulário inválido.', icon: 'warning'}, this.menuButtons);
+        return;
     }
+    const data = this.serviceForm.getRawValue();
+    const serviceCall = data.id != null && data.id > 0
+      ? this.service.updateService(data)
+      : this.service.saveNewService(data);
+
+    serviceCall.subscribe({
+      next: (ret: any) => {
+        if (ret.statusCode === 200) {
+          this.notificationService.showToast('Salvo com sucesso!', 'success');
+          // Atualiza a lista localmente
+          if (data.id) {
+            const index = this.serviceList.findIndex(s => s.id === ret.content.id);
+            if (index !== -1) this.serviceList[index] = ret.content;
+          } else {
+            this.serviceList.push(ret.content);
+          }
+          modalRef.close();
+        } else {
+          this.uiInteractionService.showSweetAlert({ title: 'Erro', text: ret.message, icon: 'error'}, this.menuButtons);
+        }
+      },
+      error: (err) => {
+          this.uiInteractionService.showSweetAlert({ title: 'Erro', text: 'Erro de comunicação ao salvar.', icon: 'error'}, this.menuButtons);
+      }
+    });
   }
 
   //#region MENU
@@ -447,7 +438,7 @@ export class ServicesComponent implements OnInit {
     },
     {
       id: 'delete',
-      label: 'Exlcuir',
+      label: 'Excluir',
       iconClass: 'fas fa-trash',
       colorClass: 'delete',
       visible: true,
@@ -475,25 +466,29 @@ export class ServicesComponent implements OnInit {
     switch (action) {
       case 'save':
         console.log('Save acionado');
-        break;
+      break;
       case 'edit':
         let service = this.serviceList.find(x => x.id == this.selectedItemRowId) ?? null;
         this.openModal(service);
-        break;
+      break;
       case 'exit':
         this.router.navigate([`apps/tools`]);
         break;
       case 'photos':
         // lógica para fotos
         console.log('Fotos acionado');
-        break;
+      break;
       case 'delete':
-        this.deleteService(this.selectedItemRowId);
-        break;
+        if (this.selectedItemRowId) {
+            this.deleteService(this.selectedItemRowId);
+        } else {
+            this.uiInteractionService.showSweetAlert({ title: 'Atenção', text: 'Nenhum serviço selecionado.', icon: 'warning' }, this.menuButtons);
+        }
+      break;
       case 'new':
         // lógica para novo
         this.openModal(null);
-        break;
+      break;
     }
   }
   //#endregion

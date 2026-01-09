@@ -1,27 +1,24 @@
-import { Component, ViewChild } from '@angular/core';
-import { CustomersRoutingModule } from './customers-routing.module';
-import { CommonModule } from '@angular/common';
+import { Component, ViewChild, OnInit, OnDestroy, AfterViewInit } from '@angular/core';
 import { BreadcrumbItem } from 'src/app/shared/page-title/page-title.model';
-import { PageTitleModule } from 'src/app/shared/page-title/page-title.module';
 import { Column } from 'src/app/shared/advanced-table/advanced-table.component';
 import { Customer } from '../Shared/models/customer.model';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DomSanitizer } from '@angular/platform-browser';
 import { GetAllRequest } from 'src/app/Http/models/Input/get-all-request.model';
 import { CustomerService } from './customer.service';
-import { firstValueFrom } from 'rxjs';
 import Swal from 'sweetalert2';
 import { MetroButton } from 'src/app/shared/metro-menu/metro-menu.component';
 import { MetroMenuService } from 'src/app/shared/metro-menu/metro-menu.service';
 import { AdvancedTableServices } from 'src/app/shared/advanced-table/advanced-table-service.service';
 import { NotificationService } from 'src/app/shared/services/notification.service';
+import { UiInteractionService } from 'src/app/shared/services/ui-interaction.service';
 
 @Component({
   selector: 'app-customers',
   templateUrl: './customers.component.html',
   styleUrl: './customers.component.scss'
 })
-export class CustomersComponent {
+export class CustomersComponent implements OnInit, AfterViewInit, OnDestroy {
   pageTitle: BreadcrumbItem[] = [];
   columns: Column[] = [];
 
@@ -39,9 +36,9 @@ export class CustomersComponent {
     private service: CustomerService,
     private tableService: AdvancedTableServices,
     private notificationService: NotificationService,
-    private metroMenuService: MetroMenuService) {
-
-  }
+    private metroMenuService: MetroMenuService,
+    private uiInteractionService: UiInteractionService
+  ) {}
 
   ngOnInit(): void {
     this.pageTitle = [
@@ -49,37 +46,46 @@ export class CustomersComponent {
       { label: "Customer", path: "/", active: true },
     ];
 
-    const initialButtons = this.menuButtons;
-    this.metroMenuService.setButtons(initialButtons);
-
-    // get service list
-    this._fetchData();
-
-    // initialize advance table
-    this.initAdvancedTableData();
     document.addEventListener('click', this.delegatedClickHandler);
+    this.initAdvancedTableData();
+    this._fetchData();
+  }
+
+  ngAfterViewInit(): void {
+    setTimeout(() => {
+      this.metroMenuService.setButtons(this.menuButtons);
+    }, 0);
   }
 
   ngOnDestroy(): void {
     document.removeEventListener('click', this.delegatedClickHandler);
+    this.metroMenuService.setButtons([]);
   }
 
   async _fetchData(): Promise<void> {
     const request: GetAllRequest = {
       pageSize: this.tableService.pageSize,
       pageIndex: this.tableService.page,
-      sort: '',
-      direction: ''
+      sort: '', direction: ''
     };
 
-    this.service.getAll(request).subscribe((ret: any) => {
+    try {
+      const ret: any = await this.service.getAll(request).toPromise();
       this.customerList = ret.content.resultList;
       this.tableService.totalRecords = ret.content.totalRecords;
       this.tableService.startIndex = (ret.content.pageIndex * ret.content.pageSize) + 1;
       this.tableService.endIndex = this.tableService.startIndex + ret.content.resultList.length - 1;
 
       console.log('Amostra: ', ret);
-    });
+    } catch(err) {
+      console.error("Erro ao buscar clientes:", err);
+      this.customerList = [];
+      await this.uiInteractionService.showSweetAlert({
+        title: 'Erro',
+        text: 'Não foi possível carregar a lista de clientes.',
+        icon: 'error'
+      }, this.menuButtons);
+    }
   }
 
   paginate(): void {
@@ -167,48 +173,43 @@ export class CustomersComponent {
     }
   ];
 
-  handleMenuAction(action: any) {
+  async handleMenuAction(action: any): Promise<void> {
     switch (action) {
       case 'save':
         console.log('Save acionado');
-        break;
+      break;
       case 'edit':
         this.router.navigate([`apps/customers/${this.selectedCustomerId}/edit`]);
-        break;
+      break;
       case 'delete':
         if (this.selectedCustomerId) {
-          Swal.fire({
+          const result = await this.uiInteractionService.showSweetAlert({
             title: 'Excluir Cliente!',
-            text: 'Tem certeza que deseja excluir este cliente? Esta ação não poderá ser desfeita!',
+            text: 'Tem certeza que deseja excluir este cliente?',
             icon: 'warning',
             showCancelButton: true,
             confirmButtonText: 'Sim, excluir',
             cancelButtonText: 'Cancelar'
-          }).then((result) => {
-            if (result.isConfirmed) {
-              this.deleteCustomer(this.selectedCustomerId);
-            }
-          });
+          }, this.menuButtons);
+          
+          if (result.isConfirmed) {
+            await this.deleteCustomer(this.selectedCustomerId);
+          }
         } else {
-          Swal.fire({
+          await this.uiInteractionService.showSweetAlert({
             title: 'Nenhum cliente selecionado',
             text: 'Por favor, selecione um cliente antes de continuar.',
             icon: 'warning',
             confirmButtonText: 'OK'
-          });
+          }, this.menuButtons);
         }
-        break;
+      break;
       case 'exit':
         this.router.navigate([`apps/tools`]);
-        break;
-      case 'photos':
-        // lógica para fotos
-        console.log('Fotos acionado');
-        break;
+      break;
       case 'new':
-        // lógica para novo
         this.router.navigate(['apps/customers/new']);
-        break;
+      break;
     }
   }
 
@@ -224,112 +225,99 @@ export class CustomersComponent {
     });
   }
 
-deleteCustomer(customerId: number): void {
-  this.service.delete(customerId).subscribe({
-    next: (result) => {
-      if (result.statusCode === 200) {
-        this.notificationService.showMessage('Cliente excluído com sucesso.', 'success');
+  async deleteCustomer(customerId: number): Promise<void> {
+    try {
+      const result = await this.service.delete(customerId).toPromise();
+      if (result && result.statusCode === 200) {
+        await this.uiInteractionService.showSweetAlert({ title: 'Sucesso', text: 'Cliente excluído com sucesso.', icon: 'success' }, this.menuButtons);
         this._fetchData();
         this.selectedCustomerId = 0;
         this.metroMenuService.disableButton('edit');
         this.metroMenuService.disableButton('delete');
       } else {
-        this.notificationService.showMessage('Erro ao excluir cliente.', 'error');
+        await this.uiInteractionService.showSweetAlert({ title: 'Erro', text: 'Erro ao excluir cliente.', icon: 'error' }, this.menuButtons);
       }
-    },
-    error: (error) => {
+    } catch (error) {
       console.error('Erro ao excluir cliente:', error);
-      this.notificationService.showMessage('Erro ao excluir cliente.', 'error');
+      await this.uiInteractionService.showSweetAlert({ title: 'Erro', text: 'Erro ao excluir cliente.', icon: 'error' }, this.menuButtons);
     }
-  });
-}
-
-private delegatedClickHandler = (event: Event) => {
-  const target = event.target as HTMLElement;
-
-  // Editar
-  const editBtn = target.closest('.edit-btn') as HTMLElement | null;
-  if (editBtn) {
-    event.preventDefault();
-    const customerId = editBtn.getAttribute('data-id');
-    if (customerId) {
-      this.router.navigate([`apps/customers/${customerId}/edit`]);
-    }
-    return;
   }
 
-  // Excluir
-  const deleteBtn = target.closest('.delete-btn') as HTMLElement | null;
-  if (deleteBtn) {
-    event.preventDefault();
-    const customerId = deleteBtn.getAttribute('data-id');
-    if (customerId && !this.isDisabled) {
-      Swal.fire({
-        title: 'Excluir Cliente!',
-        text: 'Tem certeza que deseja excluir este cliente? Ação não poderá ser desfeita!',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Sim, excluir!',
-        cancelButtonText: 'Não'
-      }).then((result) => {
+  private delegatedClickHandler = async (event: Event) => {
+    const target = event.target as HTMLElement;
+
+    const editBtn = target.closest('.edit-btn') as HTMLElement | null;
+    if (editBtn) {
+      event.preventDefault();
+      const customerId = editBtn.getAttribute('data-id');
+      if (customerId) {
+        this.router.navigate([`apps/customers/${customerId}/edit`]);
+      }
+      return;
+    }
+
+    const deleteBtn = target.closest('.delete-btn') as HTMLElement | null;
+    if (deleteBtn) {
+      event.preventDefault();
+      const customerId = deleteBtn.getAttribute('data-id');
+      if (customerId && !this.isDisabled) {
+        const result = await this.uiInteractionService.showSweetAlert({
+          title: 'Excluir Cliente!',
+          text: 'Tem certeza que deseja excluir este cliente?',
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonText: 'Sim, excluir!',
+          cancelButtonText: 'Não'
+        }, this.menuButtons);
+
         if (result.isConfirmed) {
-          this.service.delete(parseInt(customerId, 10)).subscribe({
-            next: (ret: any) => {
-              if (ret.statusCode === 200) {
-                this.notificationService.showMessage(ret.message || 'Cliente excluído com sucesso.', 'success');
-                this.customerList = this.customerList.filter(c => c.id !== parseInt(customerId!, 10));
-              } else {
-                this.notificationService.showMessage('Erro ao excluir cliente.', 'error');
-              }
-            },
-            error: (err) => {
-              console.error(err);
-              this.notificationService.showMessage('Erro ao excluir cliente.', 'error');
+          try {
+            const ret: any = await this.service.delete(parseInt(customerId, 10)).toPromise();
+            if (ret.statusCode === 200) {
+              await this.uiInteractionService.showSweetAlert({ title: 'Sucesso', text: ret.message || 'Cliente excluído com sucesso.', icon: 'success' }, this.menuButtons);
+              this.customerList = this.customerList.filter(c => c.id !== parseInt(customerId!, 10));
+            } else {
+              await this.uiInteractionService.showSweetAlert({ title: 'Erro', text: 'Erro ao excluir cliente.', icon: 'error' }, this.menuButtons);
             }
-          });
+          } catch (err) {
+            console.error(err);
+            await this.uiInteractionService.showSweetAlert({ title: 'Erro', text: 'Erro ao excluir cliente.', icon: 'error' }, this.menuButtons);
+          }
         }
-      });
+      }
+      return;
     }
-    return;
-  }
-};
+  };
+  
   /**
      * Search Method
      */
-  searchData(searchTerm: string): void {
 
-    // Se o termo estiver vazio, carrega os dados iniciais
+  async searchData(searchTerm: string): Promise<void> {
     if (searchTerm === '') {
       this._fetchData();
       return;
     }
-
-    // Requisição à API usando o método findByFilter do BaseService
-    this.service.findByFilter({ term: searchTerm }).subscribe({
-      next: (result) => {
-        if (result.statusCode === 200) {
-          this.customerList = result.content;
-        } else {
-          Swal.fire({
-            icon: 'error',
-            title: 'Erro na Pesquisa',
-            text: result.message || 'Não foi possível realizar a pesquisa.',
-            confirmButtonText: 'Entendi',
-          });
-        }
-      },
-      error: (error) => {
-        console.error('Erro na API:', error);
-        Swal.fire({
+    try {
+      const result = await this.service.findByFilter({ term: searchTerm }).toPromise();
+      if (result && result.statusCode === 200) {
+        this.customerList = result.content;
+      } else {
+        await this.uiInteractionService.showSweetAlert({
           icon: 'error',
-          title: 'Erro na API',
-          text: 'Houve um problema ao buscar os dados. Tente novamente mais tarde.',
-          confirmButtonText: 'Entendi',
-        });
-      },
-    });
+          title: 'Erro na Pesquisa',
+          text: result?.message || 'Não foi possível realizar la pesquisa.',
+        }, this.menuButtons);
+      }
+    } catch (error) {
+      console.error('Erro na API:', error);
+      await this.uiInteractionService.showSweetAlert({
+        icon: 'error',
+        title: 'Erro na API',
+        text: 'Houve um problema ao buscar os dados.',
+      }, this.menuButtons);
+    }
   }
-
 
   // formats order ID cell
   IDFormatter(customer: Customer): any {
@@ -389,5 +377,4 @@ private delegatedClickHandler = (event: Event) => {
       </a>
       `);
   }
-
 }

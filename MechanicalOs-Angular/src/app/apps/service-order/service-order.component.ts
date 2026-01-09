@@ -1,21 +1,21 @@
-import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
+import { Component, OnInit, ViewChild, AfterViewInit, OnDestroy } from '@angular/core';
 import { Column } from 'src/app/shared/advanced-table/advanced-table.component';
 import { BreadcrumbItem } from 'src/app/shared/page-title/page-title.model';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AdvancedTableServices } from 'src/app/shared/advanced-table/advanced-table-service.service';
 import { MetroMenuService } from 'src/app/shared/metro-menu/metro-menu.service';
 import { MetroButton } from 'src/app/shared/metro-menu/metro-menu.component';
-import { GetAllRequest } from 'src/app/Http/models/Input/get-all-request.model';
 import { ServiceOrderService } from './service-order.service';
 import { NotificationService } from 'src/app/shared/services/notification.service';
 import { ServiceOrder, ServiceOrderStatus, ServiceOrderStatusInfo } from '../Shared/models/service-order.model';
+import { UiInteractionService } from 'src/app/shared/services/ui-interaction.service';
 
 @Component({
   selector: 'app-service-order',
   templateUrl: './service-order.component.html',
   styleUrl: './service-order.component.scss'
 })
-export class ServiceOrderComponent implements OnInit, AfterViewInit {
+export class ServiceOrderComponent implements OnInit, AfterViewInit, OnDestroy {
   pageTitle: BreadcrumbItem[] = [];
   columns: Column[] = [];
 
@@ -39,27 +39,27 @@ export class ServiceOrderComponent implements OnInit, AfterViewInit {
     private service: ServiceOrderService,
     public tableService: AdvancedTableServices,
     private metroMenuService: MetroMenuService,
-    private notificationService: NotificationService
-  ) { }
+    private notificationService: NotificationService,
+    private uiInteractionService: UiInteractionService
+  ) {}
 
   ngOnInit(): void {
     this.pageTitle = [
       { label: "Ordem de Serviço", path: "/" },
       { label: "Ordem de Serviço", path: "/", active: true },
     ];
-
-    const initialButtons = this.menuButtons;
-    this.metroMenuService.setButtons(initialButtons);
-
     this.initAdvancedTableData();
     this.loadPixData();
   }
 
   ngAfterViewInit(): void {
-    // Sincroniza o pageSize após a view ser inicializada
     setTimeout(() => {
-      this.syncAdvancedTablePageSize();
-    }, 100);
+      this.metroMenuService.setButtons(this.menuButtons);
+    }, 0);
+  }
+
+  ngOnDestroy(): void {
+    this.metroMenuService.setButtons([]);
   }
 
   //#region ADVANCED TABLE
@@ -108,7 +108,7 @@ export class ServiceOrderComponent implements OnInit, AfterViewInit {
   /**
    * Carrega os dados PIX com paginação
    */
-  loadPixData(page: number = 1): void {
+  async loadPixData(page: number = 1): Promise<void> {
     const request = {
       pageSize: this.pageSize,
       pageIndex: page,
@@ -119,11 +119,9 @@ export class ServiceOrderComponent implements OnInit, AfterViewInit {
     console.log(`🔍 loadPixData - Página: ${page}, PageSize: ${this.pageSize}`);
     console.log('📡 Buscando ordens de serviço na API:', request);
 
-    this.service.getAllOrders(request).subscribe({
-      next: (ret: any) => {
-        console.log('✅ Dados recebidos da API:', ret);
-        
-        if (ret && ret.statusCode === 200 && ret.content && ret.content.resultList) {
+    try {
+      const ret: any = await this.service.getAllOrders(request).toPromise();
+      if (ret && ret.statusCode === 200 && ret.content && ret.content.resultList) {
           // Log para debug da estrutura do veículo
           if (ret.content.resultList.length > 0) {
             console.log('🚗 Estrutura do primeiro veículo:', ret.content.resultList[0].vehicle);
@@ -163,19 +161,14 @@ export class ServiceOrderComponent implements OnInit, AfterViewInit {
             hasPreviousPage: this.hasPreviousPage,
             pageNumbers: this.getPageNumbers()
           });
-        } else {
-          console.error('❌ Estrutura de dados inválida:', ret);
-          this.list = [];
-          this.totalItems = 0;
-        }
-      },
-      error: (error) => {
-        console.error('❌ Erro ao carregar ordens de serviço:', error);
-        this.notificationService.showMessage('Erro ao carregar lista de ordens de serviço.', 'error');
-        this.list = [];
-        this.totalItems = 0;
+      } else {
+        this.list = []; this.totalItems = 0;
       }
-    });
+    } catch (error) {
+      console.error('❌ Erro ao carregar ordens de serviço:', error);
+      this.list = []; this.totalItems = 0;
+      await this.uiInteractionService.showSweetAlert({ title: 'Erro', text: 'Erro ao carregar lista de ordens de serviço.', icon: 'error' }, this.menuButtons);
+    }
   }
 
   /**
@@ -475,24 +468,26 @@ export class ServiceOrderComponent implements OnInit, AfterViewInit {
     }
   ];
 
-  handleMenuAction(action: any) {
+  async handleMenuAction(action: any): Promise<void> {
     switch (action) {
       case 'edit':
         if (this.selectedRowId) {
           this.router.navigate([`/apps/service-orders/${this.selectedRowId}/edit`]);
         }
-        break;
+      break;
       case 'delete':
         if (this.selectedRowId) {
-          this.deleteServiceOrder(this.selectedRowId);
+          await this.deleteServiceOrder(this.selectedRowId);
+        } else {
+          await this.uiInteractionService.showSweetAlert({ title: 'Atenção', text: 'Nenhuma ordem de serviço selecionada.', icon: 'warning' }, this.menuButtons);
         }
-        break;
+      break;
       case 'exit':
-        this.router.navigate(['/']);
-        break;
+        this.router.navigate(['/apps/tools']);
+      break;
       case 'new':
         this.router.navigate(['apps/service-orders/new']);
-        break;
+      break;
     }
   }
   //#endregion
@@ -501,27 +496,36 @@ export class ServiceOrderComponent implements OnInit, AfterViewInit {
   /**
    * Exclui uma ordem de serviço
    */
-  deleteServiceOrder(orderId: number): void {
-    if (confirm('Tem certeza que deseja excluir esta ordem de serviço?')) {
-      this.service.delete(orderId).subscribe({
-        next: (result) => {
-          if (result.statusCode === 200) {
-            this.notificationService.showMessage('Ordem de serviço excluída com sucesso.', 'success');
-            this.loadPixData(this.currentPage);
-            this.selectedRowId = 0;
-            this.metroMenuService.disableButton('edit');
-            this.metroMenuService.disableButton('delete');
-          } else {
-            this.notificationService.showMessage('Erro ao excluir ordem de serviço.', 'error');
-          }
-        },
-        error: (error) => {
-          console.error('Erro ao excluir ordem de serviço:', error);
-          this.notificationService.showMessage('Erro ao excluir ordem de serviço.', 'error');
+
+  async deleteServiceOrder(orderId: number): Promise<void> {
+    const result = await this.uiInteractionService.showSweetAlert({
+      title: 'Tem certeza?',
+      text: `Deseja realmente excluir a Ordem de Serviço #${orderId}?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sim, excluir!',
+      cancelButtonText: 'Cancelar'
+    }, this.menuButtons);
+
+    if (result.isConfirmed) {
+      try {
+        const deleteResult = await this.service.delete(orderId).toPromise();
+        if (deleteResult && deleteResult.statusCode === 200) {
+          await this.uiInteractionService.showSweetAlert({ title: 'Sucesso', text: 'Ordem de serviço excluída com sucesso.', icon: 'success' }, this.menuButtons);
+          this.loadPixData(this.currentPage);
+          this.selectedRowId = 0;
+          this.metroMenuService.disableButton('edit');
+          this.metroMenuService.disableButton('delete');
+        } else {
+          await this.uiInteractionService.showSweetAlert({ title: 'Erro', text: 'Erro ao excluir ordem de serviço.', icon: 'error' }, this.menuButtons);
         }
-      });
+      } catch (error) {
+        console.error('Erro ao excluir ordem de serviço:', error);
+        await this.uiInteractionService.showSweetAlert({ title: 'Erro', text: 'Erro ao excluir ordem de serviço.', icon: 'error' }, this.menuButtons);
+      }
     }
   }
+
   //#endregion
 
   //#region HELPER METHODS
@@ -588,15 +592,15 @@ export class ServiceOrderComponent implements OnInit, AfterViewInit {
   /**
    * Formatter para ações
    */
-  actionFormatter(order: ServiceOrder): string {
+  actionFormatter(order: ServiceOrder): any {
+    const editAction = `(click)="onEdit(${order.id})"`;
+    const deleteAction = `(click)="onDelete(${order.id})"`;
+
     return `
-      <a href="#" class="action-icon edit-btn" data-id="${order.id}" title="Editar">
+      <a href="javascript:void(0);" class="action-icon" ${editAction} title="Editar">
         <i class="mdi mdi-pencil" style="color: #28a745;"></i>
       </a>
-      <a href="#" class="action-icon delete-btn ${this.isDisabled ? 'disabled' : ''}" 
-       data-id="${order.id}"
-       title="Excluir"
-       style="${this.isDisabled ? 'pointer-events: none; opacity: 0.5;' : ''}">
+      <a href="javascript:void(0);" class="action-icon" ${deleteAction} title="Excluir">
         <i class="mdi mdi-delete" style="color: #dc3545;"></i>
       </a>
     `;
@@ -635,6 +639,15 @@ export class ServiceOrderComponent implements OnInit, AfterViewInit {
       badgeClass: 'bg-light text-dark'
     };
   }
+
+  onEdit(orderId: number): void {
+    this.router.navigate([`apps/service-orders/${orderId}/edit`]);
+  }
+  
+  onDelete(orderId: number): void {
+    this.deleteServiceOrder(orderId);
+  }
+
   //#endregion
 }
 

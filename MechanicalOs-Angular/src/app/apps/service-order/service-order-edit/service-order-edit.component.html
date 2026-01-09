@@ -98,7 +98,8 @@
                                     [showPriceInList]="true"
                                     [showCodeBadge]="true"
                                     (serviceSelected)="onServiceSelected($event)"
-                                    (searchError)="onSearchError($event)">
+                                    (searchError)="onSearchError($event)"
+                                    [clearOnSelect]="false">
                                 </app-service-search>
 
                                 <!-- Tabela de serviços selecionados -->

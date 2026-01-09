@@ -25,6 +25,8 @@ export class ServiceSearchComponent implements OnInit, OnDestroy {
   @Input() showPriceInList: boolean = true;
   @Input() showCodeBadge: boolean = true;
   @Input() autoFocus: boolean = false;
+  @Input() clearOnSelect: boolean = true;
+  @Input() resultLimit: number = 10;
   
   @Output() serviceSelected = new EventEmitter<ServiceItem>();
   @Output() searchError = new EventEmitter<any>();
@@ -65,14 +67,12 @@ export class ServiceSearchComponent implements OnInit, OnDestroy {
    * Executa a busca de serviços na API
    */
   private performSearch(searchTerm: string): void {
-    // Se o campo estiver vazio ou menor que mínimo, limpa a lista
     if (!searchTerm || searchTerm.length < this.minCharacters) {
       this.availableServices = [];
       this.showResults = false;
       return;
     }
     
-    console.log(`🔍 [ServiceSearch] Buscando: "${searchTerm}"`);
     this.loadingServices = true;
     this.availableServices = [];
     
@@ -81,9 +81,13 @@ export class ServiceSearchComponent implements OnInit, OnDestroy {
         this.loadingServices = false;
         
         if (result.statusCode === 200 && result.content) {
-          console.log(`✅ [ServiceSearch] ${result.content.length} serviços encontrados`);
           
-          this.availableServices = result.content.map((service: ServiceModel) => ({
+          //APLICA O LIMITE ANTES DE MAPEAR OS DADOS
+          const limitedContent = result.content.slice(0, this.resultLimit);
+          
+          console.log(`✅ [ServiceSearch] ${result.content.length} serviços encontrados, exibindo ${limitedContent.length}`);
+          
+          this.availableServices = limitedContent.map((service: ServiceModel) => ({
             id: service.id,
             code: service.code,
             name: service.shortDescription || service.name,
@@ -93,12 +97,7 @@ export class ServiceSearchComponent implements OnInit, OnDestroy {
             total: service.price / 100  // Converte centavos para reais
           }));
           
-          console.log('💰 [ServiceSearch] Exemplo de preço:', {
-            original: result.content[0]?.price,
-            convertido: result.content[0]?.price / 100
-          });
         } else {
-          console.warn('⚠️ [ServiceSearch] Nenhum serviço encontrado');
           this.availableServices = [];
         }
       },
@@ -126,8 +125,12 @@ export class ServiceSearchComponent implements OnInit, OnDestroy {
     console.log('✅ [ServiceSearch] Serviço selecionado:', service);
     this.serviceSelected.emit(service);
     
-    // Limpa a busca após selecionar
-    this.clearSearch();
+    if (this.clearOnSelect) {
+      // Se 'clearOnSelect' for verdadeiro, limpa tudo
+      this.clearSearch();
+    } else {
+      service.quantity = 1;
+    }
   }
 
   /**

@@ -50,63 +50,17 @@
                 
                 <!-- Campo de busca -->
                 <div class="services-search-section">
-                    <div class="input-group">
-                        <input 
-                            type="text" 
-                            class="form-control" 
-                            placeholder="Digite pelo menos 3 caracteres para buscar..."
-                            [(ngModel)]="searchValue"
-                            (input)="onSearchServices()">
-                        <span class="input-group-text bg-white">
-                            <i class="fas fa-search text-muted" *ngIf="!isLoadingServices"></i>
-                            <i class="mdi mdi-loading mdi-spin text-primary" *ngIf="isLoadingServices"></i>
-                        </span>
-                    </div>
-                    <small class="text-muted d-block mt-1" *ngIf="searchValue && searchValue.length > 0 && searchValue.length < 3">
-                        <i class="mdi mdi-information-outline"></i> Digite mais {{ 3 - searchValue.length }} caractere(s) para buscar
-                    </small>
-                </div>
-
-                <!-- Lista de serviços disponíveis -->
-                <div class="mb-4" *ngIf="searchValue && searchValue.length >= 3">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <h6 class="mb-0">Serviços disponíveis:</h6>
-                        <span *ngIf="isLoadingServices" class="text-muted">
-                            <i class="mdi mdi-loading mdi-spin"></i> Buscando...
-                        </span>
-                    </div>
-                    
-                    <!-- Mensagem quando está carregando -->
-                    <div *ngIf="isLoadingServices" class="text-center py-3">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">Carregando...</span>
-                        </div>
-                    </div>
-                    
-                    <!-- Mensagem quando não há resultados -->
-                    <div *ngIf="!isLoadingServices && availableServices.length === 0" class="alert alert-info">
-                        <i class="mdi mdi-information"></i> Nenhum serviço encontrado.
-                    </div>
-                    
-                    <!-- Lista de serviços -->
-                    <div class="list-group" *ngIf="!isLoadingServices && availableServices.length > 0">
-                        <div class="list-group-item d-flex justify-content-between align-items-center available-service-item" 
-                             *ngFor="let service of availableServices">
-                            <div>
-                                <strong>{{ service.name }}</strong>
-                                <span class="badge bg-secondary ms-2" *ngIf="service.code">{{ service.code }}</span>
-                                <br>
-                                <small class="text-muted">R$ {{ service.price.toFixed(2).replace('.', ',') }}</small>
-                            </div>
-                            <div class="action-buttons">
-                                <button 
-                                    class="btn btn-sm btn-add-service" 
-                                    (click)="addService(service)">
-                                    <i class="fas fa-plus"></i> Adicionar
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+                    <app-service-search
+                        placeholder="Pesquise por código ou nome do serviço (mínimo 3 caracteres)"
+                        [minCharacters]="3"
+                        [debounceTime]="500"
+                        [showPriceInList]="true"
+                        [showCodeBadge]="true"
+                        [clearOnSelect]="false"
+                        [resultLimit]="10"
+                        (serviceSelected)="addService($event)"
+                        (searchError)="onSearchError($event)">
+                    </app-service-search>
                 </div>
 
                 <!-- Tabela de serviços selecionados -->

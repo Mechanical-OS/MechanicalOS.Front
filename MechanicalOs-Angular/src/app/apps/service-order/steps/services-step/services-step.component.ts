@@ -5,6 +5,7 @@ import { ServiceOrderService } from '../../service-order.service';
 import { NotificationService } from 'src/app/shared/services/notification.service';
 import { ServiceService } from '../../../services/service.services';
 import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
+import { UiInteractionService } from 'src/app/shared/services/ui-interaction.service';
 
 @Component({
   selector: 'app-services-step',
@@ -24,10 +25,6 @@ export class ServicesStepComponent implements OnInit {
   draftSummary: { customer: string; vehicle: string; address: string; itemsCount: number } | null = null;
   isReadyToFinalize: boolean = false;
   isFinalizingshowing: boolean = false;
-
-  // Lista de serviços disponíveis (carregados da API)
-  availableServices: ServiceItem[] = [];
-  isLoadingServices: boolean = false;
   
   // Subject para debounce da busca
   private searchSubject = new Subject<string>();
@@ -37,7 +34,8 @@ export class ServicesStepComponent implements OnInit {
     private serviceOrderService: ServiceOrderService,
     private serviceService: ServiceService,
     private notificationService: NotificationService,
-    private router: Router
+    private router: Router,
+    private uiInteractionService: UiInteractionService
   ) { }
 
 
@@ -51,22 +49,10 @@ export class ServicesStepComponent implements OnInit {
       this.calculateTotals();
     }
 
-    // Carrega resumo dos dados
-    this.loadDraftSummary();
-
-    // Verifica se está pronto para finalizar
-    this.checkIfReadyToFinalize();
-    
-    // Configura o debounce para busca
-    this.setupSearchDebounce();
-  }
-
-  private loadDraftSummary(): void {
-    this.draftSummary = this.draftService.getDraftSummary();
-  }
-
-  private checkIfReadyToFinalize(): void {
-    this.isReadyToFinalize = this.draftService.isReadyToFinalize();
+      this.draftService.draft$.subscribe(draft => {
+      this.draftSummary = this.draftService.getDraftSummary();
+      this.isReadyToFinalize = this.draftService.isReadyToFinalize();
+    });
   }
 
   getCustomerStatusIcon(): string {
@@ -99,36 +85,9 @@ export class ServicesStepComponent implements OnInit {
     return draft.address?.exists ? 'Endereço existente' : 'Novo endereço';
   }
 
-  /**
-   * Configura o debounce para busca em tempo real
-   */
-  private setupSearchDebounce(): void {
-    this.searchSubject
-      .pipe(
-        debounceTime(500), // Aguarda 500ms após o usuário parar de digitar
-        distinctUntilChanged() // Só busca se o valor mudou
-      )
-      .subscribe(searchTerm => {
-        // Remove espaços em branco
-        const trimmedTerm = searchTerm.trim();
-        
-        // Se estiver vazio, limpa a lista e não busca
-        if (trimmedTerm.length === 0) {
-          this.availableServices = [];
-          this.isLoadingServices = false;
-          console.log('🔍 Campo vazio - lista limpa');
-          return;
-        }
-        
-        // Só busca se tiver 3 ou mais caracteres
-        if (trimmedTerm.length >= 3) {
-          this.searchServicesInAPI(trimmedTerm);
-        } else {
-          // Se tiver menos de 3 caracteres, limpa a lista
-          this.availableServices = [];
-          console.log('⚠️ Digite pelo menos 3 caracteres para buscar');
-        }
-      });
+  onSearchError(error: any): void {
+    console.error('❌ Erro retornado pelo componente de busca:', error);
+    this.notificationService.showToast('Erro ao buscar serviços. Tente novamente.', 'error');
   }
 
   /**
@@ -140,65 +99,22 @@ export class ServicesStepComponent implements OnInit {
     this.searchSubject.next(this.searchValue);
   }
 
-  /**
-   * Busca serviços na API usando o método findByFilter
-   */
-  private searchServicesInAPI(searchTerm: string): void {
-    this.isLoadingServices = true;
-    console.log(`📡 Buscando serviços na API com termo: "${searchTerm}"`);
-    
-    this.serviceService.findByFilter({ term: searchTerm }).subscribe({
-      next: (result) => {
-        this.isLoadingServices = false;
-        
-        if (result.statusCode === 200 && result.content) {
-          console.log(`✅ ${result.content.length} serviços encontrados`);
-          
-          // Mapeia os serviços da API para o formato ServiceItem
-          this.availableServices = result.content.map(service => ({
-            id: service.id,
-            name: service.name,
-            price: service.price / 100, // Converte centavos para reais
-            quantity: 1,
-            total: service.price / 100,
-            code: service.code,
-            description: service.description
-          }));
-          
-          console.log('Serviços mapeados:', this.availableServices);
-        } else {
-          console.warn('⚠️ Nenhum serviço encontrado');
-          this.availableServices = [];
-        }
-      },
-      error: (error) => {
-        this.isLoadingServices = false;
-        console.error('❌ Erro ao buscar serviços:', error);
-        this.notificationService.showToast('Erro ao buscar serviços. Tente novamente.', 'error');
-        this.availableServices = [];
-      }
-    });
-  }
-
   addService(service: ServiceItem): void {
     const existingServiceIndex = this.services.findIndex(s => s.id === service.id);
     
     if (existingServiceIndex >= 0) {
-      // Se o serviço já existe, incrementa a quantidade
-      this.services[existingServiceIndex].quantity += 1;
+      this.services[existingServiceIndex].quantity += service.quantity;
       this.updateServiceTotal(existingServiceIndex);
-      
-      // Move o serviço para o topo da lista
       const updatedService = this.services.splice(existingServiceIndex, 1)[0];
       this.services.unshift(updatedService);
     } else {
-      // Se é um novo serviço, adiciona no início da lista
-      const newService = { ...service, quantity: 1, total: service.price };
+      const newService = { ...service, total: service.price * service.quantity };
       this.services.unshift(newService);
     }
     
     this.calculateTotals();
     this.saveServices();
+    this.notificationService.showToast(`${service.quantity}x ${service.name} adicionado(s)!`, 'success');
   }
 
   updateServiceQuantity(index: number, quantity: number): void {
@@ -214,10 +130,24 @@ export class ServicesStepComponent implements OnInit {
     this.services[index].total = this.services[index].price * this.services[index].quantity;
   }
 
-  removeService(index: number): void {
-    this.services.splice(index, 1);
-    this.calculateTotals();
-    this.saveServices();
+  async removeService(index: number): Promise<void> {
+    const serviceToRemove = this.services[index];
+    
+    const result = await this.uiInteractionService.showSweetAlert({
+      title: 'Remover Serviço?',
+      text: `Tem certeza que deseja remover "${serviceToRemove.name}" da ordem de serviço?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sim, remover',
+      cancelButtonText: 'Cancelar'
+    }, []);
+
+    if (result.isConfirmed) {
+      this.services.splice(index, 1);
+      this.calculateTotals();
+      this.saveServices();
+      this.notificationService.showToast(`"${serviceToRemove.name}" foi removido.`, 'success');
+    }
   }
 
   private calculateTotals(): void {
@@ -253,53 +183,56 @@ export class ServicesStepComponent implements OnInit {
 
 
   async finalizeOrder(): Promise<void> {
-    // Verifica se tem os dados mínimos
     if (!this.isReadyToFinalize) {
-      this.notificationService.showToast('Preencha todos os dados obrigatórios antes de finalizar', 'warning');
+      await this.uiInteractionService.showSweetAlert({
+        title: 'Atenção',
+        text: 'Preencha todos os dados obrigatórios nas etapas anteriores antes de finalizar.',
+        icon: 'warning'
+      }, []);
       return;
     }
 
     if (this.services.length === 0) {
-      this.notificationService.showToast('Adicione pelo menos um serviço antes de finalizar', 'warning');
+      await this.uiInteractionService.showSweetAlert({
+        title: 'Atenção',
+        text: 'Adicione pelo menos um serviço antes de finalizar.',
+        icon: 'warning'
+      }, []);
       return;
     }
 
-    // Confirma a finalização
-    if (!confirm('Deseja finalizar a ordem de serviço? Todos os dados serão salvos.')) {
-      return;
-    }
+    const result = await this.uiInteractionService.showSweetAlert({
+      title: 'Finalizar Ordem de Serviço?',
+      text: 'Todos os dados serão salvos e a O.S. será criada.',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Sim, finalizar!',
+      cancelButtonText: 'Não'
+    }, []);
 
-    try {
+    if (result.isConfirmed) {
       this.isFinalizingshowing = true;
-
-      // Salva os dados finais no draft
-      this.draftService.updateServices(this.services);
-      this.draftService.updateDiscount(this.discount);
-      this.draftService.updateDescription(this.description);
-
-      // Obtém o draft atualizado
-      const draft = this.draftService.getCurrentDraft();
-
-      // Cria a ordem de serviço completa (Customer → Address → Vehicle → Order)
-      const result = await this.serviceOrderService.createCompleteServiceOrder(draft);
-
-      if (result.statusCode === 200) {
-        this.notificationService.showSuccess(result);
+      try {
+        this.draftService.updateServices(this.services);
+        this.draftService.updateDiscount(this.discount);
+        this.draftService.updateDescription(this.description);
+        const draft = this.draftService.getCurrentDraft();
         
-        // Limpa o draft
-        this.draftService.createNewDraft();
-        
-        // Navega de volta para a listagem
-        this.router.navigate(['/apps/service-orders']);
-      } else {
-        throw new Error(result.message || 'Erro ao criar ordem de serviço');
+        const apiResult: any = await this.serviceOrderService.createCompleteServiceOrder(draft);
+
+        if (apiResult.statusCode === 200) {
+          await this.uiInteractionService.showSweetAlert({ title: 'Sucesso!', text: 'Ordem de Serviço criada com sucesso.', icon: 'success' }, []);
+          this.draftService.createNewDraft();
+          this.router.navigate(['/apps/service-orders']);
+        } else {
+          throw new Error(apiResult.message || 'Erro ao criar ordem de serviço');
+        }
+      } catch (error: any) {
+        console.error('Erro ao finalizar ordem:', error);
+        await this.uiInteractionService.showSweetAlert({ title: 'Erro!', text: error.message || 'Não foi possível finalizar a ordem.', icon: 'error' }, []);
+      } finally {
+        this.isFinalizingshowing = false;
       }
-
-    } catch (error: any) {
-      console.error('Erro ao finalizar ordem:', error);
-      this.notificationService.showError(error);
-    } finally {
-      this.isFinalizingshowing = false;
     }
   }
 }

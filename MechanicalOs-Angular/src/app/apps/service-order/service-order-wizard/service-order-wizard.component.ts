@@ -4,6 +4,7 @@ import { BreadcrumbItem } from 'src/app/shared/page-title/page-title.model';
 import { ServiceOrderDraftService } from '../shared/service-order-draft.service';
 import { ServiceOrderDraft } from '../shared/service-order-draft.service';
 import { filter } from 'rxjs/operators';
+import { UiInteractionService } from 'src/app/shared/services/ui-interaction.service';
 
 @Component({
   selector: 'app-service-order-wizard',
@@ -18,7 +19,8 @@ export class ServiceOrderWizardComponent implements OnInit {
   constructor(
     private router: Router,
     private route: ActivatedRoute,
-    private draftService: ServiceOrderDraftService
+    private draftService: ServiceOrderDraftService,
+    private uiInteractionService: UiInteractionService
   ) { }
 
   ngOnInit(): void {
@@ -125,8 +127,17 @@ export class ServiceOrderWizardComponent implements OnInit {
     }, 100);
   }
 
-  onCancel(): void {
-    if (confirm('Tem certeza que deseja cancelar? Todos os dados serão perdidos.')) {
+  async onCancel(): Promise<void> {
+    const result = await this.uiInteractionService.showSweetAlert({
+      title: 'Cancelar Criação?',
+      text: "Tem certeza que deseja cancelar? Todos os dados não salvos serão perdidos.",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sim, cancelar',
+      cancelButtonText: 'Não'
+    }, []); // Array de botões vazio, pois não há menu aqui
+
+    if (result.isConfirmed) {
       this.draftService.resetDraft();
       this.router.navigate(['/apps/service-orders']);
     }

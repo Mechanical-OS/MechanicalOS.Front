@@ -12,6 +12,7 @@ import { NotificationService } from "src/app/shared/services/notification.servic
 import { ServiceItem } from "src/app/shared/service-search";
 import pdfMake from "pdfmake/build/pdfmake";
 import pdfFonts from "pdfmake/build/vfs_fonts";
+import { UiInteractionService } from 'src/app/shared/services/ui-interaction.service';
 import { AlignLeft } from "angular-feather/icons";
 
 // Configura as fontes do pdfMake
@@ -54,7 +55,8 @@ export class ServiceOrderEditComponent implements OnInit {
     private router: Router,
     private serviceOrderService: ServiceOrderService,
     private draftService: ServiceOrderDraftService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private uiInteractionService: UiInteractionService
   ) {}
 
   ngOnInit(): void {
@@ -72,43 +74,26 @@ export class ServiceOrderEditComponent implements OnInit {
     });
   }
 
-  private loadServiceOrder(): void {
+  async loadServiceOrder(): Promise<void> {
     console.log("🔍 Buscando ordem de serviço ID:", this.orderId);
-
-    // Exibe o loading
     this.notificationService.showLoading("Carregando ordem de serviço...");
 
-    this.serviceOrderService.getOrderById(this.orderId).subscribe({
-      next: (response) => {
-        console.log("✅ Resposta da API:", response);
-
-        // Esconde o loading
-        this.notificationService.hideLoading();
-
-        if (response && response.statusCode === 200 && response.content) {
-          this.populateForm(response.content);
-        } else {
-          console.error("❌ Erro: Resposta inválida da API", response);
-          this.notificationService.showError({
-            message:
-              "Erro ao carregar ordem de serviço. Dados não encontrados.",
-          });
-          this.router.navigate(["/apps/service-orders"]);
-        }
-      },
-      error: (error) => {
-        console.error("❌ Erro ao buscar ordem de serviço:", error);
-
-        // Esconde o loading e exibe erro
-        this.notificationService.hideLoading();
-        this.notificationService.showError(error);
-
-        // Aguarda um momento antes de redirecionar para que o usuário veja o erro
-        setTimeout(() => {
-          this.router.navigate(["/apps/service-orders"]);
-        }, 2000);
-      },
-    });
+    try {
+      const response = await this.serviceOrderService.getOrderById(this.orderId).toPromise();
+      this.notificationService.hideLoading();
+      
+      if (response && response.statusCode === 200 && response.content) {
+        this.populateForm(response.content);
+      } else {
+        await this.uiInteractionService.showSweetAlert({ title: 'Erro', text: 'Erro ao carregar ordem de serviço. Dados não encontrados.', icon: 'error' }, []);
+        this.router.navigate(["/apps/service-orders"]);
+      }
+    } catch (error) {
+      console.error("❌ Erro ao buscar ordem de serviço:", error);
+      this.notificationService.hideLoading();
+      await this.uiInteractionService.showSweetAlert({ title: 'Erro', text: 'Erro de comunicação ao carregar a ordem.', icon: 'error' }, []);
+      this.router.navigate(["/apps/service-orders"]);
+    }
   }
 
   /**
@@ -315,9 +300,7 @@ export class ServiceOrderEditComponent implements OnInit {
    */
   onSearchError(error: any): void {
     console.error("❌ Erro ao buscar serviços:", error);
-    this.notificationService.showError({
-      message: "Erro ao buscar serviços. Tente novamente.",
-    });
+    this.uiInteractionService.showSweetAlert({ title: 'Erro', text: 'Erro ao buscar serviços. Tente novamente.', icon: 'error' }, []);
   }
 
   /**
@@ -350,6 +333,7 @@ export class ServiceOrderEditComponent implements OnInit {
     }
 
     this.calculateTotals();
+    this.notificationService.showToast(`${service.quantity}x ${service.name} adicionado(s)!`, 'success');
   }
 
   updateServiceQuantity(index: number, quantity: number): void {
@@ -446,22 +430,13 @@ export class ServiceOrderEditComponent implements OnInit {
     return classMap[status] || "";
   }
 
-  saveChanges(): void {
-    console.log("💾 Salvando alterações da ordem:", this.orderId);
-
-    // Valida se há ordem carregada
+  async saveChanges(): Promise<void> {
     if (!this.serviceOrder) {
-      this.notificationService.showError({
-        message: "Erro: Ordem de serviço não carregada.",
-      });
+      this.uiInteractionService.showSweetAlert({ title: 'Erro', text: 'Ordem de serviço não carregada.', icon: 'error' }, []);
       return;
     }
-
-    // Valida se há serviços
     if (!this.services || this.services.length === 0) {
-      this.notificationService.showError({
-        message: "Adicione pelo menos um serviço à ordem de serviço.",
-      });
+      this.uiInteractionService.showSweetAlert({ title: 'Atenção', text: 'Adicione pelo menos um serviço à ordem de serviço.', icon: 'warning' }, []);
       return;
     }
 
@@ -504,45 +479,36 @@ export class ServiceOrderEditComponent implements OnInit {
       JSON.stringify(updatePayload, null, 2)
     );
 
-    // Exibe loading
-    this.notificationService.showLoading("Salvando alterações...");
-
-    // Chama a API para atualizar
-    this.serviceOrderService.updateOrder(updatePayload).subscribe({
-      next: (response) => {
-        console.log("✅ Resposta da API:", response);
-
-        // Esconde loading
-        this.notificationService.hideLoading();
-
-        if (response && response.statusCode === 200) {
-          this.notificationService.showSuccess(response, "Sucesso");
-
-          // Aguarda um momento e navega de volta
-          setTimeout(() => {
-            this.router.navigate(["/apps/service-orders"]);
-          }, 1500);
-        } else {
-          console.error("❌ Erro na atualização:", response);
-          this.notificationService.showError({
-            message: response.message || "Erro ao atualizar ordem de serviço.",
-          });
-        }
-      },
-      error: (error) => {
-        console.error("❌ Erro ao atualizar ordem de serviço:", error);
-
-        // Esconde loading e exibe erro
-        this.notificationService.hideLoading();
-        this.notificationService.showError(error);
-      },
-    });
+  this.notificationService.showLoading("Salvando alterações...");
+  try {
+    const response = await this.serviceOrderService.updateOrder(updatePayload).toPromise();
+    this.notificationService.hideLoading();
+    if (response && response.statusCode === 200) {
+      const successMessage = response.message || 'Alterações salvas com sucesso!';
+      await this.uiInteractionService.showSweetAlert({ title: 'Sucesso', text: successMessage, icon: 'success' }, []);
+    //  this.router.navigate(["/apps/service-orders"]);
+    } else {
+      const errorMessage = response?.message || "Erro ao atualizar ordem de serviço.";
+      await this.uiInteractionService.showSweetAlert({ title: 'Erro', text: errorMessage, icon: 'error' }, []);
+    }
+  } catch (error) {
+      console.error("❌ Erro ao atualizar ordem de serviço:", error);
+      this.notificationService.hideLoading();
+      await this.uiInteractionService.showSweetAlert({ title: 'Erro', text: 'Erro de comunicação ao salvar.', icon: 'error' }, []);
+    }
   }
 
-  cancel(): void {
-    if (
-      confirm("Tem certeza que deseja cancelar? As alterações serão perdidas.")
-    ) {
+  async cancel(): Promise<void> {
+    const result = await this.uiInteractionService.showSweetAlert({
+      title: 'Cancelar Alterações',
+      text: "Tem certeza que deseja cancelar? As alterações serão perdidas.",
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Sim, cancelar',
+      cancelButtonText: 'Não'
+    }, []);
+    
+    if (result.isConfirmed) {
       this.router.navigate(["/apps/service-orders"]);
     }
   }

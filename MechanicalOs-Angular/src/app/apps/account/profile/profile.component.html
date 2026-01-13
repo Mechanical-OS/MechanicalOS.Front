@@ -1,0 +1,220 @@
+<app-page-title [breadcrumbItems]="pageTitle" title="Minha Conta"></app-page-title>
+
+<div class="row">
+    <div class="col-12">
+        <div class="row">
+            <!-- Profile Information -->
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title mb-4">Informações do Perfil</h5>
+                        
+                        <app-ui-preloader [display]="loading"></app-ui-preloader>
+                        
+                        @if(success){
+                        <ngb-alert type="success" [dismissible]="true" (closed)="success = ''">{{ success }}</ngb-alert>
+                        }
+                        @if(error){
+                        <ngb-alert type="danger" [dismissible]="false">{{ error }}</ngb-alert>
+                        }
+
+                        <!-- Profile Form -->
+                        <form name="profile-form" [formGroup]="profileForm" (ngSubmit)="onSubmitProfile()">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="firstName" class="form-label">Nome</label>
+                                    <input class="form-control" type="text" id="firstName" 
+                                        placeholder="Digite seu nome" required 
+                                        formControlName="firstName" 
+                                        [ngClass]="{'is-invalid': formSubmitted && profileFormValues.firstName.invalid}">
+                                    @if(formSubmitted && profileFormValues.firstName.invalid){
+                                    <div class="invalid-feedback">
+                                        @if(profileFormValues.firstName.errors?.required){
+                                        <div>Nome é obrigatório.</div>
+                                        }
+                                    </div>
+                                    }
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="lastName" class="form-label">Sobrenome</label>
+                                    <input class="form-control" type="text" id="lastName" 
+                                        placeholder="Digite seu sobrenome" required 
+                                        formControlName="lastName" 
+                                        [ngClass]="{'is-invalid': formSubmitted && profileFormValues.lastName.invalid}">
+                                    @if(formSubmitted && profileFormValues.lastName.invalid){
+                                    <div class="invalid-feedback">
+                                        @if(profileFormValues.lastName.errors?.required){
+                                        <div>Sobrenome é obrigatório.</div>
+                                        }
+                                    </div>
+                                    }
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="email" class="form-label">Email</label>
+                                    <input class="form-control" type="email" id="email" 
+                                        placeholder="Digite seu email" required 
+                                        formControlName="email" 
+                                        [ngClass]="{'is-invalid': formSubmitted && profileFormValues.email.invalid}">
+                                    @if(formSubmitted && profileFormValues.email.invalid){
+                                    <div class="invalid-feedback">
+                                        @if(profileFormValues.email.errors?.required){
+                                        <div>Email é obrigatório.</div>
+                                        }
+                                        @if(profileFormValues.email.errors?.email){
+                                        <div>Email inválido.</div>
+                                        }
+                                    </div>
+                                    }
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="phone" class="form-label">Telefone</label>
+                                    <input class="form-control" type="tel" id="phone" 
+                                        placeholder="(00) 00000-0000" 
+                                        formControlName="phone">
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="location" class="form-label">Localização</label>
+                                    <input class="form-control" type="text" id="location" 
+                                        placeholder="Cidade, Estado" 
+                                        formControlName="location">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="title" class="form-label">Cargo/Título</label>
+                                    <input class="form-control" type="text" id="title" 
+                                        placeholder="Ex: Administrador" 
+                                        formControlName="title">
+                                </div>
+                            </div>
+
+                            <div class="text-end">
+                                <button class="btn btn-primary" type="submit" [disabled]="loading">
+                                    @if(loading){
+                                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                    }
+                                    Salvar Alterações
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Password Change & Actions -->
+            <div class="col-lg-4">
+                <!-- Change Password -->
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h5 class="card-title mb-4">Alterar Senha</h5>
+                        
+                        <app-ui-preloader [display]="passwordLoading"></app-ui-preloader>
+                        
+                        @if(passwordSuccess){
+                        <ngb-alert type="success" [dismissible]="true" (closed)="passwordSuccess = ''">{{ passwordSuccess }}</ngb-alert>
+                        }
+                        @if(passwordError){
+                        <ngb-alert type="danger" [dismissible]="false">{{ passwordError }}</ngb-alert>
+                        }
+
+                        <form name="password-form" [formGroup]="passwordForm" (ngSubmit)="onSubmitPassword()">
+                            <div class="mb-3">
+                                <label for="currentPassword" class="form-label">Senha Atual</label>
+                                <div class="input-group input-group-merge">
+                                    <input [type]="showCurrentPassword ? 'text' : 'password'" 
+                                        id="currentPassword" class="form-control" 
+                                        placeholder="Digite sua senha atual" required 
+                                        formControlName="currentPassword" 
+                                        [ngClass]="{'is-invalid': passwordFormSubmitted && passwordFormValues.currentPassword.invalid}">
+                                    <div class="input-group-text" (click)="showCurrentPassword = !showCurrentPassword">
+                                        <span class="password-eye"></span>
+                                    </div>
+                                    @if(passwordFormSubmitted && passwordFormValues.currentPassword.invalid){
+                                    <div class="invalid-feedback">
+                                        @if(passwordFormValues.currentPassword.errors?.required){
+                                        <div>Senha atual é obrigatória.</div>
+                                        }
+                                    </div>
+                                    }
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="newPassword" class="form-label">Nova Senha</label>
+                                <div class="input-group input-group-merge">
+                                    <input [type]="showNewPassword ? 'text' : 'password'" 
+                                        id="newPassword" class="form-control" 
+                                        placeholder="Digite a nova senha" required minlength="4" 
+                                        formControlName="newPassword" 
+                                        [ngClass]="{'is-invalid': passwordFormSubmitted && passwordFormValues.newPassword.invalid}">
+                                    <div class="input-group-text" (click)="showNewPassword = !showNewPassword">
+                                        <span class="password-eye"></span>
+                                    </div>
+                                    @if(passwordFormSubmitted && passwordFormValues.newPassword.invalid){
+                                    <div class="invalid-feedback">
+                                        @if(passwordFormValues.newPassword.errors?.required){
+                                        <div>Nova senha é obrigatória.</div>
+                                        }
+                                        @if(passwordFormValues.newPassword.errors?.minlength){
+                                        <div>Senha precisa ter mais de 3 caracteres.</div>
+                                        }
+                                    </div>
+                                    }
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="confirmPassword" class="form-label">Confirmar Nova Senha</label>
+                                <div class="input-group input-group-merge">
+                                    <input [type]="showConfirmPassword ? 'text' : 'password'" 
+                                        id="confirmPassword" class="form-control" 
+                                        placeholder="Confirme a nova senha" required 
+                                        formControlName="confirmPassword" 
+                                        [ngClass]="{'is-invalid': passwordFormSubmitted && (passwordFormValues.confirmPassword.invalid || passwordForm.errors?.passwordMismatch)}">
+                                    <div class="input-group-text" (click)="showConfirmPassword = !showConfirmPassword">
+                                        <span class="password-eye"></span>
+                                    </div>
+                                    @if(passwordFormSubmitted && (passwordFormValues.confirmPassword.invalid || passwordForm.errors?.passwordMismatch)){
+                                    <div class="invalid-feedback">
+                                        @if(passwordFormValues.confirmPassword.errors?.required){
+                                        <div>Confirmação de senha é obrigatória.</div>
+                                        }
+                                        @if(passwordForm.errors?.passwordMismatch){
+                                        <div>As senhas não coincidem.</div>
+                                        }
+                                    </div>
+                                    }
+                                </div>
+                            </div>
+
+                            <div class="text-end">
+                                <button class="btn btn-warning" type="submit" [disabled]="passwordLoading">
+                                    @if(passwordLoading){
+                                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                    }
+                                    Alterar Senha
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Logout -->
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title mb-4">Ações</h5>
+                        <button class="btn btn-danger w-100" type="button" (click)="logout()">
+                            <i class="mdi mdi-logout me-2"></i>
+                            Sair do Sistema
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

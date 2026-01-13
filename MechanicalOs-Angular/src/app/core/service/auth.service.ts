@@ -65,5 +65,32 @@ export class AuthenticationService {
         sessionStorage.removeItem('toolsModulesCache');
         this.user = null;
     }
+
+    /**
+     * Update user profile
+     * @param userData user data to update
+     */
+    updateProfile(userData: Partial<User>): any {
+        return this.http.put<any>(`/api/user/profile`, userData)
+            .pipe(map(user => {
+                if (user && user.token) {
+                    this.user = { ...this.user, ...user };
+                    sessionStorage.setItem('currentUser', JSON.stringify(this.user));
+                }
+                return user;
+            }));
+    }
+
+    /**
+     * Change user password
+     * @param currentPassword current password
+     * @param newPassword new password
+     */
+    changePassword(currentPassword: string, newPassword: string): any {
+        return this.http.post<any>(`/api/user/change-password`, { 
+            currentPassword, 
+            newPassword 
+        });
+    }
 }
 

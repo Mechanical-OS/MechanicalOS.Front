@@ -66,6 +66,49 @@ export class FakeBackendInterceptor implements HttpInterceptor {
                 return ok(users);
             }
 
+            // update user profile - protected
+            if (request.url.endsWith('/api/user/profile') && request.method === 'PUT') {
+                if (!isLoggedIn) { return unauthorised(); }
+                const currentUser = JSON.parse(sessionStorage.getItem('currentUser')!);
+                const userIndex = users.findIndex(x => x.id === currentUser.id);
+                if (userIndex === -1) { return error('Usuário não encontrado'); }
+                
+                const updatedUser = {
+                    ...users[userIndex],
+                    ...request.body,
+                    name: request.body.firstName + ' ' + request.body.lastName,
+                    token: currentUser.token
+                };
+                users[userIndex] = updatedUser;
+                sessionStorage.setItem('users', JSON.stringify(users));
+                sessionStorage.setItem('currentUser', JSON.stringify(updatedUser));
+                
+                return ok(updatedUser);
+            }
+
+            // change password - protected
+            if (request.url.endsWith('/api/user/change-password') && request.method === 'POST') {
+                if (!isLoggedIn) { return unauthorised(); }
+                const currentUser = JSON.parse(sessionStorage.getItem('currentUser')!);
+                const user = users.find(x => x.id === currentUser.id);
+                if (!user) { return error('Usuário não encontrado'); }
+                if (user.password !== request.body.currentPassword) { 
+                    return error('Senha atual incorreta'); 
+                }
+                
+                user.password = request.body.newPassword;
+                const updatedUser = {
+                    ...user,
+                    token: currentUser.token
+                };
+                const userIndex = users.findIndex(x => x.id === currentUser.id);
+                users[userIndex] = updatedUser;
+                sessionStorage.setItem('users', JSON.stringify(users));
+                sessionStorage.setItem('currentUser', JSON.stringify(updatedUser));
+                
+                return ok({ message: 'Senha alterada com sucesso' });
+            }
+
 
 
             // pass through any requests not handled above

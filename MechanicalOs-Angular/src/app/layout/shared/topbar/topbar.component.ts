@@ -113,7 +113,7 @@ export class TopbarComponent implements OnInit {
       {
         label: "Minha Conta",
         icon: "fe-user",
-        redirectTo: "/apps/contacts/profile",
+        redirectTo: "/apps/account/profile",
       },
       {
         label: "Configurações",
@@ -128,7 +128,7 @@ export class TopbarComponent implements OnInit {
       {
         label: "Sair",
         icon: "fe-log-out",
-        redirectTo: "/auth/login",
+        redirectTo: "/auth/logout",
       },
     ];
   }

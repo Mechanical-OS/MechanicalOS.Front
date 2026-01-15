@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { ServiceOrder } from '../../Shared/models/service-order.model';
 
 export interface VehicleData {
@@ -91,6 +91,8 @@ export interface ServiceOrderDraft {
   status: number;
 }
 
+type SaveCallback = (success: boolean) => void;
+
 @Injectable({
   providedIn: 'root'
 })
@@ -98,6 +100,9 @@ export class ServiceOrderDraftService {
   private readonly STORAGE_KEY = 'mechanical-os-service-order-draft';
   private draftSubject = new BehaviorSubject<ServiceOrderDraft>(this.loadDraftFromStorage());
   public draft$ = this.draftSubject.asObservable();
+
+  private saveStepSource = new Subject<SaveCallback>();
+  public saveStep$ = this.saveStepSource.asObservable();
 
   constructor() {
     // Salva automaticamente quando houver mudanças
@@ -370,12 +375,8 @@ export class ServiceOrderDraftService {
     });
   }
 
-  saveCurrentStep(): void {
-    const currentDraft = this.getCurrentDraft();
-    console.log('Dados salvos da etapa atual:', currentDraft);
-    
-    // Força uma nova emissão do observable (que salva automaticamente no storage)
-    this.draftSubject.next(currentDraft);
+  triggerSaveCurrentStep(callback: SaveCallback): void {
+    this.saveStepSource.next(callback);
   }
 
   /**

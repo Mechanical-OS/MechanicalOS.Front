@@ -4,6 +4,7 @@ import { ServiceOrderDraftService, VehicleData } from '../../shared/service-orde
 import { VehicleService } from 'src/app/apps/vehicle/vehicle.service';
 import { NotificationService } from 'src/app/shared/services/notification.service';
 import { PlateConsultationResponse } from 'src/app/apps/Shared/models/plate-consultation.model';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-vehicle-step',
@@ -15,6 +16,7 @@ export class VehicleStepComponent implements OnInit, OnDestroy {
   plateSearchValue: string = '';
   isSearching: boolean = false;
   vehicleFound: PlateConsultationResponse | null = null;
+  private saveSubscription!: Subscription; 
 
   constructor(
     private fb: FormBuilder,
@@ -26,24 +28,44 @@ export class VehicleStepComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    // Carrega dados existentes se houver
     const currentDraft = this.draftService.getCurrentDraft();
     if (currentDraft.vehicle?.data) {
       this.loadVehicleData(currentDraft.vehicle.data);
     }
+    this.saveSubscription = this.draftService.saveStep$.subscribe((callback) => {
+      this.onSave(callback);
+    });
+  }
+
+  onSave(callback: (success: boolean) => void): void {
+    if (this.vehicleForm.valid) {
+      const vehicleData: VehicleData = this.vehicleForm.value;
+      const currentVehicleId = this.draftService.getCurrentDraft().vehicle?.id;
+      this.draftService.updateVehicleData(vehicleData, currentVehicleId);
+      console.log('Dados de veículo salvos sob comando:', vehicleData);
+      callback(true);
+    } else {
+      this.markFormGroupTouched();
+      this.notificationService.showMessage('Por favor, preencha os campos obrigatórios.', 'warning');
+      callback(false);
+    }
+  }
+
+  ngOnDestroy(): void {
+    if (this.saveSubscription) { this.saveSubscription.unsubscribe(); }
   }
 
   private createForm(): FormGroup {
     return this.fb.group({
-      brand: ['', Validators.required],
-      model: ['', Validators.required],
-      version: [''],
-      year: ['', Validators.required],
-      chassi: [''],
-      color: ['', Validators.required],
-      transmission: ['', Validators.required],
-      engine: [''],
-      plate: ['', Validators.required]
+      brand: ['', [Validators.required, Validators.maxLength(50)]],
+      model: ['', [Validators.required, Validators.maxLength(50)]],
+      version: ['', [Validators.maxLength(50)]],
+      year: ['', [Validators.required, Validators.minLength(4), Validators.maxLength(4)]],
+      chassi: ['', [Validators.maxLength(17)]],
+      color: ['', [Validators.required, Validators.maxLength(30)]],
+      transmission: ['', [Validators.required, Validators.maxLength(50)]],
+      engine: ['', [Validators.maxLength(50)]],
+      plate: ['', [Validators.required, Validators.minLength(7), Validators.maxLength(8)]]
     });
   }
 
@@ -151,28 +173,6 @@ export class VehicleStepComponent implements OnInit, OnDestroy {
 
     this.notificationService.showToast('Veículo não encontrado. Por favor, preencha os dados manualmente.', 'info');
     console.log('Veículo não encontrado para a placa:', plate);
-  }
-
-  onSaveVehicle(): void {
-    if (this.vehicleForm.valid) {
-      const vehicleData: VehicleData = this.vehicleForm.value;
-      this.draftService.updateVehicleData(vehicleData);
-      console.log('Dados do veículo salvos:', vehicleData);
-    } else {
-      this.markFormGroupTouched();
-    }
-  }
-
-  ngOnDestroy(): void {
-    console.log('VehicleStepComponent sendo destruído');
-    // Salva automaticamente quando o componente é destruído
-    if (this.vehicleForm.valid) {
-      const vehicleData: VehicleData = this.vehicleForm.value;
-      const currentDraft = this.draftService.getCurrentDraft();
-      const vehicleId = currentDraft.vehicle?.id;
-      this.draftService.updateVehicleData(vehicleData, vehicleId);
-      console.log('Dados do veículo salvos automaticamente:', vehicleData);
-    }
   }
 
   private markFormGroupTouched(): void {

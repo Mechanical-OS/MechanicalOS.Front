@@ -4,6 +4,7 @@ import { ServiceOrderDraftService, OwnerData } from '../../shared/service-order-
 import { CustomerService } from 'src/app/apps/customers/customer.service';
 import { NotificationService } from 'src/app/shared/services/notification.service';
 import { Customer } from 'src/app/apps/Shared/models/customer.model';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-owner-step',
@@ -16,11 +17,13 @@ export class OwnerStepComponent implements OnInit, OnDestroy {
   isSearching: boolean = false;
   customerFound: Customer | null = null;
 
+  private saveSubscription!: Subscription;
+
   constructor(
     private fb: FormBuilder,
     private draftService: ServiceOrderDraftService,
     private customerService: CustomerService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
   ) {
     this.ownerForm = this.createForm();
   }
@@ -32,19 +35,40 @@ export class OwnerStepComponent implements OnInit, OnDestroy {
     if (currentDraft.customer?.data) {
       this.loadOwnerData(currentDraft.customer.data);
     }
+    this.saveSubscription = this.draftService.saveStep$.subscribe((callback) => {
+      this.onSave(callback); 
+    });
+  }
+
+  onSave(callback: (success: boolean) => void): void {
+    if (this.ownerForm.valid) {
+      const ownerData: OwnerData = this.ownerForm.value;
+      const currentCustomerId = this.draftService.getCurrentDraft().customer?.id;
+      this.draftService.updateCustomerData(ownerData, currentCustomerId);
+      
+      callback(true);
+    } else {
+      this.markFormGroupTouched();
+      this.notificationService.showMessage('Por favor, preencha os campos obrigatórios.', 'warning');
+      callback(false);
+    }
+  }
+
+  ngOnDestroy(): void {
+    if (this.saveSubscription) { this.saveSubscription.unsubscribe(); }
   }
 
   private createForm(): FormGroup {
     return this.fb.group({
-      firstName: ['', Validators.required],
-      lastName: ['', Validators.required],
+      firstName: ['', [Validators.required, Validators.maxLength(50)]],
+      lastName: ['', [Validators.required, Validators.maxLength(100)]],
       birthDate: ['', Validators.required],
       cpf: ['', [Validators.required, Validators.pattern(/^\d{3}\.\d{3}\.\d{3}-\d{2}$/)]],
-      rg: [''],
-      email: ['', [Validators.required, Validators.email]],
-      phone: [''],
-      cellPhone: ['', Validators.required],
-      contact: ['']
+      rg: ['', [Validators.maxLength(12)]], // Ex: 99.999.999-X
+      email: ['', [Validators.required, Validators.email, Validators.maxLength(150)]],
+      phone: ['', [Validators.maxLength(15)]], // Ex: (99) 9999-9999
+      cellPhone: ['', [Validators.required, Validators.maxLength(15)]], // Ex: (99) 99999-9999
+      contact: ['', [Validators.maxLength(50)]]
     });
   }
 
@@ -200,16 +224,6 @@ export class OwnerStepComponent implements OnInit, OnDestroy {
     return value;
   }
 
-  onSaveOwner(): void {
-    if (this.ownerForm.valid) {
-      const ownerData: OwnerData = this.ownerForm.value;
-      this.draftService.updateOwnerData(ownerData);
-      console.log('Dados do proprietário salvos:', ownerData);
-    } else {
-      this.markFormGroupTouched();
-    }
-  }
-
   private markFormGroupTouched(): void {
     Object.keys(this.ownerForm.controls).forEach(key => {
       const control = this.ownerForm.get(key);
@@ -222,6 +236,18 @@ export class OwnerStepComponent implements OnInit, OnDestroy {
     return !!(field && field.invalid && (field.dirty || field.touched));
   }
 
+  formatCpfSearch(event: any): void {
+    let value = event.target.value.replace(/\D/g, '');
+    if (value.length > 11) {
+      value = value.substring(0, 11);
+    }
+
+    value = value.replace(/(\d{3})(\d)/, '$1.$2');
+    value = value.replace(/(\d{3})(\d)/, '$1.$2');
+    value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+    this.cpfSearchValue = value;
+  }
+
   formatCpf(event: any): void {
     let value = event.target.value.replace(/\D/g, '');
     if (value.length <= 11) {
@@ -232,27 +258,56 @@ export class OwnerStepComponent implements OnInit, OnDestroy {
     }
   }
 
+  formatRg(event: any): void {
+    let value = event.target.value.replace(/\D/g, ''); 
+    if (value.length > 9) {
+      value = value.substring(0, 9);
+    }
+
+    value = value.replace(/(\d{2})(\d)/, '$1.$2');
+    value = value.replace(/(\d{3})(\d)/, '$1.$2');
+    value = value.replace(/(\d{3})(\d{1})$/, '$1-$2');
+    this.ownerForm.patchValue({ rg: value }, { emitEvent: false });
+  }
+
   formatPhone(event: any): void {
     let value = event.target.value.replace(/\D/g, '');
-    if (value.length <= 11) {
-      if (value.length <= 10) {
-        value = value.replace(/(\d{2})(\d)/, '$1-$2');
-        value = value.replace(/(\d{4})(\d)/, '$1-$2');
-      } else {
-        value = value.replace(/(\d{2})(\d)/, '$1-$2');
-        value = value.replace(/(\d{5})(\d)/, '$1-$2');
-      }
-      this.ownerForm.patchValue({ phone: value });
+    if (value.length > 11) {
+      value = value.substring(0, 11);
     }
+
+    if (value.length > 10) {
+      value = value.replace(/^(\d\d)(\d{5})(\d{4}).*/, '($1) $2-$3');
+    } else if (value.length > 6) {
+      value = value.replace(/^(\d\d)(\d{4})(\d{4}).*/, '($1) $2-$3');
+    } else if (value.length > 2) {
+      value = value.replace(/^(\d\d)(\d*)/, '($1) $2');
+    } else if (value.length > 0) {
+      value = value.replace(/^(\d*)/, '($1');
+    }
+
+    event.target.value = value;
+    //this.ownerForm.get('phone')?.setValue(value.replace(/\D/g, ''), { emitEvent: false });
   }
 
   formatCellPhone(event: any): void {
-    let value = event.target.value.replace(/\D/g, '');
-    if (value.length <= 11) {
-      value = value.replace(/(\d{2})(\d)/, '$1-$2');
-      value = value.replace(/(\d{5})(\d)/, '$1-$2');
-      this.ownerForm.patchValue({ cellPhone: value });
+    let value = event.target.value.replace(/\D/g, ''); 
+    if (value.length > 11) {
+      value = value.substring(0, 11); 
     }
+
+    if (value.length > 10) {
+      value = value.replace(/^(\d\d)(\d{5})(\d{4}).*/, '($1) $2-$3');
+    } else if (value.length > 6) {
+      value = value.replace(/^(\d\d)(\d{4})(\d*)/, '($1) $2-$3');
+    } else if (value.length > 2) {
+      value = value.replace(/^(\d\d)(\d*)/, '($1) $2');
+    } else if (value.length > 0) {
+      value = value.replace(/^(\d*)/, '($1');
+    }
+    
+    event.target.value = value;
+    // this.ownerForm.get('cellPhone')?.setValue(value.replace(/\D/g, ''), { emitEvent: false });
   }
 
   /**
@@ -276,17 +331,5 @@ export class OwnerStepComponent implements OnInit, OnDestroy {
       month: date.getMonth() + 1,
       day: date.getDate()
     };
-  }
-
-  ngOnDestroy(): void {
-    console.log('OwnerStepComponent sendo destruído');
-    // Salva automaticamente quando o componente é destruído
-    if (this.ownerForm.valid) {
-      const ownerData: OwnerData = this.ownerForm.value;
-      const currentDraft = this.draftService.getCurrentDraft();
-      const customerId = currentDraft.customer?.id;
-      this.draftService.updateCustomerData(ownerData, customerId);
-      console.log('Dados do owner salvos automaticamente:', ownerData);
-    }
   }
 }

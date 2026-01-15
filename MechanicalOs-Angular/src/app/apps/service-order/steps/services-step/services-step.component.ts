@@ -1,18 +1,20 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewInit, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
 import { ServiceOrderDraftService, ServiceItem } from '../../shared/service-order-draft.service';
 import { ServiceOrderService } from '../../service-order.service';
 import { NotificationService } from 'src/app/shared/services/notification.service';
 import { ServiceService } from '../../../services/service.services';
-import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
+import { Subject, Subscription } from 'rxjs';
 import { UiInteractionService } from 'src/app/shared/services/ui-interaction.service';
+import { ServiceInteractionService } from 'src/app/shared/services/service-interaction.service';
+import { ServiceSearchComponent } from 'src/app/shared/service-search/service-search.component';
 
 @Component({
   selector: 'app-services-step',
   templateUrl: './services-step.component.html',
   styleUrl: './services-step.component.scss'
 })
-export class ServicesStepComponent implements OnInit {
+export class ServicesStepComponent implements OnInit, OnDestroy, AfterViewInit  {
   services: ServiceItem[] = [];
   searchValue: string = '';
   discountCoupon: string = '';
@@ -28,6 +30,9 @@ export class ServicesStepComponent implements OnInit {
   
   // Subject para debounce da busca
   private searchSubject = new Subject<string>();
+  private priceUpdateSubscription!: Subscription;
+
+  @ViewChild(ServiceSearchComponent) private serviceSearchComponent!: ServiceSearchComponent;
 
   constructor(
     private draftService: ServiceOrderDraftService,
@@ -35,7 +40,7 @@ export class ServicesStepComponent implements OnInit {
     private serviceService: ServiceService,
     private notificationService: NotificationService,
     private router: Router,
-    private uiInteractionService: UiInteractionService
+    private uiInteractionService: UiInteractionService,
   ) { }
 
 
@@ -53,6 +58,20 @@ export class ServicesStepComponent implements OnInit {
       this.draftSummary = this.draftService.getDraftSummary();
       this.isReadyToFinalize = this.draftService.isReadyToFinalize();
     });
+  }
+
+  ngAfterViewInit(): void {
+    if (this.serviceSearchComponent) {
+      this.priceUpdateSubscription = this.serviceSearchComponent.servicePriceUpdate$.subscribe(serviceToUpdate => {
+        this.onServicePriceUpdate(serviceToUpdate);
+      });
+    }
+  }
+
+  ngOnDestroy(): void {
+    if (this.priceUpdateSubscription) {
+      this.priceUpdateSubscription.unsubscribe();
+    }
   }
 
   getCustomerStatusIcon(): string {
@@ -181,6 +200,17 @@ export class ServicesStepComponent implements OnInit {
     console.log('Serviços salvos:', this.services);
   }
 
+  onServicePriceUpdate(serviceToUpdate: ServiceItem): void {
+    console.log('%c[PAI] Evento recebido VIA @ViewChild + Observable!', 'color: green; font-weight: bold;', serviceToUpdate);
+    this.serviceService.updatePrice(serviceToUpdate.id, serviceToUpdate.price).subscribe({
+      next: (response) => {
+        console.log('Atualização de preço concluída:', response);
+      },
+      error: (err) => {
+        console.error('Falha na atualização de preço:', err);
+      }
+    });
+  }
 
   async finalizeOrder(): Promise<void> {
     if (!this.isReadyToFinalize) {

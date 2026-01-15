@@ -4,6 +4,7 @@ import { ServiceOrderDraftService, AddressData } from '../../shared/service-orde
 import { ViaCepService } from 'src/app/Http/via-cep/via-cep.service';
 import { NotificationService } from 'src/app/shared/services/notification.service';
 import { ZipCodeResponse } from 'src/app/Http/via-cep/zipcode-response';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-address-step',
@@ -14,6 +15,7 @@ export class AddressStepComponent implements OnInit, OnDestroy {
   addressForm: FormGroup;
   zipCodeSearchValue: string = '';
   isSearching: boolean = false;
+  private saveSubscription!: Subscription;
 
   constructor(
     private fb: FormBuilder,
@@ -30,16 +32,37 @@ export class AddressStepComponent implements OnInit, OnDestroy {
     if (currentDraft.address?.data) {
       this.loadAddressData(currentDraft.address.data);
     }
+    this.saveSubscription = this.draftService.saveStep$.subscribe((callback) => {
+      this.onSave(callback);
+    });
+  }
+
+ onSave(callback: (success: boolean) => void): void {
+    if (this.addressForm.valid) {
+      const addressData: AddressData = this.addressForm.value;
+      const currentAddressId = this.draftService.getCurrentDraft().address?.id;
+      this.draftService.updateAddressData(addressData, currentAddressId);
+      console.log('Dados de endereço salvos sob comando:', addressData);
+      callback(true);
+    } else {
+      this.markFormGroupTouched();
+      this.notificationService.showMessage('Por favor, preencha os campos obrigatórios.', 'warning');
+      callback(false);
+    }
+  }
+
+  ngOnDestroy(): void {
+    if (this.saveSubscription) { this.saveSubscription.unsubscribe(); }
   }
 
   private createForm(): FormGroup {
     return this.fb.group({
-      city: ['', Validators.required],
-      state: ['', Validators.required],
-      neighborhood: ['', Validators.required],
-      street: ['', Validators.required],
-      number: ['', Validators.required],
-      complement: [''],
+      city: ['', [Validators.required, Validators.maxLength(100)]],
+      state: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(2)]],
+      neighborhood: ['', [Validators.required, Validators.maxLength(100)]],
+      street: ['', [Validators.required, Validators.maxLength(150)]],
+      number: ['', [Validators.required, Validators.maxLength(10)]],
+      complement: ['', [Validators.maxLength(100)]],
       zipCode: ['', [Validators.required, Validators.pattern(/^\d{5}-\d{3}$/)]]
     });
   }
@@ -52,6 +75,16 @@ export class AddressStepComponent implements OnInit, OnDestroy {
     if (this.zipCodeSearchValue && this.zipCodeSearchValue.trim()) {
       this.searchAddressByZipCode(this.zipCodeSearchValue.trim());
     }
+  }
+
+  formatZipCodeSearch(event: any): void {
+    let value = event.target.value.replace(/\D/g, '');
+    if (value.length > 8) {
+      value = value.substring(0, 8);
+    }
+
+    value = value.replace(/(\d{5})(\d)/, '$1-$2');
+    this.zipCodeSearchValue = value;
   }
 
   private searchAddressByZipCode(zipCode: string): void {
@@ -129,16 +162,6 @@ export class AddressStepComponent implements OnInit, OnDestroy {
     return value;
   }
 
-  onSaveAddress(): void {
-    if (this.addressForm.valid) {
-      const addressData: AddressData = this.addressForm.value;
-      this.draftService.updateAddressData(addressData);
-      console.log('Dados do endereço salvos:', addressData);
-    } else {
-      this.markFormGroupTouched();
-    }
-  }
-
   private markFormGroupTouched(): void {
     Object.keys(this.addressForm.controls).forEach(key => {
       const control = this.addressForm.get(key);
@@ -156,18 +179,6 @@ export class AddressStepComponent implements OnInit, OnDestroy {
     if (value.length <= 8) {
       value = value.replace(/(\d{5})(\d)/, '$1-$2');
       this.addressForm.patchValue({ zipCode: value });
-    }
-  }
-
-  ngOnDestroy(): void {
-    console.log('AddressStepComponent sendo destruído');
-    // Salva automaticamente quando o componente é destruído
-    if (this.addressForm.valid) {
-      const addressData: AddressData = this.addressForm.value;
-      const currentDraft = this.draftService.getCurrentDraft();
-      const addressId = currentDraft.address?.id;
-      this.draftService.updateAddressData(addressData, addressId);
-      console.log('Dados do endereço salvos automaticamente:', addressData);
     }
   }
 }

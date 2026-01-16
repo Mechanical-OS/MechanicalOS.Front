@@ -68,11 +68,18 @@
                                 {{ service.code }}
                             </span>
                         </div>
-                        <small 
-                            *ngIf="showPriceInList" 
-                            class="text-muted">
-                            R$ {{ service.price.toFixed(2).replace('.', ',') }}
-                        </small>
+                        <div *ngIf="showPriceInList">
+                            <!-- Se o preço for maior que zero, mostra o preço -->
+                            <small *ngIf="service.price > 0" class="text-muted">
+                                R$ {{ service.price.toFixed(2).replace('.', ',') }}
+                            </small>
+                            <!-- Se o preço for zero ou nulo, mostra o botão de editar -->
+                            <button *ngIf="!service.price || service.price < 0.01"
+                                    class="btn btn-sm btn-outline-warning mt-1 py-0 px-1"
+                                    (click)="openEditPriceModal(service); $event.stopPropagation()">
+                                <i class="fas fa-pencil-alt me-1"></i> Editar Preço
+                            </button>
+                        </div>
                     </div>
                     <div class="service-actions d-flex align-items-center gap-2">
                         <div class="quantity-input">
@@ -105,4 +112,30 @@
         </div>
     </div>
 </div>
+
+<ng-template #editPriceModal let-modal>
+  <div class="modal-header">
+    <h5 class="modal-title">Editar Preço do Serviço</h5>
+    <button type="button" class="btn-close" (click)="modal.dismiss()"></button>
+  </div>
+  <div class="modal-body" *ngIf="serviceToEdit">
+    <p><strong>Serviço:</strong> {{ serviceToEdit.name }}</p>
+    <div class="mb-3">
+      <label for="newPrice" class="form-label">Novo Preço (R$)</label>
+      <input 
+        id="newPrice"
+        type="number" 
+        class="form-control" 
+        [(ngModel)]="newPrice"
+        placeholder="0.00"
+        [autofocus]="true">
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">Cancelar</button>
+    <button type="button" class="btn btn-primary" (click)="saveNewPrice(modal)" [disabled]="newPrice === null || newPrice < 0">
+      Salvar Preço
+    </button>
+  </div>
+</ng-template>
 

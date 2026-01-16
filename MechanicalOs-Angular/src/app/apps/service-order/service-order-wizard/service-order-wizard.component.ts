@@ -65,37 +65,24 @@ export class ServiceOrderWizardComponent implements OnInit {
   }
 
   onSaveAndNext(): void {
-    // Força a detecção da etapa atual
     this.detectCurrentStep();
-    
-    console.log('Salvando e avançando da etapa:', this.currentStep);
-    this.draftService.saveCurrentStep();
-    
-    // Aguarda um momento para garantir que os dados sejam salvos
-    setTimeout(() => {
-      // Navega para a próxima etapa
-      switch (this.currentStep) {
-        case 'owner':
-          console.log('Navegando para address');
-          this.router.navigate(['/apps/service-orders/new/address']);
-          break;
-        case 'address':
-          console.log('Navegando para vehicle');
-          this.router.navigate(['/apps/service-orders/new/vehicle']);
-          break;
-        case 'vehicle':
-          console.log('Navegando para services');
-          this.router.navigate(['/apps/service-orders/new/services']);
-          break;
-        case 'services':
-          console.log('Salvando dados da etapa de serviços');
-          this.draftService.saveCurrentStep();
-          // Não finaliza aqui, o botão finalizar está na própria tela de serviços
-          break;
-        default:
-          console.log('Etapa não reconhecida:', this.currentStep);
+    this.draftService.triggerSaveCurrentStep((success: boolean) => {
+      if (success) {
+        switch (this.currentStep) {
+          case 'owner':
+            this.router.navigate(['/apps/service-orders/new/address']);
+            break;
+          case 'address':
+            this.router.navigate(['/apps/service-orders/new/vehicle']);
+            break;
+          case 'vehicle':
+            this.router.navigate(['/apps/service-orders/new/services']);
+            break;
+        }
+      } else {
+        console.error('Falha ao salvar a etapa atual, navegação interrompida.');
       }
-    }, 100);
+    });
   }
 
   onBack(): void {

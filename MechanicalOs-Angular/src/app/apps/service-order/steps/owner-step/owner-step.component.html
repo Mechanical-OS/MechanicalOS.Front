@@ -11,7 +11,9 @@
                         placeholder="Digite o CPF"
                         [(ngModel)]="cpfSearchValue"
                         (keyup.enter)="onSearchCpf()"
-                        [disabled]="isSearching">
+                        [disabled]="isSearching"
+                        maxlength="14"  
+                        (input)="formatCpfSearch($event)"> 
                     <button 
                         class="btn btn-success" 
                         type="button" 
@@ -34,7 +36,7 @@
             <div class="card-body">
                 <h5 class="card-title">Cadastro do Proprietário</h5>
                 
-                <form [formGroup]="ownerForm" (ngSubmit)="onSaveOwner()">
+                <form [formGroup]="ownerForm">
                     <!-- Primeira linha - Nome e Sobrenome -->
                     <div class="row mb-3">
                         <div class="col-md-4">
@@ -45,7 +47,8 @@
                                 id="firstName"
                                 formControlName="firstName"
                                 [class.is-invalid]="isFieldInvalid('firstName')"
-                                placeholder="Ex: Kleiton">
+                                placeholder="Ex: Kleiton"
+                                maxlength="50">
                             <div class="invalid-feedback" *ngIf="isFieldInvalid('firstName')">
                                 Nome é obrigatório
                             </div>
@@ -58,7 +61,8 @@
                                 id="lastName"
                                 formControlName="lastName"
                                 [class.is-invalid]="isFieldInvalid('lastName')"
-                                placeholder="Ex: Freitas">
+                                placeholder="Ex: Freitas"
+                                maxlength="100">
                             <div class="invalid-feedback" *ngIf="isFieldInvalid('lastName')">
                                 Sobrenome é obrigatório
                             </div>
@@ -106,7 +110,8 @@
                                 formControlName="cpf"
                                 [class.is-invalid]="isFieldInvalid('cpf')"
                                 placeholder="000.000.000-00"
-                                (input)="formatCpf($event)">
+                                (input)="formatCpf($event)"
+                                maxlength="14">
                             <div class="invalid-feedback" *ngIf="isFieldInvalid('cpf')">
                                 CPF é obrigatório e deve ter formato válido
                             </div>
@@ -118,7 +123,9 @@
                                 class="form-control" 
                                 id="rg"
                                 formControlName="rg"
-                                placeholder="00.000.000-0">
+                                placeholder="00.000.000-0"
+                                maxlength="12"
+                                (input)="formatRg($event)">
                         </div>
                         <div class="col-md-4">
                             <label for="email" class="form-label">EMAIL</label>
@@ -128,7 +135,8 @@
                                 id="email"
                                 formControlName="email"
                                 [class.is-invalid]="isFieldInvalid('email')"
-                                placeholder="exemplo@email.com">
+                                placeholder="exemplo@email.com"
+                                maxlength="150">
                             <div class="invalid-feedback" *ngIf="isFieldInvalid('email')">
                                 Email é obrigatório e deve ter formato válido
                             </div>
@@ -144,7 +152,8 @@
                                 class="form-control" 
                                 id="phone"
                                 formControlName="phone"
-                                placeholder="00-0000-0000"
+                                placeholder="(00) 0000-0000"
+                                maxlength="15" 
                                 (input)="formatPhone($event)">
                         </div>
                         <div class="col-md-4">
@@ -155,7 +164,8 @@
                                 id="cellPhone"
                                 formControlName="cellPhone"
                                 [class.is-invalid]="isFieldInvalid('cellPhone')"
-                                placeholder="00-00000-0000"
+                                placeholder="(00) 00000-0000"
+                                maxlength="15"
                                 (input)="formatCellPhone($event)">
                             <div class="invalid-feedback" *ngIf="isFieldInvalid('cellPhone')">
                                 Celular é obrigatório
@@ -168,7 +178,8 @@
                                 class="form-control" 
                                 id="contact"
                                 formControlName="contact"
-                                placeholder="Nome para contato">
+                                placeholder="Nome para contato"
+                                maxlength="50">
                         </div>
                     </div>
                 </form>

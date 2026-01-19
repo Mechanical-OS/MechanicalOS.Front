@@ -1,0 +1,247 @@
+<app-page-title [breadcrumbItems]="pageTitle" title=""></app-page-title>
+
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-body">
+        <div class="mb-4">
+          <h4 class="fw-bold">
+            {{ isEditMode ? 'Editar Usuário' : 'Cadastro de Usuário' }}
+          </h4>
+        </div>
+
+        <div class="row">
+          <div class="col-md-12">
+            <form [formGroup]="form">
+              <h6 class="fw-bold">Dados Pessoais</h6>
+              <!-- Linha 1: Nome, Sobrenome, Email -->
+              <div class="row mb-3">
+                <div class="col-md-4">
+                  <label for="firstName" class="form-label required">Nome</label>
+                  <input
+                    id="firstName"
+                    formControlName="firstName"
+                    class="form-control"
+                    [ngClass]="{ 'is-invalid': form.get('firstName')?.invalid && form.get('firstName')?.touched }"/>
+                  <div class="invalid-feedback">
+                    {{ messageValidationService.getErrorMessage(form.get('firstName'), 'Nome') }}
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <label for="lastName" class="form-label required">Sobrenome</label>
+                  <input
+                    id="lastName"
+                    formControlName="lastName"
+                    class="form-control"
+                    [ngClass]="{ 'is-invalid': form.get('lastName')?.invalid && form.get('lastName')?.touched }"/>
+                  <div class="invalid-feedback">
+                    {{ messageValidationService.getErrorMessage(form.get('lastName'), 'Sobrenome') }}
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <label for="email" class="form-label required">Email</label>
+                  <input
+                    id="email"
+                    type="email"
+                    formControlName="email"
+                    class="form-control"
+                    [ngClass]="{ 'is-invalid': form.get('email')?.invalid && form.get('email')?.touched }"/>
+                  <div class="invalid-feedback">
+                    {{ messageValidationService.getErrorMessage(form.get('email'), 'Email') }}
+                  </div>
+                </div>
+              </div>
+
+              <!-- Linha 2: CPF, RG -->
+              <div class="row mb-3">
+                <div class="col-md-6">
+                  <label for="cpf" class="form-label required">CPF</label>
+                  <input
+                    id="cpf"
+                    formControlName="cpf"
+                    class="form-control"
+                    [value]="form.get('cpf')?.value | cpf"
+                    (input)="onCpfInput($event)"
+                    [ngClass]="{ 'is-invalid': form.get('cpf')?.invalid && form.get('cpf')?.touched }"/>
+                  <div class="invalid-feedback">
+                    {{ messageValidationService.getErrorMessage(form.get('cpf'), 'CPF') }}
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <label for="rg" class="form-label">RG</label>
+                  <input
+                    id="rg"
+                    formControlName="rg"
+                    class="form-control"
+                    [value]="form.get('rg')?.value | rg"
+                    (input)="onRgInput($event)"/>
+                </div>
+              </div>
+              
+              <!-- Linha 3: Telefone e WhatsApp -->
+              <div class="row mb-3">
+                  <div class="col-md-6">
+                    <label for="phone" class="form-label required">Telefone</label>
+                    <input
+                      id="phone"
+                      formControlName="phone"
+                      class="form-control"
+                      [value]="form.get('phone')?.value | phone"
+                      (input)="onPhoneInput($event)"
+                      [ngClass]="{ 'is-invalid': form.get('phone')?.invalid && form.get('phone')?.touched }"/>
+                    <div class="invalid-feedback">
+                      {{ messageValidationService.getErrorMessage(form.get('phone'), 'Telefone') }}
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <label for="whatsapp" class="form-label">WhatsApp</label>
+                    <input
+                      id="whatsapp"
+                      formControlName="whatsapp"
+                      class="form-control"
+                      [value]="form.get('whatsapp')?.value | phone"
+                      (input)="onWhatsappInput($event)"/>
+                  </div>
+              </div>
+
+              <hr class="my-4">
+              <h6 class="fw-bold">Credenciais de Acesso</h6>
+
+              <!-- Linha 4: Login, Senha e Status -->
+              <div class="row mb-3">
+                <div class="col-md-4">
+                  <label for="login" class="form-label required">Login</label>
+                  <input
+                    id="login"
+                    formControlName="login"
+                    class="form-control"
+                    [ngClass]="{ 'is-invalid': form.get('login')?.invalid && form.get('login')?.touched }"/>
+                  <div class="invalid-feedback">
+                    {{ messageValidationService.getErrorMessage(form.get('login'), 'Login') }}
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <label for="password" class="form-label" [class.required]="!isEditMode">Senha</label>
+                  <input
+                    id="password"
+                    type="password"
+                    formControlName="password"
+                    class="form-control"
+                    [ngClass]="{ 'is-invalid': form.get('password')?.invalid && form.get('password')?.touched }"
+                    placeholder="{{ isEditMode ? 'Deixe em branco para não alterar' : '' }}"/>
+                  <div class="invalid-feedback">
+                    {{ messageValidationService.getErrorMessage(form.get('password'), 'Senha') }}
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <label for="userStatus" class="form-label required">Status</label>
+                  <select id="userStatus" class="form-select" formControlName="status">
+                    <option [value]="1">Ativo</option>
+                    <option [value]="0">Inativo</option>
+                  </select>
+                </div>
+
+              </div>
+              
+              <hr class="my-4">
+              <h6 class="fw-bold">Endereço</h6>
+              
+              <!-- Seção de Endereço -->
+              <div formGroupName="address">
+                <div class="row mb-3">
+                  <div class="col-md-4">
+                    <label for="zipcode" class="form-label required">CEP</label>
+                    <input
+                      id="zipcode"
+                      formControlName="zipcode"
+                      class="form-control"
+                      (blur)="getZipCode()"
+                      [value]="form.get('address.zipcode')?.value | cep"
+                      (input)="onCepInput($event)"
+                      [ngClass]="{ 'is-invalid': form.get('address.zipcode')?.invalid && form.get('address.zipcode')?.touched }"/>
+                    <div class="invalid-feedback">
+                      {{ messageValidationService.getErrorMessage(form.get('address.zipcode'), 'CEP') }}
+                    </div>
+                  </div>
+                  <div class="col-md-8">
+                    <label for="street" class="form-label required">Rua</label>
+                    <input
+                      id="street"
+                      formControlName="street"
+                      class="form-control"
+                      [ngClass]="{ 'is-invalid': form.get('address.street')?.invalid && form.get('address.street')?.touched }"/>
+                    <div class="invalid-feedback">
+                      {{ messageValidationService.getErrorMessage(form.get('address.street'), 'Rua') }}
+                    </div>
+                  </div>
+                </div>
+                <div class="row mb-3">
+                  <div class="col-md-2">
+                    <label for="uf" class="form-label required">UF</label>
+                    <input
+                      id="uf"
+                      formControlName="uf"
+                      maxlength="2"
+                      class="form-control"
+                      [ngClass]="{ 'is-invalid': form.get('address.uf')?.invalid && form.get('address.uf')?.touched }"/>
+                    <div class="invalid-feedback">
+                      {{ messageValidationService.getErrorMessage(form.get('address.uf'), 'UF') }}
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <label for="city" class="form-label required">Cidade</label>
+                    <input
+                      id="city"
+                      formControlName="city"
+                      class="form-control"
+                      [ngClass]="{ 'is-invalid': form.get('address.city')?.invalid && form.get('address.city')?.touched }"/>
+                    <div class="invalid-feedback">
+                      {{ messageValidationService.getErrorMessage(form.get('address.city'), 'Cidade') }}
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <label for="neighborhood" class="form-label required">Bairro</label>
+                    <input
+                      id="neighborhood"
+                      formControlName="neighborhood"
+                      class="form-control"
+                      [ngClass]="{ 'is-invalid': form.get('address.neighborhood')?.invalid && form.get('address.neighborhood')?.touched }"/>
+                    <div class="invalid-feedback">
+                      {{ messageValidationService.getErrorMessage(form.get('address.neighborhood'), 'Bairro') }}
+                    </div>
+                  </div>
+                </div>
+                <div class="row mb-4">
+                  <div class="col-md-4">
+                    <label for="number" class="form-label required">Número</label>
+                    <input
+                      id="number"
+                      formControlName="number"
+                      class="form-control"
+                      [ngClass]="{ 'is-invalid': form.get('address.number')?.invalid && form.get('address.number')?.touched }"/>
+                    <div class="invalid-feedback">
+                      {{ messageValidationService.getErrorMessage(form.get('address.number'), 'Número') }}
+                    </div>
+                  </div>
+                  <div class="col-md-8">
+                    <label for="complement" class="form-label">Complemento</label>
+                    <input
+                      id="complement"
+                      formControlName="complement"
+                      class="form-control"/>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<app-metro-menu
+  [orientation]="'horizontal'"
+  [buttons]="menuButtons"
+  (buttonClick)="handleMenuAction($event)">
+</app-metro-menu>

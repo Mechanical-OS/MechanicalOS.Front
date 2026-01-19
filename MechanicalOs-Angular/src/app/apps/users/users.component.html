@@ -1,0 +1,35 @@
+<app-page-title [breadcrumbItems]="pageTitle" title=""></app-page-title>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="mb-4">
+                    <h4>Cadastro de Usuários</h4>
+                </div>
+                <div class="row mb-2">
+                    <app-advanced-table 
+                        #advancedTable 
+                        [tableData]="userList" 
+                        [columns]="columns" 
+                        [pagination]="true" 
+                        [hasRowSelection]="true"
+                        [isSearchable]="true" 
+                        (search)="searchData($event)" 
+                        [isSortable]="false"
+                        tableClasses="table-centered" 
+                        theadClasses="table-light"
+                        (rowSelected)="onRowSelected($event)"
+                        [singleRowSelection]="true">
+                    </app-advanced-table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<app-metro-menu 
+    [orientation]="'horizontal'" 
+    [buttons]="menuButtons"
+    (buttonClick)="handleMenuAction($event)">
+</app-metro-menu>

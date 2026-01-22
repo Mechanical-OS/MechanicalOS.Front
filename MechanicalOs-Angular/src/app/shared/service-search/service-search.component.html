@@ -1,5 +1,4 @@
 <div class="service-search-container">
-    <!-- Campo de busca -->
     <div class="search-input-section mb-3">
         <div class="input-group">
             <input 
@@ -31,84 +30,75 @@
         </small>
     </div>
 
-    <!-- Resultados da busca -->
-    <div class="search-results" *ngIf="showResults">
-        <!-- Loading -->
+    <div class="search-results" *ngIf="searchValue && searchValue.length >= minCharacters">
         <div *ngIf="loadingServices" class="text-center py-3">
             <div class="spinner-border text-primary" role="status">
                 <span class="visually-hidden">Carregando...</span>
             </div>
             <p class="text-muted mt-2 mb-0">Buscando serviços...</p>
         </div>
-        
-        <!-- Lista de serviços encontrados -->
-        <div *ngIf="!loadingServices && availableServices.length > 0" class="results-list">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-                <h6 class="mb-0">
-                    <i class="fas fa-list me-2"></i>Serviços disponíveis ({{ availableServices.length }})
-                </h6>
-                <button 
-                    class="btn btn-sm btn-link text-muted" 
-                    (click)="closeResults()"
-                    title="Fechar resultados">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            
-            <div class="list-group">
-                <div 
-                    class="list-group-item d-flex justify-content-between align-items-center service-item" 
-                    *ngFor="let service of availableServices">
-                    <div class="service-info flex-grow-1">
-                        <div class="service-name">
-                            <strong>{{ service.name }}</strong>
-                            <span 
-                                *ngIf="showCodeBadge && service.code" 
-                                class="badge bg-secondary ms-2">
-                                {{ service.code }}
-                            </span>
+        <div *ngIf="!loadingServices">
+            <div *ngIf="availableServices.length > 0" class="results-list">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="mb-0">
+                        <i class="fas fa-list me-2"></i>Serviços disponíveis ({{ availableServices.length }})
+                    </h6>
+                    <button class="btn btn-sm btn-link text-muted" (click)="closeResults()" title="Fechar resultados">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="list-group">
+                    <div class="list-group-item d-flex justify-content-between align-items-center service-item" 
+                         *ngFor="let service of availableServices">
+                        <div class="service-info flex-grow-1">
+                            <div class="service-name">
+                                <strong>{{ service.name }}</strong>
+                                <span *ngIf="showCodeBadge && service.code" class="badge bg-secondary ms-2">{{ service.code }}</span>
+                            </div>
+                            <div *ngIf="showPriceInList">
+                                <small *ngIf="service.price > 0" class="text-muted">
+                                    {{ service.price | brlCurrency }}
+                                </small>
+                                <button *ngIf="!service.price || service.price < 0.01"
+                                        class="btn btn-sm btn-outline-warning mt-1 py-0 px-1"
+                                        (click)="openEditPriceModal(service); $event.stopPropagation()">
+                                    <i class="fas fa-pencil-alt me-1"></i> Editar Preço
+                                </button>
+                            </div>
                         </div>
-                        <div *ngIf="showPriceInList">
-                            <!-- Se o preço for maior que zero, mostra o preço -->
-                            <small *ngIf="service.price > 0" class="text-muted">
-                                R$ {{ service.price.toFixed(2).replace('.', ',') }}
-                            </small>
-                            <!-- Se o preço for zero ou nulo, mostra o botão de editar -->
-                            <button *ngIf="!service.price || service.price < 0.01"
-                                    class="btn btn-sm btn-outline-warning mt-1 py-0 px-1"
-                                    (click)="openEditPriceModal(service); $event.stopPropagation()">
-                                <i class="fas fa-pencil-alt me-1"></i> Editar Preço
+                        <div class="service-actions d-flex align-items-center gap-2">
+                            <div class="quantity-input">
+                                <label class="form-label mb-0 me-2 small">Qtd:</label>
+                                <input 
+                                    type="number" 
+                                    class="form-control form-control-sm" 
+                                    [(ngModel)]="service.quantity"
+                                    min="1"
+                                    max="999"
+                                    style="width: 70px;"
+                                    (click)="$event.stopPropagation()">
+                            </div>
+                            <button 
+                                class="btn btn-sm btn-success"
+                                type="button"
+                                (click)="selectService(service)">
+                                <i class="fas fa-plus me-1"></i> Adicionar
                             </button>
                         </div>
                     </div>
-                    <div class="service-actions d-flex align-items-center gap-2">
-                        <div class="quantity-input">
-                            <label class="form-label mb-0 me-2 small">Qtd:</label>
-                            <input 
-                                type="number" 
-                                class="form-control form-control-sm" 
-                                [(ngModel)]="service.quantity"
-                                min="1"
-                                max="999"
-                                style="width: 70px;"
-                                (click)="$event.stopPropagation()">
-                        </div>
-                        <button 
-                            class="btn btn-sm btn-success"
-                            type="button"
-                            (click)="selectService(service)">
-                            <i class="fas fa-plus me-1"></i> Adicionar
-                        </button>
-                    </div>
                 </div>
             </div>
-        </div>
-        
-        <!-- Nenhum serviço encontrado -->
-        <div *ngIf="!loadingServices && availableServices.length === 0 && searchValue.length >= minCharacters" 
-             class="alert alert-info">
-            <i class="fas fa-info-circle me-2"></i>
-            Nenhum serviço encontrado para <strong>"{{ searchValue }}"</strong>
+            <div *ngIf="showAddNewButton"
+                class="alert alert-info d-flex flex-column align-items-center">
+                <div class="mb-2">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Nenhum serviço encontrado para <strong>"{{ searchValue }}"</strong>
+                </div>
+                <button class="btn btn-sm btn-primary" (click)="openNewServiceModal()">
+                    <i class="fas fa-plus me-1"></i>
+                    Cadastrar "{{ searchValue }}" como novo serviço
+                </button>
+            </div>
         </div>
     </div>
 </div>
@@ -121,14 +111,14 @@
   <div class="modal-body" *ngIf="serviceToEdit">
     <p><strong>Serviço:</strong> {{ serviceToEdit.name }}</p>
     <div class="mb-3">
-      <label for="newPrice" class="form-label">Novo Preço (R$)</label>
-      <input 
+        <label for="newPrice" class="form-label">Novo Preço (R$)</label>
+        <input 
         id="newPrice"
-        type="number" 
+        type="text" 
         class="form-control" 
         [(ngModel)]="newPrice"
-        placeholder="0.00"
-        [autofocus]="true">
+        placeholder="0,00"
+        appCurrencyBr>
     </div>
   </div>
   <div class="modal-footer">
@@ -139,3 +129,35 @@
   </div>
 </ng-template>
 
+<!-- Modal para Cadastro Rápido de Serviço -->
+<ng-template #newServiceModal let-modal>
+  <div class="modal-header">
+    <h5 class="modal-title">Cadastrar Novo Serviço</h5>
+    <button type="button" class="btn-close" (click)="modal.dismiss()"></button>
+  </div>
+  <form [formGroup]="newServiceForm" (ngSubmit)="saveNewService(modal)">
+    <div class="modal-body">
+      <div class="mb-3">
+        <label for="newServiceName" class="form-label">Nome do Serviço</label>
+        <input id="newServiceName" type="text" class="form-control" formControlName="name">
+      </div>
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label for="newServiceCode" class="form-label">Código (Opcional)</label>
+          <input id="newServiceCode" type="text" class="form-control" formControlName="code">
+        </div>
+        <div class="col-md-6 mb-3">
+          <label for="newServicePrice" class="form-label">Preço</label>
+          <input id="newServicePrice" type="text" class="form-control" formControlName="price" appCurrencyBr>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">Cancelar</button>
+      <button type="submit" class="btn btn-primary" [disabled]="newServiceForm.invalid || isSavingNewService">
+        <i *ngIf="isSavingNewService" class="fas fa-spinner fa-spin me-1"></i>
+        Salvar e Adicionar
+      </button>
+    </div>
+  </form>
+</ng-template>

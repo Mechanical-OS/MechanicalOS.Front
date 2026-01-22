@@ -5,6 +5,7 @@ import { CustomerService } from 'src/app/apps/customers/customer.service';
 import { NotificationService } from 'src/app/shared/services/notification.service';
 import { Customer } from 'src/app/apps/Shared/models/customer.model';
 import { Subscription } from 'rxjs';
+import { dateValidator } from './date-validator';
 
 @Component({
   selector: 'app-owner-step',
@@ -16,6 +17,7 @@ export class OwnerStepComponent implements OnInit, OnDestroy {
   cpfSearchValue: string = '';
   isSearching: boolean = false;
   customerFound: Customer | null = null;
+  birthDateMask: string = '';
 
   private saveSubscription!: Subscription;
 
@@ -32,10 +34,15 @@ export class OwnerStepComponent implements OnInit, OnDestroy {
     console.log('OwnerStepComponent inicializado');
     // Carrega dados existentes se houver
     const currentDraft = this.draftService.getCurrentDraft();
-    if (currentDraft.customer?.data) {
+    if (currentDraft.customer?.data?.birthDate) {
       this.loadOwnerData(currentDraft.customer.data);
+
+      const date = currentDraft.customer.data.birthDate;
+      if(date && date.year) {
+        this.birthDateMask = `${String(date.day).padStart(2, '0')}/${String(date.month).padStart(2, '0')}/${date.year}`;
+      }
     }
-    this.saveSubscription = this.draftService.saveStep$.subscribe((callback) => {
+      this.saveSubscription = this.draftService.saveStep$.subscribe((callback) => {
       this.onSave(callback); 
     });
   }
@@ -62,7 +69,7 @@ export class OwnerStepComponent implements OnInit, OnDestroy {
     return this.fb.group({
       firstName: ['', [Validators.required, Validators.maxLength(50)]],
       lastName: ['', [Validators.required, Validators.maxLength(100)]],
-      birthDate: ['', Validators.required],
+      birthDate: ['', [Validators.required, dateValidator]],
       cpf: ['', [Validators.required, Validators.pattern(/^\d{3}\.\d{3}\.\d{3}-\d{2}$/)]],
       rg: ['', [Validators.maxLength(12)]], // Ex: 99.999.999-X
       email: ['', [Validators.required, Validators.email, Validators.maxLength(150)]],
@@ -308,6 +315,49 @@ export class OwnerStepComponent implements OnInit, OnDestroy {
     
     event.target.value = value;
     // this.ownerForm.get('cellPhone')?.setValue(value.replace(/\D/g, ''), { emitEvent: false });
+  }
+
+  formatBirthDate(event: any): void {
+    let value = event.target.value.replace(/\D/g, '');
+    
+    if (value.length > 8) {
+      value = value.substring(0, 8);
+    }
+
+    if (value.length > 4) {
+      value = value.replace(/(\d{2})(\d{2})(\d{4})/, '$1/$2/$3');
+    } else if (value.length > 2) {
+      value = value.replace(/(\d{2})(\d)/, '$1/$2');
+    }
+    
+    event.target.value = value;
+    this.ownerForm.get('birthDate')?.setValue(value, { emitEvent: false });
+  }
+
+  onBirthDateInput(): void {
+    let value = this.birthDateMask.replace(/\D/g, '');
+    
+    if (value.length > 8) { value = value.substring(0, 8); }
+    if (value.length > 4) { value = value.replace(/(\d{2})(\d{2})(\d{4})/, '$1/$2/$3'); }
+    else if (value.length > 2) { value = value.replace(/(\d{2})(\d)/, '$1/$2'); }
+    this.birthDateMask = value;
+
+    if (this.birthDateMask.length === 10) {
+      const parts = this.birthDateMask.split('/');
+      const day = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10);
+      const year = parseInt(parts[2], 10);
+
+      if (day > 0 && day <= 31 && month > 0 && month <= 12 && year > 1900) {
+        this.ownerForm.get('birthDate')?.setValue({ year, month, day });
+      }
+    }
+  }
+
+  onDateSelect(date: any): void {
+      if(date && date.year) {
+        this.birthDateMask = `${String(date.day).padStart(2, '0')}/${String(date.month).padStart(2, '0')}/${date.year}`;
+      }
   }
 
   /**

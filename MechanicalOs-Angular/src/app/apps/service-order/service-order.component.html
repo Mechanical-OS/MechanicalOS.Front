@@ -31,7 +31,7 @@
         <div class="row mb-2">
           <app-advanced-table
             #advancedTable
-            (handleTableLoad)="handleTableLoad($event)"
+            (handleTableLoad)="handleTableLoad()" 
             [tableData]="list"
             [columns]="columns"
             [pagination]="false"
@@ -42,6 +42,7 @@
             theadClasses="table-light"
             (rowSelected)="onRowSelected($event)"
             [singleRowSelection]="true"
+            [isLoading]="isLoading"
           >
           </app-advanced-table>
         </div>

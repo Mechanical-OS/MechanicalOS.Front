@@ -22,10 +22,10 @@ export class ServiceService extends BaseService<ServiceModel> {
         super(http, notificationService, SERVICES_URL);
     }
 
-    saveNewService(data: ServiceModel): Observable<OperationResult<any>> {
+    saveNewService(data: ServiceModel): Observable<Result<ServiceModel>> {
         this.notificationService.showLoading();
         return this.save(data).pipe(
-            map(response => {
+            map((response: Result<ServiceModel>) => {
                 if (response.statusCode != 200) {
                     this.notificationService.showError(response);
                     throw new Error(response.message || 'Erro desconhecido');
@@ -43,7 +43,7 @@ export class ServiceService extends BaseService<ServiceModel> {
     updateService(data: ServiceModel): Observable<OperationResult<any>> {
         this.notificationService.showLoading();
         return this.update(data).pipe(
-            map(response => {
+            map((response: Result<ServiceModel>) => {
                 if (response.statusCode != 200) {
                     this.notificationService.showError(response);
                     throw new Error(response.message || 'Erro desconhecido');

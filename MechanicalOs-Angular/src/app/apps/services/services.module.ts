@@ -6,14 +6,13 @@ import { PageTitleModule } from 'src/app/shared/page-title/page-title.module';
 import { WidgetModule } from 'src/app/shared/widget/widget.module';
 import { ServicesRoutingModule } from './services-routing.module';
 import { ServicesComponent } from './services.component';
-import { CurrencyBrDirective } from 'src/app/shared/directives/currency-br.directive';
 import { MetroMenuModule } from 'src/app/shared/metro-menu/metro-menu.module';
+import { SharedModule } from 'src/app/shared/shared.module';
 
 
 @NgModule({
   declarations: [
     ServicesComponent,
-    CurrencyBrDirective
   ],
   imports: [
     CommonModule,
@@ -23,7 +22,8 @@ import { MetroMenuModule } from 'src/app/shared/metro-menu/metro-menu.module';
     AdvancedTableModule,
     WidgetModule,
     PageTitleModule,
-    ServicesRoutingModule
+    ServicesRoutingModule,
+    SharedModule
   ]
 })
 export class ServicesModule { }

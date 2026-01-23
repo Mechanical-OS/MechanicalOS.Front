@@ -13,12 +13,13 @@ import { NgbDateParserFormatter, NgbDatepickerI18n } from '@ng-bootstrap/ng-boot
 import { CustomDatepickerI18n, I18n } from './shared/directives/ngb-datepicker-i18n';
 import { CustomDatepickerFormatter } from './shared/directives/custom-datepicker-formatter';
 import { NgbDatepickerPtDirective } from './shared/directives/ngb-datepicker-pt.directive';
+import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
 @NgModule({
     declarations: [
         AppComponent, NgbDatepickerPtDirective
     ],
-    bootstrap: [AppComponent], imports: [BrowserModule,
+    bootstrap: [AppComponent], imports: [BrowserModule, NgbModule,
         JoyrideModule.forRoot(),
         SweetAlert2Module.forRoot(),
         AppRoutingModule,

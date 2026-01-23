@@ -1,2 +1,16 @@
-// Service Order Component Styles
+:host ::ng-deep .action-icon i {
+  color: #adb5bd;
+  transition: color 0.2s ease-in-out;
+}
 
+:host ::ng-deep .action-icon.edit-btn:hover i {
+  color: #28a745;
+}
+
+:host ::ng-deep .action-icon.delete-btn:hover i {
+  color: #dc3545;
+}
+
+:host ::ng-deep .action-icon i {
+  font-size: 1.2rem;
+}

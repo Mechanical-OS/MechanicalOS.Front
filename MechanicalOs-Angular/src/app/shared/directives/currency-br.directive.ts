@@ -1,41 +1,45 @@
-import { Directive, HostListener, ElementRef } from '@angular/core';
+import { Directive, HostListener, ElementRef, OnInit } from '@angular/core';
 import { NgControl } from '@angular/forms';
 
 @Directive({
   selector: '[appCurrencyBr]'
 })
-export class CurrencyBrDirective {
-  private el: HTMLInputElement;
+export class CurrencyBrDirective implements OnInit {
 
-  constructor(private elementRef: ElementRef, private control: NgControl) {
-    this.el = this.elementRef.nativeElement;
+  constructor(private elementRef: ElementRef, private ngControl: NgControl) {}
+
+  ngOnInit() {
+    this.formatValue(this.ngControl.value);
   }
 
   @HostListener('input', ['$event'])
   onInput(event: Event): void {
-    let value = this.el.value;
-
-    // Remove tudo que não é número
-    value = value.replace(/\D/g, '');
-
-    // Converte para número com duas casas
-    const numericValue = (parseInt(value || '0', 10) / 100).toFixed(2);
-
-    // Formata como moeda brasileira
-    const formatted = this.formatToBR(numericValue);
-
-    // Atualiza o valor do input
-    this.el.value = formatted;
-
-    // Atualiza o form control com valor numérico
-    if (this.control && this.control.control) {
-      this.control.control.setValue(formatted, { emitEvent: false });
-    }
+    const inputElement = event.target as HTMLInputElement;
+    this.formatValue(inputElement.value);
   }
 
-  private formatToBR(value: string): string {
-    const [intPart, decimalPart] = value.split('.');
-    const intFormatted = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-    return `${intFormatted},${decimalPart}`;
+  private formatValue(value: string | number | null) {
+    if (value === null || value === undefined) {
+      this.elementRef.nativeElement.value = '';
+      return;
+    }
+
+    let cleanValue = String(value).replace(/\D/g, '');
+    if (cleanValue === '') {
+      this.ngControl.control?.setValue(null, { emitEvent: false });
+      this.elementRef.nativeElement.value = '';
+      return;
+    }
+    
+    const numericValue = parseFloat(cleanValue) / 100;
+
+    this.ngControl.control?.setValue(numericValue, { emitEvent: false });
+
+    const formattedValue = new Intl.NumberFormat('pt-BR', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(numericValue);
+    
+    this.elementRef.nativeElement.value = formattedValue;
   }
 }

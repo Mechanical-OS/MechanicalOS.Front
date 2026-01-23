@@ -10,6 +10,7 @@ import { ServiceOrderRoutingModule } from "./service-order-routing.module";
 import { SharedModule } from "src/app/shared/shared.module";
 import { NgbModalModule, NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { UiModule } from 'src/app/shared/ui/ui.module';
+import { ServiceSearchModule } from 'src/app/shared/service-search/service-search.module';
 
 // Wizard Components
 import { ServiceOrderWizardComponent } from "./service-order-wizard/service-order-wizard.component";
@@ -45,7 +46,8 @@ import { ServiceOrderEditComponent } from "./service-order-edit/service-order-ed
         WidgetModule,
         PageTitleModule,
         UiModule,
-        ServiceOrderRoutingModule
+        ServiceOrderRoutingModule,
+        ServiceSearchModule
     ]
 })
 export class ServiceOrderModule { }

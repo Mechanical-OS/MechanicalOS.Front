@@ -9,6 +9,7 @@ import { ServiceOrderService } from './service-order.service';
 import { NotificationService } from 'src/app/shared/services/notification.service';
 import { ServiceOrder, ServiceOrderStatus, ServiceOrderStatusInfo } from '../Shared/models/service-order.model';
 import { UiInteractionService } from 'src/app/shared/services/ui-interaction.service';
+import { DomSanitizer } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-service-order',
@@ -24,6 +25,7 @@ export class ServiceOrderComponent implements OnInit, AfterViewInit, OnDestroy {
   list: ServiceOrder[] = [];
   isDisabled: boolean = false;
   selectedRowId: number = 0;
+  isLoading: boolean = false;
 
   // Propriedades para paginação
   currentPage: number = 1;
@@ -40,7 +42,8 @@ export class ServiceOrderComponent implements OnInit, AfterViewInit, OnDestroy {
     public tableService: AdvancedTableServices,
     private metroMenuService: MetroMenuService,
     private notificationService: NotificationService,
-    private uiInteractionService: UiInteractionService
+    private uiInteractionService: UiInteractionService,
+    private sanitizer: DomSanitizer,
   ) {}
 
   ngOnInit(): void {
@@ -50,6 +53,8 @@ export class ServiceOrderComponent implements OnInit, AfterViewInit, OnDestroy {
     ];
     this.initAdvancedTableData();
     this.loadPixData();
+
+    document.addEventListener('click', this.delegatedClickHandler);
   }
 
   ngAfterViewInit(): void {
@@ -60,6 +65,7 @@ export class ServiceOrderComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.metroMenuService.setButtons([]);
+    document.removeEventListener('click', this.delegatedClickHandler);
   }
 
   //#region ADVANCED TABLE
@@ -109,6 +115,8 @@ export class ServiceOrderComponent implements OnInit, AfterViewInit, OnDestroy {
    * Carrega os dados PIX com paginação
    */
   async loadPixData(page: number = 1): Promise<void> {
+    this.isLoading = true;
+    
     const request = {
       pageSize: this.pageSize,
       pageIndex: page,
@@ -168,9 +176,10 @@ export class ServiceOrderComponent implements OnInit, AfterViewInit, OnDestroy {
       console.error('❌ Erro ao carregar ordens de serviço:', error);
       this.list = []; this.totalItems = 0;
       await this.uiInteractionService.showSweetAlert({ title: 'Erro', text: 'Erro ao carregar lista de ordens de serviço.', icon: 'error' }, this.menuButtons);
+    } finally {
+      this.isLoading = false;
     }
   }
-
   /**
    * Sincroniza o pageSize do advanced-table com o número de registros recebidos
    */
@@ -381,28 +390,34 @@ export class ServiceOrderComponent implements OnInit, AfterViewInit, OnDestroy {
   /**
    * Adiciona event listeners para botões de ação
    */
-  handleTableLoad(event: any): void {
-    setTimeout(() => {
-      document.querySelectorAll(".edit-btn").forEach((btn) => {
-        btn.addEventListener("click", (e) => {
-          e.preventDefault();
-          const orderId = btn.getAttribute('data-id');
-          if (orderId) {
-            this.router.navigate([`apps/service-orders/${orderId}/edit`]);
-          }
-        });
-      });
+  handleTableLoad(): void {
+    const tableElement = this.advancedTable.advancedTable.nativeElement;
 
-      document.querySelectorAll(".delete-btn").forEach((btn) => {
-        btn.addEventListener("click", (e) => {
-          e.preventDefault();
-          const orderId = btn.getAttribute('data-id');
-          if (orderId && !this.isDisabled) {
-            this.deleteServiceOrder(parseInt(orderId));
+    if (tableElement) {
+      tableElement.addEventListener('click', (event: Event) => {
+        const target = event.target as HTMLElement;
+
+        // Lógica de Editar
+        const editBtn = target.closest('.edit-btn');
+        if (editBtn) {
+          event.preventDefault();
+          const orderId = editBtn.getAttribute('data-id');
+          if (orderId) {
+            this.onEdit(parseInt(orderId, 10));
           }
-        });
+        }
+
+        // Lógica de Excluir
+        const deleteBtn = target.closest('.delete-btn');
+        if (deleteBtn) {
+          event.preventDefault();
+          const orderId = deleteBtn.getAttribute('data-id');
+          if (orderId) {
+            this.onDelete(parseInt(orderId, 10));
+          }
+        }
       });
-    }, 100);
+    }
   }
 
   /**
@@ -427,7 +442,7 @@ export class ServiceOrderComponent implements OnInit, AfterViewInit, OnDestroy {
       this.metroMenuService.enableButton('delete');
     } else {
       this.metroMenuService.disableButton('edit');
-      this.metroMenuService.enableButton('delete');
+      this.metroMenuService.disableButton('delete');
     }
   }
   //#endregion
@@ -590,23 +605,6 @@ export class ServiceOrderComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   /**
-   * Formatter para ações
-   */
-  actionFormatter(order: ServiceOrder): any {
-    const editAction = `(click)="onEdit(${order.id})"`;
-    const deleteAction = `(click)="onDelete(${order.id})"`;
-
-    return `
-      <a href="javascript:void(0);" class="action-icon" ${editAction} title="Editar">
-        <i class="mdi mdi-pencil" style="color: #28a745;"></i>
-      </a>
-      <a href="javascript:void(0);" class="action-icon" ${deleteAction} title="Excluir">
-        <i class="mdi mdi-delete" style="color: #dc3545;"></i>
-      </a>
-    `;
-  }
-
-  /**
    * Obtém informações do status
    */
   getStatusInfo(status: ServiceOrderStatus): ServiceOrderStatusInfo {
@@ -638,6 +636,43 @@ export class ServiceOrderComponent implements OnInit, AfterViewInit, OnDestroy {
       label: 'DESCONHECIDO',
       badgeClass: 'bg-light text-dark'
     };
+  }
+
+  private delegatedClickHandler = async (event: Event) => {
+    const target = event.target as HTMLElement;
+    const editBtn = target.closest('.edit-btn') as HTMLElement | null;
+    if (editBtn) {
+      event.preventDefault();
+      const orderId = editBtn.getAttribute('data-id');
+      if (orderId) {
+        this.onEdit(parseInt(orderId, 10));
+      }
+      return;
+    }
+
+    const deleteBtn = target.closest('.delete-btn') as HTMLElement | null;
+    if (deleteBtn) {
+      event.preventDefault();
+      const orderId = deleteBtn.getAttribute('data-id');
+      if (orderId) {
+        await this.onDelete(parseInt(orderId, 10));
+      }
+      return;
+    }
+  };
+
+  actionFormatter(order: ServiceOrder): any {
+    return this.sanitizer.bypassSecurityTrustHtml(`
+      <a href="javascript:void(0);" class="action-icon edit-btn" data-id="${order.id}" title="Editar">
+        <i class="mdi mdi-pencil"></i>
+      </a>
+      <a href="javascript:void(0);" class="action-icon delete-btn ${this.isDisabled ? 'disabled' : ''}" 
+       data-id="${order.id}"
+       title="Excluir"
+       style="${this.isDisabled ? 'pointer-events: none; opacity: 0.5;' : ''}">
+        <i class="mdi mdi-delete"></i>
+      </a>
+    `);
   }
 
   onEdit(orderId: number): void {

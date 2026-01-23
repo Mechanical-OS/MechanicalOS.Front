@@ -78,7 +78,7 @@
                         <tbody>
                             <tr *ngFor="let service of services; let i = index">
                                 <td>{{ service.name }}</td>
-                                <td>R$ {{ service.price.toFixed(2).replace('.', ',') }}</td>
+                                <td>{{ service.price | brlCurrency }}</td>
                                 <td>
                                     <input 
                                         type="number" 
@@ -89,7 +89,7 @@
                                         (change)="updateServiceQuantity(i, $any($event.target).value)"
                                         (input)="updateServiceQuantity(i, $any($event.target).value)">
                                 </td>
-                                <td>R$ {{ service.total.toFixed(2).replace('.', ',') }}</td>
+                                <td>{{ service.total | brlCurrency }}</td>
                                 <td>
                                     <div class="action-buttons">
                                         <button 
@@ -131,21 +131,21 @@
                 <div class="mb-3">
                     <div class="d-flex justify-content-between">
                         <span>Sub total:</span>
-                        <span><strong>R$ {{ subtotal.toFixed(2).replace('.', ',') }}</strong></span>
+                        <span><strong>{{ subtotal | brlCurrency }}</strong></span>
                     </div>
                 </div>
 
                 <div class="mb-3">
                     <div class="d-flex justify-content-between">
                         <span>Desconto:</span>
-                        <span class="text-danger">- R$ {{ discount.toFixed(2).replace('.', ',') }}</span>
+                        <span class="text-danger">- {{ discount | brlCurrency }}</span>
                     </div>
                 </div>
 
                 <div class="mb-3">
                     <div class="d-flex justify-content-between">
                         <span>Taxas:</span>
-                        <span>R$ 0,00</span>
+                        <span>{{ 0 | brlCurrency }}</span>
                     </div>
                 </div>
 
@@ -154,7 +154,7 @@
                 <div class="mb-3">
                     <div class="d-flex justify-content-between">
                         <span><strong>Total:</strong></span>
-                        <span><strong class="text-success fs-5">R$ {{ total.toFixed(2).replace('.', ',') }}</strong></span>
+                        <span><strong class="text-success fs-5">{{ total | brlCurrency }}</strong></span>
                     </div>
                 </div>
 

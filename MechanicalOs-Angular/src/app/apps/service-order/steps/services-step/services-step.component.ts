@@ -66,6 +66,11 @@ export class ServicesStepComponent implements OnInit, OnDestroy, AfterViewInit  
         this.onServicePriceUpdate(serviceToUpdate);
       });
     }
+    if (this.serviceSearchComponent && this.serviceSearchComponent.servicePriceUpdate$) {
+      this.priceUpdateSubscription = this.serviceSearchComponent.servicePriceUpdate$.subscribe(serviceToUpdate => {
+        this.onServicePriceUpdate(serviceToUpdate);
+      });
+    }
   }
 
   ngOnDestroy(): void {
@@ -136,12 +141,16 @@ export class ServicesStepComponent implements OnInit, OnDestroy, AfterViewInit  
     this.notificationService.showToast(`${service.quantity}x ${service.name} adicionado(s)!`, 'success');
   }
 
-  updateServiceQuantity(index: number, quantity: number): void {
-    if (quantity > 0) {
-      this.services[index].quantity = quantity;
+  updateServiceQuantity(index: number, newQuantityAsString: string): void {
+    const quantity = parseInt(newQuantityAsString, 10);
+    if (!isNaN(quantity) && quantity > 0) {
+      this.services[index].quantity = quantity; 
       this.updateServiceTotal(index);
       this.calculateTotals();
-      this.saveServices();
+    } else if (this.services[index]) {
+      this.services[index].quantity = 1;
+      this.updateServiceTotal(index);
+      this.calculateTotals();
     }
   }
 
@@ -201,7 +210,7 @@ export class ServicesStepComponent implements OnInit, OnDestroy, AfterViewInit  
   }
 
   onServicePriceUpdate(serviceToUpdate: ServiceItem): void {
-    console.log('%c[PAI] Evento recebido VIA @ViewChild + Observable!', 'color: green; font-weight: bold;', serviceToUpdate);
+    console.log('%c[PAI] Evento de preço recebido VIA @ViewChild!', 'color: green; font-weight: bold;', serviceToUpdate);
     this.serviceService.updatePrice(serviceToUpdate.id, serviceToUpdate.price).subscribe({
       next: (response) => {
         console.log('Atualização de preço concluída:', response);

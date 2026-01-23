@@ -3,7 +3,7 @@ import { Subject, debounceTime, distinctUntilChanged, Subscription } from 'rxjs'
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ServiceService } from 'src/app/apps/services/service.services';
 import { ServiceModel } from 'src/app/apps/services/models/service.model';
-import { ServiceInteractionService } from 'src/app/shared/services/service-interaction.service';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms'; 
 
 export interface ServiceItem {
   id: number;
@@ -36,7 +36,7 @@ export class ServiceSearchComponent implements OnInit, OnDestroy {
   searchValue: string = '';
   availableServices: ServiceItem[] = [];
   loadingServices: boolean = false;
-  showResults: boolean = false;
+  showAddNewButton: boolean = false; 
 
   @ViewChild('editPriceModal') editPriceModal!: TemplateRef<any>;
   serviceToEdit: ServiceItem | null = null;
@@ -48,21 +48,22 @@ export class ServiceSearchComponent implements OnInit, OnDestroy {
   private servicePriceUpdateSource = new Subject<ServiceItem>();
   public servicePriceUpdate$ = this.servicePriceUpdateSource.asObservable();
 
+  @ViewChild('newServiceModal') newServiceModal!: TemplateRef<any>;
+  newServiceForm!: FormGroup;
+  isSavingNewService: boolean = false;
+
   constructor(
     private serviceService: ServiceService, 
     private modalService: NgbModal,
+    private fb: FormBuilder
   ) {}
 
   ngOnInit(): void {
-    // Configura debounce para busca de serviços
     this.searchSubject.pipe(
       debounceTime(this.debounceTime),
       distinctUntilChanged()
     ).subscribe(searchTerm => {
       this.performSearch(searchTerm);
-    });
-      this.serviceUpdateSubscription = this.serviceService.serviceUpdated$.subscribe(updatedService => {
-      this.updateServiceInList(updatedService);
     });
   }
 
@@ -78,7 +79,11 @@ export class ServiceSearchComponent implements OnInit, OnDestroy {
    */
   onSearch(): void {
     const searchTerm = this.searchValue?.trim() || '';
-    this.showResults = searchTerm.length >= this.minCharacters;
+    if (searchTerm.length >= this.minCharacters) {
+      this.loadingServices = true;
+      this.showAddNewButton = false;
+    }
+    
     this.searchSubject.next(searchTerm);
   }
 
@@ -88,11 +93,13 @@ export class ServiceSearchComponent implements OnInit, OnDestroy {
   private performSearch(searchTerm: string): void {
     if (!searchTerm || searchTerm.length < this.minCharacters) {
       this.availableServices = [];
-      this.showResults = false;
+      this.loadingServices = false;
+      this.showAddNewButton = false;
       return;
     }
     
     this.loadingServices = true;
+    this.showAddNewButton = false;
     this.availableServices = [];
     
     this.serviceService.findByFilter({ term: searchTerm }).subscribe({
@@ -100,12 +107,7 @@ export class ServiceSearchComponent implements OnInit, OnDestroy {
         this.loadingServices = false;
         
         if (result.statusCode === 200 && result.content) {
-          
-          //APLICA O LIMITE ANTES DE MAPEAR OS DADOS
           const limitedContent = result.content.slice(0, this.resultLimit);
-          
-          console.log(`✅ [ServiceSearch] ${result.content.length} serviços encontrados, exibindo ${limitedContent.length}`);
-          
           this.availableServices = limitedContent.map((service: ServiceModel) => ({
             id: service.id,
             code: service.code,
@@ -115,19 +117,21 @@ export class ServiceSearchComponent implements OnInit, OnDestroy {
             quantity: 1,
             total: service.price / 100  // Converte centavos para reais
           }));
-          
+          this.showAddNewButton = this.availableServices.length === 0;
         } else {
           this.availableServices = [];
+          this.showAddNewButton = true;
         }
       },
       error: (error) => {
         this.loadingServices = false;
-        console.error('❌ [ServiceSearch] Erro ao buscar:', error);
         this.availableServices = [];
+        this.showAddNewButton = true;
         this.searchError.emit(error);
       }
     });
   }
+
 
   /**
    * Seleciona um serviço da lista
@@ -178,20 +182,69 @@ export class ServiceSearchComponent implements OnInit, OnDestroy {
     }
   }
 
+  openNewServiceModal(): void {
+    this.newServiceForm.reset({ name: this.searchValue, price: null, code: '' });
+    this.isSavingNewService = false;
+    this.modalService.open(this.newServiceModal, { centered: true, backdrop: 'static' });
+  }
+  
+  saveNewService(modal: any): void {
+    if (!this.newServiceForm.valid) {
+      this.newServiceForm.markAllAsTouched();
+      return;
+    }
+    
+    this.isSavingNewService = true;
+    const formData = this.newServiceForm.value;
+
+    const newServiceData: ServiceModel = {
+      id: 0,
+      name: formData.name,
+      shortDescription: formData.name,
+      description: formData.name,
+      code: formData.code,
+      price: Math.round(formData.price * 100),
+      status: 1
+    };
+
+    this.serviceService.saveNewService(newServiceData).subscribe({
+      next: (response) => {
+        this.isSavingNewService = false;
+        if (response.statusCode === 200 && response.content) {
+          modal.close();
+          const newServiceItem: ServiceItem = {
+            id: response.content.id,
+            code: response.content.code,
+            name: response.content.shortDescription || response.content.name,
+            price: response.content.price / 100,
+            quantity: 1,
+            total: response.content.price / 100,
+            description: response.content.description
+          };
+          this.selectService(newServiceItem);
+        } else {
+          console.error("Erro ao salvar novo serviço:", response.message);
+        }
+      },
+      error: (err) => {
+        this.isSavingNewService = false;
+        console.error("Erro de comunicação ao salvar novo serviço:", err);
+      }
+    });
+  }
+
   /**
    * Limpa a busca
    */
   clearSearch(): void {
     this.searchValue = '';
     this.availableServices = [];
-    this.showResults = false;
+    this.loadingServices = false;
+    this.showAddNewButton = false;
   }
-
-  /**
-   * Fecha os resultados
-   */
+  
   closeResults(): void {
-    this.showResults = false;
+    this.clearSearch();
   }
 }
 

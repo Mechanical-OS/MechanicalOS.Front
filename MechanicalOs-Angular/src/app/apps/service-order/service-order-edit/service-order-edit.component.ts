@@ -32,6 +32,9 @@ export class ServiceOrderEditComponent implements OnInit {
   customerData: any = null;
   vehicleData: any = null;
   addressData: any = null;
+  isReadOnly: boolean = false;
+  hasChanges: boolean = false;
+  private initialState: any = {};
 
   // Dados editáveis
   services: ServiceItem[] = [];
@@ -49,6 +52,12 @@ export class ServiceOrderEditComponent implements OnInit {
     { value: ServiceOrderStatus.CONCLUIDO, label: "Concluído" },
     { value: ServiceOrderStatus.CANCELADO, label: "Cancelado" },
   ];
+
+  private readonly editableStatuses = [
+    ServiceOrderStatus.ORCAMENTO,
+    ServiceOrderStatus.EM_ANDAMENTO
+  ];
+
 
   constructor(
     private route: ActivatedRoute,
@@ -83,6 +92,8 @@ export class ServiceOrderEditComponent implements OnInit {
       this.notificationService.hideLoading();
       
       if (response && response.statusCode === 200 && response.content) {
+        // response.content.status = 5; // Força o status para CONCLUÍDO
+        // response.content.status = 8; // Força o status para CANCELADO
         this.populateForm(response.content);
       } else {
         await this.uiInteractionService.showSweetAlert({ title: 'Erro', text: 'Erro ao carregar ordem de serviço. Dados não encontrados.', icon: 'error' }, []);
@@ -166,6 +177,15 @@ export class ServiceOrderEditComponent implements OnInit {
       };
     }
 
+    this.currentStatus = this.mapNumberToStatus(orderData.status);
+    
+    if (!this.editableStatuses.includes(this.currentStatus as ServiceOrderStatus)) {
+      this.isReadOnly = true;
+      console.warn(`🔒 A Ordem de Serviço está em modo de SOMENTE LEITURA. Status: ${this.currentStatus}`);
+    } else {
+      this.isReadOnly = false;
+    }
+
     // Carrega os serviços da ordem
     if (orderData.orderServices && Array.isArray(orderData.orderServices)) {
       this.services = orderData.orderServices.map((service: any) => ({
@@ -192,11 +212,34 @@ export class ServiceOrderEditComponent implements OnInit {
     // Calcula totais
     this.calculateTotals();
 
+    this.captureInitialState();
+
     console.log("✅ Formulário populado com sucesso");
     console.log("Cliente:", this.customerData);
     console.log("Veículo:", this.vehicleData);
     console.log("Endereço:", this.addressData);
     console.log("Serviços:", this.services);
+  }
+
+  private captureInitialState(): void {
+    this.initialState = {
+      services: JSON.stringify(this.services),
+      observations: this.observations,
+      discount: this.discount,
+      status: this.currentStatus
+    };
+    this.hasChanges = false;
+    console.log("📸 Estado inicial capturado:", this.initialState);
+  }
+
+  private checkForChanges(): void {
+    const servicesChanged = JSON.stringify(this.services) !== this.initialState.services;
+    const observationsChanged = this.observations !== this.initialState.observations;
+    const discountChanged = this.discount !== this.initialState.discount;
+    const statusChanged = this.currentStatus !== this.initialState.status;
+
+    this.hasChanges = servicesChanged || observationsChanged || discountChanged || statusChanged;
+    console.log("🔄 Verificando mudanças:", { hasChanges: this.hasChanges, servicesChanged, observationsChanged, discountChanged, statusChanged });
   }
 
   private loadMockServiceOrder(): void {
@@ -293,6 +336,8 @@ export class ServiceOrderEditComponent implements OnInit {
   onServiceSelected(service: ServiceItem): void {
     console.log("✅ Serviço selecionado:", service);
     this.addService(service);
+    this.calculateTotals();
+    this.checkForChanges();
   }
 
   /**
@@ -336,11 +381,18 @@ export class ServiceOrderEditComponent implements OnInit {
     this.notificationService.showToast(`${service.quantity}x ${service.name} adicionado(s)!`, 'success');
   }
 
-  updateServiceQuantity(index: number, quantity: number): void {
-    if (quantity > 0) {
-      this.services[index].quantity = quantity;
+  updateServiceQuantity(index: number, newQuantityAsString: string): void {
+    const quantity = parseInt(newQuantityAsString, 10);
+    if (!isNaN(quantity) && quantity > 0) {
+      this.services[index].quantity = quantity; 
       this.updateServiceTotal(index);
       this.calculateTotals();
+      this.checkForChanges();
+    } else if (this.services[index]) {
+      this.services[index].quantity = 1;
+      this.updateServiceTotal(index);
+      this.calculateTotals();
+      this.checkForChanges();
     }
   }
 
@@ -349,9 +401,23 @@ export class ServiceOrderEditComponent implements OnInit {
       this.services[index].price * this.services[index].quantity;
   }
 
-  removeService(index: number): void {
-    this.services.splice(index, 1);
-    this.calculateTotals();
+  async removeService(index: number): Promise<void> {
+    const serviceToRemove = this.services[index];
+    const result = await this.uiInteractionService.showSweetAlert({
+      title: 'Remover Serviço?',
+      text: `Tem certeza que deseja remover "${serviceToRemove.name}" da ordem de serviço?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sim, remover',
+      cancelButtonText: 'Cancelar'
+    }, []);
+
+    if (result.isConfirmed) {
+      this.services.splice(index, 1);
+      this.calculateTotals();
+      this.notificationService.showToast(`"${serviceToRemove.name}" foi removido.`, 'success');
+      this.checkForChanges();
+    }
   }
 
   private calculateTotals(): void {
@@ -379,12 +445,14 @@ export class ServiceOrderEditComponent implements OnInit {
           this.discountCoupon
         } - Desconto: R$ ${this.discount.toFixed(2)}`
       );
+      this.checkForChanges();
     }
   }
 
   updateObservations(): void {
     // Salva as observações
     console.log("Observações atualizadas:", this.observations);
+    this.checkForChanges();
   }
 
   /**
@@ -415,6 +483,7 @@ export class ServiceOrderEditComponent implements OnInit {
     if (this.serviceOrder) {
       this.serviceOrder.status = this.currentStatus as any;
     }
+    this.checkForChanges();
   }
 
   /**
@@ -431,6 +500,14 @@ export class ServiceOrderEditComponent implements OnInit {
   }
 
   async saveChanges(): Promise<void> {
+    if (this.isReadOnly) {
+      await this.uiInteractionService.showSweetAlert({
+        title: 'Ação não permitida',
+        text: 'Esta Ordem de Serviço não pode ser alterada pois seu status é "' + this.getStatusLabel(this.currentStatus) + '".',
+        icon: 'info'
+      }, []);
+      return;
+    }
     if (!this.serviceOrder) {
       this.uiInteractionService.showSweetAlert({ title: 'Erro', text: 'Ordem de serviço não carregada.', icon: 'error' }, []);
       return;
@@ -474,6 +551,11 @@ export class ServiceOrderEditComponent implements OnInit {
       })),
     };
 
+    console.log('%c--- ANTES DE ENVIAR PARA A API ---', 'color: blue; font-weight: bold;');
+    console.log('Status selecionado na UI (this.currentStatus):', this.currentStatus);
+    console.log('Status convertido para número (statusNumber):', statusNumber);
+    console.log('Payload completo enviado:', updatePayload);
+
     console.log(
       "📤 Payload da atualização:",
       JSON.stringify(updatePayload, null, 2)
@@ -483,9 +565,13 @@ export class ServiceOrderEditComponent implements OnInit {
   try {
     const response = await this.serviceOrderService.updateOrder(updatePayload).toPromise();
     this.notificationService.hideLoading();
+
+    console.log('%c--- RESPOSTA DA API ---', 'color: green; font-weight: bold;');
+    console.log('Objeto completo retornado pela API:', response);
     if (response && response.statusCode === 200) {
       const successMessage = response.message || 'Alterações salvas com sucesso!';
       await this.uiInteractionService.showSweetAlert({ title: 'Sucesso', text: successMessage, icon: 'success' }, []);
+      this.loadServiceOrder();
     //  this.router.navigate(["/apps/service-orders"]);
     } else {
       const errorMessage = response?.message || "Erro ao atualizar ordem de serviço.";
@@ -498,20 +584,47 @@ export class ServiceOrderEditComponent implements OnInit {
     }
   }
 
-  async cancel(): Promise<void> {
+async revertChanges(): Promise<void> {
     const result = await this.uiInteractionService.showSweetAlert({
-      title: 'Cancelar Alterações',
-      text: "Tem certeza que deseja cancelar? As alterações serão perdidas.",
+      title: 'Descartar Alterações?',
+      text: 'Tem certeza que deseja cancelar? Todas as alterações feitas serão perdidas.',
       icon: 'question',
       showCancelButton: true,
-      confirmButtonText: 'Sim, cancelar',
+      confirmButtonText: 'Sim, descartar',
       cancelButtonText: 'Não'
     }, []);
-    
+
     if (result.isConfirmed) {
-      this.router.navigate(["/apps/service-orders"]);
+      console.log('🚮 Revertendo alterações...');
+
+      this.services = JSON.parse(this.initialState.services);
+      this.observations = this.initialState.observations;
+      this.discount = this.initialState.discount;
+      this.currentStatus = this.initialState.status;
+
+      this.calculateTotals();
+      this.checkForChanges();
+      
+      this.notificationService.showToast('Alterações descartadas.', 'info');
     }
   }
+
+  async cancelAndExit(): Promise<void> {
+  if (this.hasChanges) {
+    const result = await this.uiInteractionService.showSweetAlert({
+      title: 'Sair sem Salvar?',
+      text: 'Você tem alterações não salvas. Deseja sair mesmo assim?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sim, sair',
+      cancelButtonText: 'Não'
+    }, []);
+    if (!result.isConfirmed) {
+      return;
+    }
+  }
+  this.router.navigate(["/apps/service-orders"]);
+}
 
   /**
    * Gera um PDF da ordem de serviço com layout moderno e profissional
@@ -1335,7 +1448,7 @@ export class ServiceOrderEditComponent implements OnInit {
   /**
    * Retorna o label do status
    */
-  private getStatusLabel(status: string): string {
+  public getStatusLabel(status: string): string {
     const statusItem = this.statusList.find((s) => s.value === status);
     return statusItem ? statusItem.label : "Desconhecido";
   }

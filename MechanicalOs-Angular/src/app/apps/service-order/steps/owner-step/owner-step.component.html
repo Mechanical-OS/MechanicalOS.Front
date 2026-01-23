@@ -68,33 +68,32 @@
                             </div>
                         </div>
                         <div class="col-md-4">
-                            <label for="birthDate" class="form-label">Data de Nascimento</label>
+                            <label for="birthDateInput" class="form-label">Data de Nascimento</label>
                             <div class="input-group">
                                 <input 
-                                    id="birthDate"
+                                    id="birthDateInput"
                                     class="form-control"
                                     placeholder="dd/mm/aaaa"
+                                    [class.is-invalid]="isFieldInvalid('birthDate')"
+                                    maxlength="10"
+                                    [(ngModel)]="birthDateMask"
+                                    [ngModelOptions]="{standalone: true}"
+                                    (ngModelChange)="onBirthDateInput()">
+                                <input 
+                                    formControlName="birthDate"
+                                    [hidden]="true"
                                     ngbDatepicker
                                     #d1="ngbDatepicker"
-                                    appNgbDatepickerPt
-                                    formControlName="birthDate"
-                                    [class.is-invalid]="isFieldInvalid('birthDate')">
+                                    (dateSelect)="onDateSelect($event)">
                                 <button 
                                     class="btn btn-outline-secondary"
                                     (click)="d1.toggle()"
                                     type="button">
                                     <i class="far fa-calendar-alt"></i>
                                 </button>
-                                <button 
-                                    class="btn btn-outline-danger"
-                                    *ngIf="ownerForm.controls['birthDate'].value"
-                                    (click)="clearDate('birthDate')"
-                                    type="button">
-                                    <i class="fas fa-times"></i>
-                                </button>
                             </div>
                             <div class="invalid-feedback" *ngIf="isFieldInvalid('birthDate')">
-                                Data de nascimento é obrigatória
+                                Data de nascimento é obrigatória e deve ser válida
                             </div>
                         </div>
                     </div>

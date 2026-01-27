@@ -40,45 +40,35 @@ export class ServiceService extends BaseService<ServiceModel> {
         );
     }
 
-    updateService(data: ServiceModel): Observable<OperationResult<any>> {
-        this.notificationService.showLoading();
+    updateService(data: ServiceModel): Observable<Result<ServiceModel>> {
         return this.update(data).pipe(
-            map((response: Result<ServiceModel>) => {
-                if (response.statusCode != 200) {
-                    this.notificationService.showError(response);
-                    throw new Error(response.message || 'Erro desconhecido');
-                }
+            map(response => {
                 if (response.content) {
                     this.serviceUpdatedSource.next(response.content);
                 }
                 return response;
-            }),
-            catchError((error: HttpErrorResponse) => {
-                this.notificationService.showError(error);
-                return throwError(() => error);
-            }),
-            finalize(() => this.notificationService.hideLoading())
+            })
         );
     }
-        updatePrice(serviceId: number, newPrice: number): Observable<OperationResult<any>> {
+    updatePrice(serviceId: number, newPrice: number): Observable<Result<ServiceModel>> {
         this.notificationService.showLoading('Atualizando preço...');
 
         return this.findById(serviceId).pipe(
             switchMap(findResult => {
                 if (findResult.statusCode !== 200 || !findResult.content) {
-                    throw new Error('Serviço não encontrado para atualização.');
+                    return throwError(() => new Error('Serviço não encontrado para atualização.'));
                 }
                 
                 const serviceToUpdate = findResult.content;
-                
                 serviceToUpdate.price = Math.round(newPrice * 100);
-                this.notificationService.hideLoading();
                 return this.updateService(serviceToUpdate);
             }),
             catchError((error: any) => {
-                this.notificationService.hideLoading();
-                this.notificationService.showError({ message: error.message || 'Erro ao buscar serviço para atualizar.' });
+                this.notificationService.showError({ message: error.message || 'Erro ao atualizar o preço.' });
                 return throwError(() => error);
+            }),
+            finalize(() => {
+                this.notificationService.hideLoading();
             })
         );
     }

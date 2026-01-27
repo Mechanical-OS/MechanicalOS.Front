@@ -65,6 +65,11 @@ export class ServiceSearchComponent implements OnInit, OnDestroy {
     ).subscribe(searchTerm => {
       this.performSearch(searchTerm);
     });
+    this.newServiceForm = this.fb.group({
+      name: ['', Validators.required],
+      code: [''],
+      price: [null, [Validators.required, Validators.min(0.01)]]
+    });
   }
 
   ngOnDestroy(): void {

@@ -1,4 +1,4 @@
-import { Component, OnInit } from "@angular/core";
+import { Component, OnInit, ViewChild, AfterViewInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from "@angular/router";
 import { BreadcrumbItem } from "src/app/shared/page-title/page-title.model";
 import { ServiceOrderService } from "../service-order.service";
@@ -9,11 +9,13 @@ import {
   mapStatusToNumber,
 } from "../../Shared/models/service-order.model";
 import { NotificationService } from "src/app/shared/services/notification.service";
-import { ServiceItem } from "src/app/shared/service-search";
+import { ServiceSearchComponent, ServiceItem } from "src/app/shared/service-search";
 import pdfMake from "pdfmake/build/pdfmake";
 import pdfFonts from "pdfmake/build/vfs_fonts";
 import { UiInteractionService } from 'src/app/shared/services/ui-interaction.service';
 import { AlignLeft } from "angular-feather/icons";
+import { ServiceService } from 'src/app/apps/services/service.services';
+import { Subscription } from 'rxjs';
 
 // Configura as fontes do pdfMake
 (pdfMake as any).vfs = pdfFonts;
@@ -23,7 +25,7 @@ import { AlignLeft } from "angular-feather/icons";
   templateUrl: "./service-order-edit.component.html",
   styleUrl: "./service-order-edit.component.scss",
 })
-export class ServiceOrderEditComponent implements OnInit {
+export class ServiceOrderEditComponent implements OnInit, AfterViewInit, OnDestroy {
   pageTitle: BreadcrumbItem[] = [];
   serviceOrder: ServiceOrder | null = null;
   orderId: number = 0;
@@ -58,6 +60,8 @@ export class ServiceOrderEditComponent implements OnInit {
     ServiceOrderStatus.EM_ANDAMENTO
   ];
 
+  @ViewChild(ServiceSearchComponent) private serviceSearchComponent!: ServiceSearchComponent;
+  private priceUpdateSubscription!: Subscription;
 
   constructor(
     private route: ActivatedRoute,
@@ -65,7 +69,8 @@ export class ServiceOrderEditComponent implements OnInit {
     private serviceOrderService: ServiceOrderService,
     private draftService: ServiceOrderDraftService,
     private notificationService: NotificationService,
-    private uiInteractionService: UiInteractionService
+    private uiInteractionService: UiInteractionService,
+    private serviceService: ServiceService,
   ) {}
 
   ngOnInit(): void {
@@ -81,6 +86,21 @@ export class ServiceOrderEditComponent implements OnInit {
         this.loadServiceOrder();
       }
     });
+  }
+
+  ngAfterViewInit(): void {
+    // Garante que o componente filho exista antes de se inscrever
+    if (this.serviceSearchComponent && this.serviceSearchComponent.servicePriceUpdate$) {
+      this.priceUpdateSubscription = this.serviceSearchComponent.servicePriceUpdate$.subscribe(serviceToUpdate => {
+        this.onServicePriceUpdate(serviceToUpdate);
+      });
+    }
+  }
+
+  ngOnDestroy(): void {
+    if (this.priceUpdateSubscription) {
+      this.priceUpdateSubscription.unsubscribe();
+    }
   }
 
   async loadServiceOrder(): Promise<void> {
@@ -240,6 +260,25 @@ export class ServiceOrderEditComponent implements OnInit {
 
     this.hasChanges = servicesChanged || observationsChanged || discountChanged || statusChanged;
     console.log("🔄 Verificando mudanças:", { hasChanges: this.hasChanges, servicesChanged, observationsChanged, discountChanged, statusChanged });
+  }
+
+  onServicePriceUpdate(serviceToUpdate: ServiceItem): void {
+    console.log('[ServiceOrderEdit] Recebido evento para atualizar o preço:', serviceToUpdate);
+    this.notificationService.showToast('Atualizando preço do serviço...', 'info');
+
+    this.serviceService.updatePrice(serviceToUpdate.id, serviceToUpdate.price).subscribe({
+      next: (response) => {
+        if (response.statusCode === 200) {
+          this.notificationService.showToast('Preço atualizado com sucesso!', 'success');
+        } else {
+          this.notificationService.showToast('Erro ao atualizar preço.', 'error');
+        }
+      },
+      error: (err) => {
+        console.error('Erro ao atualizar preço:', err);
+        this.notificationService.showToast('Erro de comunicação ao atualizar preço.', 'error');
+      }
+    });
   }
 
   private loadMockServiceOrder(): void {
@@ -556,10 +595,7 @@ export class ServiceOrderEditComponent implements OnInit {
     console.log('Status convertido para número (statusNumber):', statusNumber);
     console.log('Payload completo enviado:', updatePayload);
 
-    console.log(
-      "📤 Payload da atualização:",
-      JSON.stringify(updatePayload, null, 2)
-    );
+    console.log('JSON EXATO ENVIADO:', JSON.stringify(updatePayload, null, 2));
 
   this.notificationService.showLoading("Salvando alterações...");
   try {
